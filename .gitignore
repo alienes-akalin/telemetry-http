@@ -6,6 +6,16 @@
 .env.local
 .env.*.local
 
+# ==================== AI ARAÇ KLASÖRLERI ====================
+.agent/
+.agents/
+.claude/
+.cursor/
+.gemini/
+
+# ==================== GEREKSIZ DOSYALAR ====================
+main.c
+
 # ==================== BAĞIMLILIKLAR ====================
 node_modules/
 
