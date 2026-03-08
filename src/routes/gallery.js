@@ -9,12 +9,19 @@ const { authenticateToken } = require('../middleware/auth');
 const logger = require('../logger');
 
 /**
- * Google Apps Script URL'sine HTTPS GET isteği atar, JSON döner.
- * Node.js 18 öncesi için yerleşik https modülü kullanılır.
+ * Google Apps Script URL'sine HTTPS GET isteği atar, redirect takip eder, JSON döner.
+ * Google Apps Script web app'leri genellikle 302 redirect döndürür.
  */
-function fetchJson(url) {
+function fetchJson(url, redirectCount = 0) {
   return new Promise((resolve, reject) => {
+    if (redirectCount > 5) return reject(new Error('Çok fazla redirect'));
+
     https.get(url, (res) => {
+      // Redirect'i takip et
+      if ((res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307) && res.headers.location) {
+        return resolve(fetchJson(res.headers.location, redirectCount + 1));
+      }
+
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
