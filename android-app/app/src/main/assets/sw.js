@@ -10,7 +10,7 @@
 // ============================================================
 
 // Önbellek versiyonu - Her güncellemede artırılmalı
-const CACHE_NAME = 'telemetri-v109';
+const CACHE_NAME = 'telemetri-v110';
 
 // Statik dosyalar - Cache First (sadece ikonlar ve manifest)
 const STATIC_ASSETS = [

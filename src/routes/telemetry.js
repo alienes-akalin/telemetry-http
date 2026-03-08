@@ -567,5 +567,50 @@ router.get('/stats', authenticateToken, async (req, res) => {
     }
 });
 
+// ==================== GET /api/v1/telemetry/gps-track ====================
+/**
+ * Belirtilen süre aralığındaki GPS noktalarını döner (harita geçmişi için).
+ * Sadece geçerli GPS koordinatları olan kayıtlar döner.
+ * @query {string} device_id - Araç ID'si
+ * @query {number} hours     - Kaç saatlik geçmiş (varsayılan: 2)
+ */
+router.get('/gps-track', async (req, res) => {
+    try {
+        const { device_id = 'a1', hours = 2 } = req.query;
+        const since = new Date(Date.now() - parseFloat(hours) * 60 * 60 * 1000);
+
+        const deviceIds = [device_id];
+        if (device_id === 'a1') deviceIds.push('arac-01');
+        else if (device_id === 'a2') deviceIds.push('arac-02');
+
+        const points = await Telemetry.find({
+            device_id: { $in: deviceIds },
+            event_type: 'telemetry',
+            ts_server: { $gte: since },
+            'gps.lat_deg': { $ne: null, $ne: 0 },
+            'gps.lon_deg': { $ne: null, $ne: 0 }
+        })
+        .sort({ ts_server: 1 })
+        .limit(3000)
+        .select('ts_server gps motor.speed_kph')
+        .lean();
+
+        res.json({
+            count: points.length,
+            since,
+            points: points.map(p => ({
+                ts: p.ts_server,
+                lat: p.gps.lat_deg,
+                lon: p.gps.lon_deg,
+                speed: p.motor?.speed_kph || 0
+            }))
+        });
+
+    } catch (err) {
+        logger.error('Get GPS track failed', { error: err.message });
+        res.status(500).json({ error: 'Sunucu hatası' });
+    }
+});
+
 module.exports = router;
 module.exports.setSocketIO = setSocketIO;

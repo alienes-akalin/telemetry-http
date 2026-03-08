@@ -618,6 +618,7 @@
 
                 // Save auth data
                 localStorage.setItem('authToken', data.token);
+                if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
                 localStorage.setItem('user', JSON.stringify(data.user));
 
                 // Show success animation

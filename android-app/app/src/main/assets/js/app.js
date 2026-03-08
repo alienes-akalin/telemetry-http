@@ -195,6 +195,8 @@ function switchVehicle(newDeviceId) {
         fullMap.setView(defaultPos, 14);
         isTrackingMode = true;
         updateTrackingButton();
+        // Yeni araç için geçmiş GPS rota verisi yükle
+        if (currentView === 'map') loadGPSTrack();
     }
     lastKnownPos = defaultPos;
 
@@ -376,10 +378,9 @@ async function sendPrankNotification() {
     statusEl.textContent = '';
 
     try {
-        const token = localStorage.getItem('authToken');
-        const res = await fetch('/api/v1/prank/notify', {
+        const res = await apiFetch('/api/v1/prank/notify', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title, message, type, icon })
         });
 
@@ -401,6 +402,66 @@ async function sendPrankNotification() {
 }
 
 // ==================== KİMLİK DOĞRULAMA ====================
+
+/**
+ * Kimlik doğrulama gerektiren fetch wrapper.
+ * 401 "Token süresi dolmuş" alındığında refreshToken ile yeni access token alır,
+ * ardından orijinal isteği tekrar dener. Yenileme de başarısız olursa login'e yönlendirir.
+ */
+async function apiFetch(url, options = {}) {
+    const token = localStorage.getItem('authToken');
+    const opts = {
+        ...options,
+        headers: {
+            ...(options.headers || {}),
+            'Authorization': `Bearer ${token}`
+        }
+    };
+
+    let res = await fetch(url, opts);
+
+    // Token süresi dolduysa yenilemeyi dene
+    if (res.status === 401) {
+        const body = await res.json().catch(() => ({}));
+        if (body.error && body.error.includes('süresi dolmuş')) {
+            const refreshed = await tryRefreshToken();
+            if (refreshed) {
+                // Yeni token ile tekrar dene
+                opts.headers['Authorization'] = `Bearer ${localStorage.getItem('authToken')}`;
+                res = await fetch(url, opts);
+            } else {
+                logout();
+                return res;
+            }
+        }
+    }
+
+    return res;
+}
+
+/**
+ * refreshToken ile yeni access token alır.
+ * Başarılıysa localStorage'ı günceller ve true döner.
+ * Başarısızsa false döner.
+ */
+async function tryRefreshToken() {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) return false;
+    try {
+        const res = await fetch(`${API_BASE}/api/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken })
+        });
+        if (!res.ok) return false;
+        const data = await res.json();
+        localStorage.setItem('authToken', data.token);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 // Oturum kontrolü - Token yoksa login sayfasına yönlendirir
 function checkAuth() {
     // Login sayfasındaysak kontrol etme (WebView + web uyumu)
@@ -420,7 +481,6 @@ function checkAuth() {
         currentUserRole = userData.role;
         currentUsername = userData.username;  // Owner kontrolü için
 
-
         // Rol bazlı UI kısıtlamalarını uygula
         applyRoleRestrictions();
         return true;
@@ -434,6 +494,7 @@ function checkAuth() {
 // Çıkış yap - Token ve kullanıcı bilgilerini temizle
 function logout() {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     currentUserRole = null;
     currentUsername = null;
@@ -692,10 +753,9 @@ async function playYoutubeAudio() {
 
     // Sunucuya gönder → herkese prank_play eventi yayınlar (sen dahil)
     try {
-        const token = localStorage.getItem('authToken');
-        const res = await fetch('/api/v1/prank/play', {
+        const res = await apiFetch('/api/v1/prank/play', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ videoId })
         });
         const data = await res.json();
@@ -720,10 +780,9 @@ async function stopYoutubeAudio() {
 
     // Backend'e durdur sinyali gönder → herkese prank_stop eventi yayınlar
     try {
-        const token = localStorage.getItem('authToken');
-        await fetch('/api/v1/prank/stop', {
+        await apiFetch('/api/v1/prank/stop', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+            headers: { 'Content-Type': 'application/json' }
         });
     } catch { /* sessiz hata */ }
 }
@@ -912,7 +971,7 @@ function initNavigation() {
             }
             if (targetPage === 'map') {
                 setTimeout(initFullMap, 400);
-                setTimeout(fetchLatestData, 500);
+                setTimeout(() => { fetchLatestData(); loadGPSTrack(); }, 500);
             }
             if (targetPage === 'history') {
                 loadSessions();
@@ -1246,6 +1305,40 @@ function initFullMap() {
     });
 
     mapInitialized = true;
+}
+
+// Son 2 saatteki GPS geçmişini haritaya çizer (sayfa açılışında veya araç değişiminde)
+async function loadGPSTrack() {
+    if (!mapInitialized || !fullMap) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/v1/telemetry/gps-track?device_id=${currentDeviceId}&hours=2`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!json.points || json.points.length < 2) return;
+
+        // Geçmiş segmentleri çiz — hız bazlı renkli
+        for (let i = 1; i < json.points.length; i++) {
+            const prev = json.points[i - 1];
+            const curr = json.points[i];
+            const color = getSpeedColor(curr.speed || 0);
+            const seg = L.polyline(
+                [[prev.lat, prev.lon], [curr.lat, curr.lon]],
+                { color, weight: 4, opacity: 0.7, dashArray: '6 4' }  // kesikli: geçmiş veri
+            ).addTo(fullMap);
+            routePolylines.push(seg);
+        }
+
+        // routeSegments'i geçmiş noktalarla doldur → yeni gelen verilere sorunsuz eklensin
+        routeSegments = json.points.map(p => ({ latlng: [p.lat, p.lon], speed: p.speed }));
+
+        // Haritayı son bilinen noktaya ortala
+        const last = json.points[json.points.length - 1];
+        fullMap.setView([last.lat, last.lon], 15);
+        fullMarker.setLatLng([last.lat, last.lon]);
+        lastKnownPos = [last.lat, last.lon];
+    } catch (e) {
+        // GPS track yüklenemese de harita normal çalışır
+    }
 }
 
 // Detaylı haritayı günceller ve hıza göre renkli rota çizer
@@ -2092,9 +2185,7 @@ async function loadTeamGallery() {
 
     try {
         const token = localStorage.getItem('authToken');
-        const res = await fetch(`${API_BASE}/api/v1/gallery`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await apiFetch(`${API_BASE}/api/v1/gallery`, {});
 
         if (res.status === 503) {
             grid.innerHTML = `

@@ -37,6 +37,8 @@ function mongoSanitizeMiddleware(req, res, next) {
 const connectDB = require('./config/db');
 const { initRedis, isRedisConnected } = require('./config/redis');
 const logger = require('./logger');
+const mongoose = require('mongoose');
+const Telemetry = require('./models/telemetry');
 
 const authRoutes = require('./routes/auth');
 const telemetryRoutes = require('./routes/telemetry');
@@ -158,13 +160,49 @@ app.use((req, res, next) => {
 // ==================== ROTALAR ====================
 
 // Sağlık kontrolü — harici monitor araçları (uptime robot vb.) için
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    uptime: Math.round(process.uptime()),
-    timestamp: new Date().toISOString(),
-    redis: isRedisConnected() ? 'connected' : 'disconnected'
-  });
+app.get('/health', async (req, res) => {
+  try {
+    // MongoDB ping
+    const dbState = mongoose.connection.readyState; // 0=kapali, 1=bagli, 2=baglaniyor, 3=kopuyor
+    const dbStatus = ['disconnected', 'connected', 'connecting', 'disconnecting'][dbState] || 'unknown';
+    let dbPingMs = null;
+    if (dbState === 1) {
+      const t0 = Date.now();
+      await mongoose.connection.db.command({ ping: 1 });
+      dbPingMs = Date.now() - t0;
+    }
+
+    // Son telemetri zamanı
+    const lastRecord = await Telemetry.findOne().sort({ ts_server: -1 }).select('ts_server device_id').lean();
+
+    // Memory kullanımı
+    const mem = process.memoryUsage();
+    const toMB = (bytes) => Math.round(bytes / 1024 / 1024 * 10) / 10;
+
+    res.json({
+      status: dbState === 1 ? 'OK' : 'DEGRADED',
+      uptime: Math.round(process.uptime()),
+      timestamp: new Date().toISOString(),
+      redis: isRedisConnected() ? 'connected' : 'disconnected',
+      mongodb: {
+        status: dbStatus,
+        pingMs: dbPingMs
+      },
+      lastTelemetry: lastRecord ? {
+        ts: lastRecord.ts_server,
+        device_id: lastRecord.device_id,
+        ageSeconds: Math.round((Date.now() - new Date(lastRecord.ts_server).getTime()) / 1000)
+      } : null,
+      memory: {
+        heapUsedMB: toMB(mem.heapUsed),
+        heapTotalMB: toMB(mem.heapTotal),
+        rssMB: toMB(mem.rss)
+      }
+    });
+  } catch (err) {
+    logger.error('Health check error', { error: err.message });
+    res.status(500).json({ status: 'ERROR', error: err.message });
+  }
 });
 
 app.use('/api/auth', authRoutes);

@@ -24,13 +24,17 @@ const loginLimiter = rateLimit({
 });
 
 /**
- * JWT token üretir
- * @param {string} userId - Mongoose kullanıcı _id
- * @returns {string} İmzalı JWT
+ * Access token üretir (kısa ömürlü: 2 saat)
  */
 const generateToken = (userId) => {
-    const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
-    return jwt.sign({ userId }, JWT_SECRET, { expiresIn });
+    return jwt.sign({ userId, type: 'access' }, JWT_SECRET, { expiresIn: '2h' });
+};
+
+/**
+ * Refresh token üretir (uzun ömürlü: 30 gün)
+ */
+const generateRefreshToken = (userId) => {
+    return jwt.sign({ userId, type: 'refresh' }, JWT_SECRET, { expiresIn: '30d' });
 };
 
 // ==================== POST /api/auth/login ====================
@@ -64,11 +68,13 @@ router.post('/login', loginLimiter, async (req, res) => {
         await user.save();
 
         const token = generateToken(user._id);
+        const refreshToken = generateRefreshToken(user._id);
         logger.info('Login successful', { username, userId: user._id });
 
         res.json({
             message: 'Giriş başarılı',
             token,
+            refreshToken,
             user: { id: user._id, username: user.username, role: user.role }
         });
 
@@ -97,13 +103,32 @@ router.get('/profile', authenticateToken, (req, res) => {
 
 // ==================== POST /api/auth/refresh ====================
 /**
- * Geçerli bir token ile yeni token alır (token yenileme).
+ * Refresh token ile yeni access token al.
+ * Refresh token geçerliyse ve `type: 'refresh'` ise yeni access token döner.
  */
-router.post('/refresh', authenticateToken, async (req, res) => {
+router.post('/refresh', async (req, res) => {
     try {
-        const token = generateToken(req.user._id);
+        const { refreshToken } = req.body;
+        if (!refreshToken) {
+            return res.status(400).json({ error: 'Refresh token gerekli' });
+        }
+
+        const decoded = jwt.verify(refreshToken, JWT_SECRET);
+        if (decoded.type !== 'refresh') {
+            return res.status(401).json({ error: 'Geçersiz token tipi' });
+        }
+
+        const user = await User.findById(decoded.userId);
+        if (!user) {
+            return res.status(401).json({ error: 'Kullanıcı bulunamadı' });
+        }
+
+        const token = generateToken(user._id);
         res.json({ token });
     } catch (err) {
+        if (err.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Refresh token süresi dolmuş, tekrar giriş yapın' });
+        }
         logger.error('Token refresh error', { error: err.message });
         res.status(500).json({ error: 'Sunucu hatası' });
     }

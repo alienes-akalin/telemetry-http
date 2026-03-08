@@ -54,7 +54,9 @@ const TelemetrySchema = new Schema({
 });
 
 // ==================== INDEX'LER ====================
-// Bileşik index: device_id + event_type + zaman aralığı sorgularını hızlandırır
+// Bileşik index: device_id + ts_server → history ve export sorgularını hızlandırır (en kritik)
+TelemetrySchema.index({ device_id: 1, ts_server: -1 });
+// Bileşik index: device_id + event_type + zaman → startup event sorgularını hızlandırır
 TelemetrySchema.index({ device_id: 1, event_type: 1, ts_server: -1 });
 
 module.exports = mongoose.model('Telemetry', TelemetrySchema);
