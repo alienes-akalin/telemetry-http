@@ -218,6 +218,60 @@ Kullanıcının yapacakları (sadece bunlar):
 - Manuel E2E: Backend başlat → web dashboard aç → simülatör çalıştır → gerçek zamanlı güncellemeleri gözle
 - Sağlık endpoint'ini kontrol et: `curl http://localhost:3000/health` (uptime, Redis durumu gösterir)
 
+## GitHub Repo Güncelleme Kuralları
+
+> **AI için zorunlu kural**: `telemetry-http` projesinde **herhangi bir dosyada değişiklik yapıldığında**
+> (kod, yapılandırma, belge fark etmeksizin) aşağıdaki pipeline otomatik çalıştırılmalıdır.
+> Kullanıcı hatırlatmak zorunda kalmamalı.
+
+### Değişiklik Sonrası Otomatik GitHub Pipeline
+
+1. **Eğer `public/` altında değişiklik varsa** — önce Android pipeline uygula:
+   ```powershell
+   npx terser public/js/app.js -o public/js/app.min.js -c -m
+   # sw.js CACHE_NAME ve index.html ?v= değerlerini +1 artır
+   Copy-Item -Path "public\*" -Destination "android-app\app\src\main\assets\" -Recurse -Force
+   ```
+
+2. **Her değişiklikten sonra** — commit ve push:
+   ```powershell
+   git add .
+   git commit -m "<değişikliği özetleyen anlamlı mesaj>"
+   git push
+   ```
+
+3. **Commit mesajı formatı** (conventional commits):
+   - `feat:` yeni özellik
+   - `fix:` hata düzeltme
+   - `chore:` yapılandırma/temizlik
+   - `docs:` sadece belge değişikliği
+
+### Gizli Bilgi Güvenliği — GitHub'a Asla Yüklenmeye**cek**ler
+
+> **AI için zorunlu kural**: Kod yazarken veya dosya düzenlerken aşağıdaki bilgileri
+> **asla** doğrudan kaynak koduna sabit değer (hardcode) olarak yazma.
+> Bunların `.gitignore` tarafından korunduğundan her zaman emin ol.
+
+| Kategori | Örnekler | Doğru Yaklaşım |
+|---|---|---|
+| Şifreler | Kullanıcı şifreleri, admin şifreleri | `process.env.SEED_*` değişkenlerinden oku |
+| JWT Secret | 64 karakterlik hex key | `.env` dosyasında `JWT_SECRET` değişkeni |
+| API Key'leri | `DEVICE_API_KEY`, `GOOGLE_SCRIPT_URL` | `.env` dosyasında sakla |
+| Veritabanı URI | MongoDB bağlantı stringi | `.env` dosyasında `MONGODB_URI` |
+| Sunucu şifreleri | SSH key, SSL sertifikası | Asla repoya ekleme |
+
+**`.gitignore` koruması altındaki dosyalar** (bu dosyalara asla kaynak kod yazma):
+- `.env`
+- `.env.production`
+- `.env.local`
+- `.env.*.local`
+
+**Yeni gizli değer gerektiğinde yapılacaklar:**
+1. Değeri `.env` ve `.env.production` dosyalarına ekle (yerel/sunucu)
+2. Placeholder'ı `.env.example` dosyasına ekle (GitHub'a gider)
+3. Kodda `process.env.DEĞIŞKEN_ADI` ile oku
+4. Middleware'lerdeki import formatını kontrol et: `const { authenticateToken } = require('../middleware/auth')`
+
 ## FOC Geliştirme Ortamı — Teşhis Kuralları
 
 Bu bölüm `FOC_B (2)/` projesindeki STM32 FOC algoritması geliştirme sürecine ait bilinen durumları ve teşhis kurallarını içerir.
