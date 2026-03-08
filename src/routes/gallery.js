@@ -5,7 +5,7 @@
 const express = require('express');
 const https = require('https');
 const router = express.Router();
-const authMiddleware = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const logger = require('../logger');
 
 /**
@@ -36,7 +36,7 @@ function fetchJson(url) {
  * Google Apps Script üzerinden Drive galerisi fotoğraflarını döner.
  * Kimlik doğrulaması gerektirir (JWT).
  */
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
   const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
 
   if (!scriptUrl) {
