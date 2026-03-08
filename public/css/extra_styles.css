@@ -1,0 +1,83 @@
+/* public/css/extra_styles.css */
+/* ============================================================
+   EK STİL DOSYASI
+   ============================================================
+   Bu dosya ana style.css'e ek olarak kullanılan
+   özel bileşen stilleri içerir.
+
+   İçerik:
+   1. Oturum Sekmeleri (Session Tabs) - Geçmiş sayfasındaki tab butonları
+   2. Kredi Kutusu (Credit Box) - Geliştirici bilgisi
+   3. Yenile Butonu - Oturum listesi yenileme
+   ============================================================
+*/
+
+/* ==================== OTURUM SEKMELERİ ====================
+   Geçmiş sayfasında "Oturumlar" ve "Özel Paketler" 
+   arasında geçiş yapan tab butonları
+*/
+.session-tabs {
+    display: flex;
+    background: #0f172a;
+    /* Koyu arkaplan */
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    width: fit-content;
+    /* İçeriğe göre genişlik */
+    gap: 5px;
+    /* Butonlar arası boşluk */
+}
+
+/* Tab Buton Stili (Pasif) */
+.session-tabs .sw-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+/* Tab Buton Stili (Aktif/Seçili) */
+.session-tabs .sw-btn.active {
+    background: var(--bg-card);
+    /* Daha açık arkaplan */
+    color: var(--text-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Tab Buton Hover Efekti */
+.session-tabs .sw-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+/* ==================== KREDİ KUTUSU ====================
+   Sağ üst köşede geliştirici bilgisi gösteren küçük kutu
+*/
+.credit-box {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: -5px;
+    /* Yukarı çek */
+    margin-bottom: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ==================== YENİLE BUTONU ====================
+   Oturum listesi yenileme butonu
+*/
+.btn-refresh {
+    float: none;
+    /* Float sıfırla */
+    height: 38px;
+    /* Tab yüksekliğiyle uyumlu */
+    width: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

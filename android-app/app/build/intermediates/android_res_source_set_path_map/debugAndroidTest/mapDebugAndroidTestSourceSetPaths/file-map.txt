@@ -1,0 +1,5 @@
+com.adana.telemetri.test.app-androidTest-0 C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\build\generated\res\resValues\androidTest\debug
+com.adana.telemetri.test.app-updated_navigation_xml-1 C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\build\generated\updated_navigation_xml\debugAndroidTest
+com.adana.telemetri.test.app-mergeDebugAndroidTestResources-2 C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
+com.adana.telemetri.test.app-mergeDebugAndroidTestResources-3 C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
+com.adana.telemetri.test.app-debugAndroidTest-4 C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources

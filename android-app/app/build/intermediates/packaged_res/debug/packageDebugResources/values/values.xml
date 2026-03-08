@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#0f172a</color>
+    <color name="primary">#3b82f6</color>
+    <color name="primary_dark">#1e40af</color>
+    <color name="white">#FFFFFF</color>
+    <string name="app_name">1.5 Adana Telemetri</string>
+    <style name="Theme.TelemetriApp" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:navigationBarColor">@color/background</item>
+    </style>
+</resources>

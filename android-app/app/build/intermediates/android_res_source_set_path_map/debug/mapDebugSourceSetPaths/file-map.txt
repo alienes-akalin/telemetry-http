@@ -1,0 +1,8 @@
+com.adana.telemetri.app-pngs-0 C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\build\generated\res\pngs\debug
+com.adana.telemetri.app-resValues-1 C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\build\generated\res\resValues\debug
+com.adana.telemetri.app-updated_navigation_xml-2 C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\build\generated\updated_navigation_xml\debug
+com.adana.telemetri.app-packageDebugResources-3 C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.adana.telemetri.app-packageDebugResources-4 C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.adana.telemetri.app-debug-5 C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\build\intermediates\merged_res\debug\mergeDebugResources
+com.adana.telemetri.app-debug-6 C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\debug\res
+com.adana.telemetri.app-main-7 C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\res

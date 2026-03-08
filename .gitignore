@@ -1,0 +1,30 @@
+# ==================== GİZLİ DOSYALAR ====================
+# Bu dosyalar ASLA repoya eklenmez — gerçek şifre/key içerirler.
+# Paylaşmak için .env.example dosyasını kullanın.
+.env
+.env.production
+.env.local
+.env.*.local
+
+# ==================== BAĞIMLILIKLAR ====================
+node_modules/
+
+# ==================== LOG DOSYALARI ====================
+logs/
+*.log
+npm-debug.log*
+
+# ==================== DIŞA AKTARILAN DOSYALAR ====================
+exports/
+
+# ==================== ANDROID BUILD & YEREL AYARLAR ====================
+# APK dosyaları büyük olabilir ve repoya eklenmez — sunucuya doğrudan yüklenir.
+releases/*.apk
+android-app/build/
+android-app/.gradle/
+android-app/local.properties
+
+# ==================== İŞLETİM SİSTEMİ ====================
+.DS_Store
+Thumbs.db
+Desktop.ini

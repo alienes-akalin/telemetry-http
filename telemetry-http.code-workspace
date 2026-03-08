@@ -1,0 +1,30 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../Telemetry_SIM800L"
+		},
+		{
+			"path": "../Esp32_BMS"
+		},
+		{
+			"path": "../Esp32_Surucu"
+		},
+		{
+			"path": "../FOC_B (2)"
+		},
+		{
+			"path": "../../FOC_B (2)"
+		},
+		{
+			"path": "../Esp32_BMS_V2"
+		}
+	],
+	"settings": {
+		"java.compile.nullAnalysis.mode": "disabled",
+		"powershell.cwd": "telemetry-http",
+		"java.configuration.updateBuildConfiguration": "automatic"
+	}
+}

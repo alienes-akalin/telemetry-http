@@ -1,0 +1,15 @@
+R_DEF: Internal format may change without notice
+local
+color background
+color primary
+color primary_dark
+color white
+drawable ic_notification
+id progressBar
+id swipeRefresh
+id webView
+layout activity_main
+mipmap ic_launcher
+string app_name
+style Theme.TelemetriApp
+xml file_paths

@@ -1,0 +1,141 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.adana.telemetri"
+4    android:versionCode="9"
+5    android:versionName="1.9" >
+6
+7    <uses-sdk
+7-->INJECTED
+8        android:minSdkVersion="24"
+8-->INJECTED
+9        android:targetSdkVersion="34" />
+9-->INJECTED
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:4:5-67
+11-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:4:22-64
+12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+12-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:5:5-79
+12-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:5:22-76
+13    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+13-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:6:5-83
+13-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:6:22-80
+14    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+14-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:7:5-77
+14-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:7:22-74
+15    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+15-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:8:5-87
+15-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:8:22-84
+16    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+16-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:9:5-77
+16-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:9:22-74
+17    <uses-permission
+17-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:10:5-11:38
+18        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+18-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:10:22-78
+19        android:maxSdkVersion="28" />
+19-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:11:9-35
+20
+21    <permission
+21-->[androidx.core:core:1.9.0] C:\Users\ALI\.gradle\caches\9.3.1\transforms\6952a47358fc85097fa4e62e6b265bb3\workspace\transformed\core-1.9.0\AndroidManifest.xml:22:5-24:47
+22        android:name="com.adana.telemetri.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+22-->[androidx.core:core:1.9.0] C:\Users\ALI\.gradle\caches\9.3.1\transforms\6952a47358fc85097fa4e62e6b265bb3\workspace\transformed\core-1.9.0\AndroidManifest.xml:23:9-81
+23        android:protectionLevel="signature" />
+23-->[androidx.core:core:1.9.0] C:\Users\ALI\.gradle\caches\9.3.1\transforms\6952a47358fc85097fa4e62e6b265bb3\workspace\transformed\core-1.9.0\AndroidManifest.xml:24:9-44
+24
+25    <uses-permission android:name="com.adana.telemetri.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+25-->[androidx.core:core:1.9.0] C:\Users\ALI\.gradle\caches\9.3.1\transforms\6952a47358fc85097fa4e62e6b265bb3\workspace\transformed\core-1.9.0\AndroidManifest.xml:26:5-97
+25-->[androidx.core:core:1.9.0] C:\Users\ALI\.gradle\caches\9.3.1\transforms\6952a47358fc85097fa4e62e6b265bb3\workspace\transformed\core-1.9.0\AndroidManifest.xml:26:22-94
+26
+27    <application
+27-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:13:5-47:19
+28        android:allowBackup="true"
+28-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:14:9-35
+29        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+29-->[androidx.core:core:1.9.0] C:\Users\ALI\.gradle\caches\9.3.1\transforms\6952a47358fc85097fa4e62e6b265bb3\workspace\transformed\core-1.9.0\AndroidManifest.xml:28:18-86
+30        android:debuggable="true"
+31        android:extractNativeLibs="false"
+31-->INJECTED
+32        android:icon="@mipmap/ic_launcher"
+32-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:15:9-43
+33        android:label="@string/app_name"
+33-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:16:9-41
+34        android:theme="@style/Theme.TelemetriApp"
+34-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:17:9-50
+35        android:usesCleartextTraffic="true" >
+35-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:18:9-44
+36        <activity
+36-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:20:9-29:20
+37            android:name="com.adana.telemetri.MainActivity"
+37-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:21:13-41
+38            android:configChanges="orientation|screenSize"
+38-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:23:13-59
+39            android:exported="true"
+39-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:22:13-36
+40            android:screenOrientation="unspecified" >
+40-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:24:13-52
+41            <intent-filter>
+41-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:25:13-28:29
+42                <action android:name="android.intent.action.MAIN" />
+42-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:26:17-69
+42-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:26:25-66
+43
+44                <category android:name="android.intent.category.LAUNCHER" />
+44-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:27:17-77
+44-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:27:27-74
+45            </intent-filter>
+46        </activity>
+47
+48        <!-- OTA güncelleme: APK dosyasını güvenli şekilde paylaşmak için FileProvider -->
+49        <provider
+49-->INJECTED
+50            android:name="androidx.core.content.FileProvider"
+50-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:33:13-62
+51            android:authorities="com.adana.telemetri.fileprovider"
+51-->INJECTED
+52            android:exported="false"
+52-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:35:13-37
+53            android:grantUriPermissions="true" >
+53-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:36:13-47
+54            <meta-data
+54-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:37:13-39:54
+55                android:name="android.support.FILE_PROVIDER_PATHS"
+55-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:38:17-67
+56                android:resource="@xml/file_paths" />
+56-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:39:17-51
+57        </provider>
+58
+59        <!-- Arka plan telemetri alarm servisi -->
+60        <service
+60-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:43:9-46:56
+61            android:name="com.adana.telemetri.TelemetryAlertService"
+61-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:44:13-50
+62            android:exported="false"
+62-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:45:13-37
+63            android:foregroundServiceType="dataSync" />
+63-->C:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\android-app\app\src\main\AndroidManifest.xml:46:13-53
+64
+65        <provider
+65-->[androidx.emoji2:emoji2:1.2.0] C:\Users\ALI\.gradle\caches\9.3.1\transforms\831a705722417c11da4cfd0e623b2645\workspace\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
+66            android:name="androidx.startup.InitializationProvider"
+66-->[androidx.emoji2:emoji2:1.2.0] C:\Users\ALI\.gradle\caches\9.3.1\transforms\831a705722417c11da4cfd0e623b2645\workspace\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:25:13-67
+67            android:authorities="com.adana.telemetri.androidx-startup"
+67-->[androidx.emoji2:emoji2:1.2.0] C:\Users\ALI\.gradle\caches\9.3.1\transforms\831a705722417c11da4cfd0e623b2645\workspace\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:26:13-68
+68            android:exported="false" >
+68-->[androidx.emoji2:emoji2:1.2.0] C:\Users\ALI\.gradle\caches\9.3.1\transforms\831a705722417c11da4cfd0e623b2645\workspace\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:27:13-37
+69            <meta-data
+69-->[androidx.emoji2:emoji2:1.2.0] C:\Users\ALI\.gradle\caches\9.3.1\transforms\831a705722417c11da4cfd0e623b2645\workspace\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
+70                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+70-->[androidx.emoji2:emoji2:1.2.0] C:\Users\ALI\.gradle\caches\9.3.1\transforms\831a705722417c11da4cfd0e623b2645\workspace\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:30:17-75
+71                android:value="androidx.startup" />
+71-->[androidx.emoji2:emoji2:1.2.0] C:\Users\ALI\.gradle\caches\9.3.1\transforms\831a705722417c11da4cfd0e623b2645\workspace\transformed\jetified-emoji2-1.2.0\AndroidManifest.xml:31:17-49
+72            <meta-data
+72-->[androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\ALI\.gradle\caches\9.3.1\transforms\4562dafb5cdfff015d13d2dcb0016e1e\workspace\transformed\jetified-lifecycle-process-2.4.1\AndroidManifest.xml:31:13-33:52
+73                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+73-->[androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\ALI\.gradle\caches\9.3.1\transforms\4562dafb5cdfff015d13d2dcb0016e1e\workspace\transformed\jetified-lifecycle-process-2.4.1\AndroidManifest.xml:32:17-78
+74                android:value="androidx.startup" />
+74-->[androidx.lifecycle:lifecycle-process:2.4.1] C:\Users\ALI\.gradle\caches\9.3.1\transforms\4562dafb5cdfff015d13d2dcb0016e1e\workspace\transformed\jetified-lifecycle-process-2.4.1\AndroidManifest.xml:33:17-49
+75        </provider>
+76    </application>
+77
+78</manifest>

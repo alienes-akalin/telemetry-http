@@ -1,0 +1,9 @@
+{
+  "versionCode": 9,
+  "versionName": "1.9",
+  "releaseNotes": "Bildirime tıklayınca uygulamayı açma; Araç Açıldı bildirimi kaldırıldı; sayfa yenilemede yanlış alarm bildirimi düzeltildi",
+  "apkFileName": "telemetri-v1.9.apk",
+  "minAndroidSdk": 24,
+  "forceUpdate": false,
+  "apkSizeMb": null
+}

@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "com.adana.telemetri.app-debug-22:/layout_activity_main.xml.flat",
+        "source": "com.adana.telemetri.app-main-24:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.adana.telemetri.app-debug-22:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.adana.telemetri.app-main-24:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.adana.telemetri.app-debug-22:/xml_file_paths.xml.flat",
+        "source": "com.adana.telemetri.app-main-24:/xml/file_paths.xml"
+    },
+    {
+        "merged": "com.adana.telemetri.app-debug-22:/drawable_ic_notification.xml.flat",
+        "source": "com.adana.telemetri.app-main-24:/drawable/ic_notification.xml"
+    }
+]
