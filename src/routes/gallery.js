@@ -3,9 +3,33 @@
 // GOOGLE_SCRIPT_URL'yi .env'den okur ve frontend'e iletir — key client-side'da görünmez.
 
 const express = require('express');
+const https = require('https');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const logger = require('../logger');
+
+/**
+ * Google Apps Script URL'sine HTTPS GET isteği atar, JSON döner.
+ * Node.js 18 öncesi için yerleşik https modülü kullanılır.
+ */
+function fetchJson(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        if (res.statusCode !== 200) {
+          return reject(new Error(`Drive API yanıt kodu: ${res.statusCode}`));
+        }
+        try {
+          resolve(JSON.parse(data));
+        } catch (e) {
+          reject(new Error('JSON parse hatası'));
+        }
+      });
+    }).on('error', reject);
+  });
+}
 
 /**
  * GET /api/v1/gallery
@@ -20,11 +44,7 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 
   try {
-    const response = await fetch(scriptUrl);
-    if (!response.ok) {
-      throw new Error(`Drive API yanıt kodu: ${response.status}`);
-    }
-    const data = await response.json();
+    const data = await fetchJson(scriptUrl);
     res.json(data);
   } catch (err) {
     logger.error('Gallery proxy hatası:', err.message);
@@ -33,3 +53,4 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+
