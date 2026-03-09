@@ -18,9 +18,9 @@ MongoDB [tüm kayıtları kalıcı hale getirir] ← device_id, ts_server ile in
 ## Temel Mimari Kalıpları
 
 ### 1. Telemetri Veri Şeması
-**Konum**: [src/models/telemetry.js](../src/models/telemetry.js)
+**Konum**: `src/models/telemetry.js`
 
-Şema doğrudan STM32 firmware'ine (Core/Inc/telemetry.h) eşlenir:
+Şema doğrudan STM32 firmware'ine (`Core/Inc/telemetry.h`) eşlenir:
 - **BMS**: voltage_v, current_a, temp_c, soc_pct, energy_mwh
 - **Motor**: rpm, speed_kph (tekerlek çevresinden hesaplanır), duty_pct  
 - **GPS**: lat_deg, lon_deg
@@ -29,17 +29,17 @@ MongoDB [tüm kayıtları kalıcı hale getirir] ← device_id, ts_server ile in
 ⚠️ **Kritik**: Veriye kalıcı hale getirmeden önce her zaman device_id doğrulaması yapın. Device_id, STM32 yapılandırmasıyla (DEVICE_ID="arac-01") eşleşmelidir.
 
 ### 2. Socket.io Yayın Kalıbı
-**Konum**: [src/routes/telemetry.js](../src/routes/telemetry.js), [src/server.js](../src/server.js)
+**Konum**: `src/routes/telemetry.js`, `src/server.js`
 
 POST `/api/v1/telemetry/ingest` veri aldığında:
 1. MongoDB'ye kaydet
 2. TÜM bağlı istemcilere anında `io.emit('telemetry', {...})` yayını yap
-3. İstemciler [public/js/app.js](../public/js/app.js) içinde dinler - çapraz cihaz karışıklığını önlemek için device_id filtresini kontrol et
+3. İstemciler `public/js/app.js` içinde dinler - çapraz cihaz karışıklığını önlemek için device_id filtresini kontrol et
 
 Telemetri yayınları için asla `io.to()` oda filtreleme kullanmayın—sistem gerçek zamanlı verileri herkese açık olarak ele alır, ancak JWT kimlik doğrulaması API erişimini kontrol eder.
 
 ### 3. Sıcaklık Alarm Sistemi (Sabit Kodlanmış Eşikler)
-**Konum**: [public/js/app.js](../public/js/app.js) içinde `updateDashboardWidgets()` fonksiyonu
+**Konum**: `public/js/app.js` içinde `updateDashboardWidgets()` fonksiyonu
 
 ```
 temp >= 70°C → KONTAKTÖR (kırmızı)   // Donanım kapatma tetikleyicisi
@@ -51,7 +51,7 @@ temp < 30°C  → NORMAL (yeşil)
 Bunlar veritabanı tabanlı değildir; eşiklerin ayarlanması gerekiyorsa `updateDashboardWidgets()` fonksiyonunu değiştirin. Dashboard kartları CSS class enjeksiyonu kullanır (.temp-critical, .temp-buzzer, .temp-fan).
 
 ### 4. Kimlik Doğrulama ve Yetkilendirme
-**Konum**: [src/routes/auth.js](../src/routes/auth.js), [src/middleware/auth.js](../src/middleware/auth.js)
+**Konum**: `src/routes/auth.js`, `src/middleware/auth.js`
 
 - Giriş sırasında JWT token'ları veriliyor
 - Rotalar `authMiddleware` ile korunuyor (tüm `/api/v1/*` rotalarını kontrol et)
@@ -120,18 +120,18 @@ Android Studio → **Build → Build Bundle(s) / APK(s) → Build APK(s)**
 ## Projeye Özel Konvansiyonlar
 
 ### 1. Hata Yönetim Kalıpları
-- **Backend**: Tüm loglar için Winston logger [src/logger.js](../src/logger.js) kullan, düz console.log kullanmaktan kaçın
+- **Backend**: Tüm loglar için Winston logger `src/logger.js` kullan, düz console.log kullanmaktan kaçın
 - **Frontend**: Socket.io bağlantı kopmaları → "Bağlantı koptu" banner göster (örnek için public/js/app.js kontrol et)
 - **STM32**: Sınırlı loglama—UART2 debug çıktısı kullan (HAL_UART_Transmit ile printf)
 
 ### 2. Dosya İsimlendirme ve Organizasyon
 - Rotalar REST fiilleri kullanır: `GET /telemetry/:id`, `POST /telemetry/ingest`, `PUT /customSessions/:id`
-- Middleware [src/middleware/](../src/middleware/) klasöründe organize edilir
-- Modeller Mongoose şemalarını yansıtır [src/models/](../src/models/)
+- Middleware `src/middleware/` klasöründe organize edilir
+- Modeller Mongoose şemalarını yansıtır `src/models/`
 - STM32 firmware `API_ENDPOINT` tanımını güncellemeden ana API yollarını asla değiştirmeyin
 
 ### 3. Yapılandırma
-- **Ortam Değişkenleri** [.env.example](../.env.example):
+- **Ortam Değişkenleri** `.env.example`:
   - `MONGODB_URI` - kalıcılık için gerekli
   - `JWT_SECRET` - kimlik doğrulama için gerekli
   - `REDIS_URL` - isteğe bağlı, oturum önbelleği için `initRedis()` tarafından kullanılır
@@ -154,19 +154,19 @@ Android Studio → **Build → Build Bundle(s) / APK(s) → Build APK(s)**
 
 ### Yeni Sensör Ekleme
 1. STM32 `TelemetryData_t` struct'ına ekle (Telemetry_SIM800L/Core/Inc/telemetry.h)
-2. MongoDB şemasını [src/models/telemetry.js](../src/models/telemetry.js) içinde güncelle
-3. Frontend grafik render'ını [public/js/app.js](../public/js/app.js) içinde güncelle
+2. MongoDB şemasını `src/models/telemetry.js` içinde güncelle
+3. Frontend grafik render'ını `public/js/app.js` içinde güncelle
 4. Her üç istemciyi de güncelle (web, React Native, Android hibrit)
 
 ### Telemetri Kaybı Hata Ayıklama
 1. STM32 UART debug çıktısını kontrol et (main.c içindeki printf ifadeleri)
 2. Ağ bağlantısını kontrol et (sim800l.c içindeki SIM800L AT komutları)
-3. MongoDB bağlantısını doğrula [src/config/db.js](../src/config/db.js)
+3. MongoDB bağlantısını doğrula `src/config/db.js`
 4. Socket.io istemci bağlantılarını kontrol et (`io.engine.clientsCount`)
 5. `logs/` dizinindeki Winston loglarını gözden geçir
 
 ### Alarm Eşiklerini Değiştirme
-- **Frontend'de sabit kodlanmış**: [public/js/app.js](../public/js/app.js) `updateDashboardWidgets()` fonksiyonunu düzenle
+- **Frontend'de sabit kodlanmış**: `public/js/app.js` → `updateDashboardWidgets()` fonksiyonunu düzenle
 - **Seçenek**: Runtime ayarlaması için veritabanı config tablosuna taşı (PROJECT_PERSPECTIVES.md içinde gelecek geliştirme)
 
 ## OTA Güncelleme Yayınlama Otomasyonu
