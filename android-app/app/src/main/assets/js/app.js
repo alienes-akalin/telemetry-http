@@ -1077,10 +1077,8 @@ socket.on('telemetry', (data) => {
         updateMainMap(data);
     }
 
-    // Strateji ekranını güncelle
-    if (currentView === 'strategy') {
-        updateStrategyView(data);
-    }
+    // Strateji hesaplamalarını her zaman güncelle (arka plan - DOM yoksa sessizce atlanır)
+    updateStrategyView(data);
 });
 
 // ==================== DASHBOARD GÜNCELLEME ====================
@@ -2873,6 +2871,20 @@ function updateStrategyView(data) {
     animateValue('total-consumed', totalConsumedWh.toFixed(1) + ' Wh');
     animateValue('current-speed', speed.toFixed(1) + ' km/h');
 
+    // Kalan Süre: yarış aktifse kronometreye göre geri sayım
+    const remTimeEl = document.getElementById('remaining-time');
+    if (remTimeEl) {
+        if (raceStrategy.isRaceActive && raceStrategy.raceStartTime) {
+            const elapsedSec = (Date.now() - raceStrategy.raceStartTime) / 1000;
+            const remainSec = Math.max(0, raceStrategy.targetTimeMin * 60 - elapsedSec);
+            const rm = Math.floor(remainSec / 60);
+            const rs = Math.floor(remainSec % 60);
+            remTimeEl.innerText = `${rm}:${rs.toString().padStart(2, '0')}`;
+        } else {
+            remTimeEl.innerText = '--:--';
+        }
+    }
+
     // Enerji/Tur hesapla (ortalama)
     if (raceStrategy.currentLap > 0) {
         const energyPerLap = totalConsumedWh / raceStrategy.currentLap;
@@ -2884,6 +2896,20 @@ function updateStrategyView(data) {
 
         // Enerji bütçesi bar güncelleme
         updateEnergyBudget(totalConsumedWh, projectedTotal);
+    }
+
+    // Kalan Menzil tahmini (SoC bazlı)
+    const soc = data.bms.soc_pct || 0;
+    if (raceStrategy.avgConsumptionWhKm > 0.5 && totalConsumedWh > 0 && soc > 0) {
+        const consumedSocPct = 100 - soc;
+        if (consumedSocPct > 3) {
+            const estimatedCapacityWh = (totalConsumedWh / consumedSocPct) * 100;
+            const remainingEnergyWh = estimatedCapacityWh * (soc / 100);
+            const remainingRangeKm = remainingEnergyWh / raceStrategy.avgConsumptionWhKm;
+            animateValue('remaining-range', remainingRangeKm.toFixed(1) + ' km');
+        }
+    } else {
+        animateValue('remaining-range', '--');
     }
 
     // Pace durumunu güncelle
