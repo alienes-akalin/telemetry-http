@@ -1,34 +1,28 @@
 ﻿from PIL import Image
-from collections import Counter
 import os
 
 src = Image.open(r'c:\Users\ALI\Desktop\1.5 ADANA\telemetry-http\public\img\hydro_4.png').convert('RGBA')
 pixels = src.load()
 w, h = src.size
+print(f'Resim: {w}x{h}')
 
-# Tum opak piksellerin g-r ve b-r dagilimi
+# Alt %30'luk bölgeyi analiz et (kayıp çizgiler burada)
+bottom_start = int(h * 0.7)
 samples = []
-for y in range(0, h, 3):
-    for x in range(0, w, 3):
+for y in range(bottom_start, h, 2):
+    for x in range(0, w, 2):
         r, g, b, a = pixels[x, y]
-        if a > 0 and not (r > 230 and g > 230 and b > 230):  # beyaz hariç
+        if a > 0:
             diff_gr = g - r
             diff_br = b - r
-            samples.append((diff_gr, diff_br, r, g, b))
+            # Herhangi bir renkli piksel (beyaz/gri değil)
+            if not (r > 200 and g > 200 and b > 200 and abs(r-g)<15 and abs(g-b)<15):
+                samples.append((r,g,b,diff_gr,diff_br,a))
 
-# Esige gore piksel sayisi
-thresholds = [(20,15), (30,25), (40,35), (45,40), (50,45), (55,50), (60,55)]
-total = len(samples)
-print(f'Toplam opak, beyaz olmayan piksel: {total}')
-for tg, tb in thresholds:
-    cnt = sum(1 for dg,db,r,g,b in samples if dg>tg and db>tb)
-    print(f'  g-r>{tg} ve b-r>{tb}: {cnt} piksel ({100*cnt//max(total,1)}%)')
-
-# En koyu/zayif cyan ornekleri goster
-weak = [(r,g,b,g-r,b-r) for dg,db,r,g,b in samples if 10<dg<45 and 5<db<40]
+print(f'Alt bolgede beyaz olmayan piksel sayisi: {len(samples)}')
+# Ozgun renkleri listele
 from collections import Counter
-top_weak = Counter(weak).most_common(15)
-print('\nZayif cyan pikseller (g-r or b-r esige yakin):')
-for (r,g,b,dgr,dbr), cnt in top_weak:
-    print(f'  {cnt:4d}x  r={r:3d} g={g:3d} b={b:3d}  g-r={dgr} b-r={dbr}')
+top = Counter([(r,g,b,dg,db) for r,g,b,dg,db,a in samples]).most_common(30)
+for (r,g,b,dg,db), cnt in top:
+    print(f'  {cnt:4d}x  r={r:3d} g={g:3d} b={b:3d}  g-r={dg:3d} b-r={db:3d}')
 src.close()
