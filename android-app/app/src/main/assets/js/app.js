@@ -93,8 +93,10 @@ const API_BASE = (window.location.protocol === 'file:')
 
 // Araç konfigürasyonu
 const VEHICLE_CONFIG = {
-    'a1': { name: 'Hidromobil', hasIso: true, hasH2: true, color: '#a855f7' },
-    'a2': { name: 'Shell', hasIso: false, hasH2: false, color: '#3b82f6' }
+    'a1': { name: 'Hidromobil', hasIso: true, hasH2: true, color: '#a855f7',
+        imgs: ['img/header-hydro-side.png','img/header-hydro-front.png','img/header-hydro-top.png','img/header-hydro-iso.png'] },
+    'a2': { name: 'Shell', hasIso: false, hasH2: false, color: '#3b82f6',
+        imgs: ['img/header-side.png','img/header-front.png','img/header-top.png','img/header-iso.png'] }
 };
 
 // Cihaz ID alias'ları (socket filter için)
@@ -236,6 +238,13 @@ function switchVehicle(newDeviceId) {
     if (select && cfg.color) {
         select.style.borderColor = cfg.color;
         select.style.boxShadow = `0 0 10px ${cfg.color}55`;
+    }
+
+    // Header çizim görsellerini araç tipine göre değiştir
+    if (cfg.imgs) {
+        document.querySelectorAll('.header-sketch-img').forEach((img, i) => {
+            if (cfg.imgs[i]) img.src = cfg.imgs[i];
+        });
     }
 
     // Geçmiş sekmesini yenile
@@ -876,6 +885,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (initCfg && initCfg.color) {
             deviceSelect.style.borderColor = initCfg.color;
             deviceSelect.style.boxShadow = `0 0 10px ${initCfg.color}55`;
+        }
+        // İlk yüklemede araç tipine göre header çizimlerini ayarla
+        if (initCfg && initCfg.imgs) {
+            document.querySelectorAll('.header-sketch-img').forEach((img, i) => {
+                if (initCfg.imgs[i]) img.src = initCfg.imgs[i];
+            });
         }
     }
 
