@@ -200,6 +200,17 @@ function switchVehicle(newDeviceId) {
     }
     lastKnownPos = defaultPos;
 
+    // ==================== KRONOMETRE: ARAÇ BAZLI DURUM ====================
+    // Eski aracın durumunu kaydet (zaten düzenli kaydediliyor ama garanti için)
+    saveStopwatchState();
+    // Çalışıyorsa durdur
+    stopStopwatchTimer();
+    // Yeni aracın durumunu yükle (sayfa geçişi değil araç geçişi — isRunning geri yüklenir)
+    const swWasRunning = loadStopwatchState(true);
+    updateAllStopwatchDisplays();
+    updateAllLapLists();
+    if (swWasRunning) startStopwatchTimer();
+
     // ==================== STRATEJİ SIFIRLA ====================
     // Dinamik hesaplar sıfırlanır, kullanıcının girdiği ayarlar (tur sayısı vb.) korunur
     raceStrategy.totalConsumedWh = 0;
@@ -1881,7 +1892,7 @@ let lapCount = 0;                    // Tur sayısı
 let lastLapCentiseconds = 0;         // Son tur zamanı
 let lapData = [];                    // Tur verileri [{lapNum, lapTime, totalTime}]
 
-// Kronometre durumunu localStorage'a kaydeder
+// Kronometre durumunu localStorage'a kaydeder (araç bazlı)
 function saveStopwatchState() {
     const state = {
         centiseconds: stopwatchCentiseconds,
@@ -1890,12 +1901,13 @@ function saveStopwatchState() {
         lapData: lapData,
         isRunning: stopwatchInterval !== null
     };
-    localStorage.setItem('stopwatchState', JSON.stringify(state));
+    localStorage.setItem('stopwatchState_' + currentDeviceId, JSON.stringify(state));
 }
 
-// Kronometre durumunu localStorage'dan yükler
-function loadStopwatchState() {
-    const saved = localStorage.getItem('stopwatchState');
+// Kronometre durumunu localStorage'dan yükler (araç bazlı)
+// Sayfa ilk açılışında isRunning yoksayılır — kullanıcı manuel başlatmalı
+function loadStopwatchState(resumeIfRunning = false) {
+    const saved = localStorage.getItem('stopwatchState_' + currentDeviceId);
     if (saved) {
         try {
             const state = JSON.parse(saved);
@@ -1903,7 +1915,7 @@ function loadStopwatchState() {
             lapCount = state.lapCount || 0;
             lastLapCentiseconds = state.lastLapCentiseconds || 0;
             lapData = state.lapData || [];
-            return state.isRunning || false;
+            return resumeIfRunning ? (state.isRunning || false) : false;
         } catch (e) {
             console.error('Stopwatch state parse error:', e);
         }
@@ -2076,7 +2088,7 @@ function resetStopwatch() {
     }
 
     // localStorage'dan da sil
-    localStorage.removeItem('stopwatchState');
+    localStorage.removeItem('stopwatchState_' + currentDeviceId);
 }
 
 // Kronometre bileşenini başlatır ve olay dinleyicilerini ekler
