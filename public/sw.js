@@ -1,16 +1,16 @@
-// public/sw.js
+﻿// public/sw.js
 // ============================================================
-// SERVİCE WORKER - PWA (Progressive Web App) Desteği
+// SERVÄ°CE WORKER - PWA (Progressive Web App) DesteÄŸi
 // ============================================================
-// Geliştirilmiş cache stratejileri:
-// - Stale-While-Revalidate (CSS/JS için)
+// GeliÅŸtirilmiÅŸ cache stratejileri:
+// - Stale-While-Revalidate (CSS/JS iÃ§in)
 // - Cache First (statik asset'ler)
 // - Network Only (API)
 // - Offline Fallback
 // ============================================================
 
-// Önbellek versiyonu - Her güncellemede artırılmalı
-const CACHE_NAME = 'telemetri-v115';
+// Ã–nbellek versiyonu - Her gÃ¼ncellemede artÄ±rÄ±lmalÄ±
+const CACHE_NAME = 'telemetri-v116';
 
 // Statik dosyalar - Cache First (sadece ikonlar ve manifest)
 const STATIC_ASSETS = [
@@ -21,7 +21,7 @@ const STATIC_ASSETS = [
     '/img/favicon.png'
 ];
 
-// Network First için (her zaman ağdan al, offline'da cache'den sun)
+// Network First iÃ§in (her zaman aÄŸdan al, offline'da cache'den sun)
 const NETWORK_FIRST_ASSETS = [
     '/index.html',
     '/css/style.css',
@@ -35,7 +35,7 @@ const OFFLINE_HTML = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çevrimdışı - 1.5 Adana Telemetri</title>
+    <title>Ã‡evrimdÄ±ÅŸÄ± - 1.5 Adana Telemetri</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -76,9 +76,9 @@ const OFFLINE_HTML = `
 </head>
 <body>
     <div class="offline-container">
-        <div class="offline-icon">📡</div>
-        <h1>Bağlantı Yok</h1>
-        <p>İnternet bağlantınızı kontrol edin ve tekrar deneyin.</p>
+        <div class="offline-icon">ğŸ“¡</div>
+        <h1>BaÄŸlantÄ± Yok</h1>
+        <p>Ä°nternet baÄŸlantÄ±nÄ±zÄ± kontrol edin ve tekrar deneyin.</p>
         <button class="retry-btn" onclick="location.reload()">Yeniden Dene</button>
     </div>
 </body>
@@ -111,7 +111,7 @@ self.addEventListener('activate', event => {
                     })
             );
         }).then(() => {
-            // Tüm istemcileri hemen kontrol al ve yenile
+            // TÃ¼m istemcileri hemen kontrol al ve yenile
             return self.clients.claim().then(() => {
                 return self.clients.matchAll({ type: 'window' }).then(clients => {
                     clients.forEach(client => client.navigate(client.url));
@@ -131,7 +131,7 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Network First: HTML, JS ve CSS dosyaları — önce ağdan al, hata olursa cache'den sun
+    // Network First: HTML, JS ve CSS dosyalarÄ± â€” Ã¶nce aÄŸdan al, hata olursa cache'den sun
     const isNetworkFirst = url.pathname === '/' ||
         NETWORK_FIRST_ASSETS.some(asset => url.pathname === asset || url.pathname.endsWith(asset.split('/').pop()));
 
@@ -154,7 +154,7 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Diğer statik dosyalar - Cache First with Network Fallback
+    // DiÄŸer statik dosyalar - Cache First with Network Fallback
     event.respondWith(
         caches.match(event.request)
             .then(response => {
@@ -176,7 +176,7 @@ self.addEventListener('fetch', event => {
                         return response;
                     })
                     .catch(() => {
-                        // HTML istekleri için offline fallback
+                        // HTML istekleri iÃ§in offline fallback
                         if (event.request.headers.get('accept')?.includes('text/html')) {
                             return new Response(OFFLINE_HTML, {
                                 headers: { 'Content-Type': 'text/html' }
@@ -187,9 +187,10 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// ==================== BACKGROUND SYNC (Gelecek için) ====================
+// ==================== BACKGROUND SYNC (Gelecek iÃ§in) ====================
 self.addEventListener('sync', event => {
     if (event.tag === 'sync-telemetry') {
         console.log('[SW] Background sync triggered');
     }
 });
+

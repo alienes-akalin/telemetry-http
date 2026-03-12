@@ -1,9 +1,9 @@
-/* public/css/style.css */
+﻿/* public/css/style.css */
 :root {
     /* Glassmorphism & Neon Palette */
     --bg-dark: #0f172a;
     --bg-card: rgba(30, 41, 59, 0.6);
-    /* Yarı saydam */
+    /* YarÄ± saydam */
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-shine: rgba(255, 255, 255, 0.05);
 
@@ -48,7 +48,7 @@ body {
     max-width: 100vw;
 }
 
-/* Düzen (Layout) */
+/* DÃ¼zen (Layout) */
 .app-container {
     display: flex;
     min-height: 100vh;
@@ -65,12 +65,12 @@ body {
     max-width: 100%;
 }
 
-/* Kenar Çubuğu (Sidebar) */
-/* Kenar Çubuğu (Sidebar) */
+/* Kenar Ã‡ubuÄŸu (Sidebar) */
+/* Kenar Ã‡ubuÄŸu (Sidebar) */
 .sidebar {
     width: 250px;
     background: rgba(15, 23, 42, 0.85);
-    /* İyice koyu cam */
+    /* Ä°yice koyu cam */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-right: 1px solid var(--glass-border);
@@ -85,7 +85,7 @@ body {
     height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
-    /* Scrollbar stillendirme (ince, şeffaf) */
+    /* Scrollbar stillendirme (ince, ÅŸeffaf) */
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
@@ -172,12 +172,12 @@ body {
     background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
-    /* Aynı parlama */
+    /* AynÄ± parlama */
     letter-spacing: 2px;
     text-transform: uppercase;
     margin-top: 5px;
     opacity: 1;
-    /* Opaklık tam */
+    /* OpaklÄ±k tam */
 }
 
 #menu-toggle {
@@ -190,7 +190,7 @@ body {
 }
 
 /* ==================== GLOBAL MOBILE DRAWER SYSTEM ==================== */
-/* Sol üst hamburger butonu - Tüm sekmelerde sabit */
+/* Sol Ã¼st hamburger butonu - TÃ¼m sekmelerde sabit */
 .global-menu-btn {
     display: none;
     /* Desktop'ta gizli */
@@ -198,7 +198,7 @@ body {
     top: 12px;
     left: 12px;
     z-index: 20003;
-    /* Sidebar (20002), Drawer (20001), Overlay (19999) üstünde */
+    /* Sidebar (20002), Drawer (20001), Overlay (19999) Ã¼stÃ¼nde */
     background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -219,22 +219,22 @@ body {
     transform: scale(0.9);
 }
 
-/* Splash screen aktifken hamburger menüyü gizle */
+/* Splash screen aktifken hamburger menÃ¼yÃ¼ gizle */
 #splash-screen:not(.hidden)~.app-container .global-menu-btn {
     display: none !important;
 }
 
-/* Drawer açıkken X ikonuna dönüştür - bu JS'te yapılır */
+/* Drawer aÃ§Ä±kken X ikonuna dÃ¶nÃ¼ÅŸtÃ¼r - bu JS'te yapÄ±lÄ±r */
 
-/* Overlay (arkaplan karartma) - Sadece drawer'ın SAĞINDA */
+/* Overlay (arkaplan karartma) - Sadece drawer'Ä±n SAÄINDA */
 .drawer-overlay {
     display: none;
     position: fixed;
     top: 0;
     left: 260px;
-    /* Drawer genişliği */
+    /* Drawer geniÅŸliÄŸi */
     width: calc(100% - 260px);
-    /* Drawer hariç kalan alan */
+    /* Drawer hariÃ§ kalan alan */
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     z-index: 9998;
@@ -286,11 +286,11 @@ body.drawer-open .drawer-overlay {
     align-items: center;
     gap: 10px;
     margin-top: auto;
-    /* Her zaman sidebar'ın en altına yapış */
+    /* Her zaman sidebar'Ä±n en altÄ±na yapÄ±ÅŸ */
     padding-top: 15px;
     padding-bottom: 10px;
     flex-shrink: 0;
-    /* Alt alanın küçülmesini engelle */
+    /* Alt alanÄ±n kÃ¼Ã§Ã¼lmesini engelle */
 }
 
 .sidebar-logo-c {
@@ -345,14 +345,14 @@ body.drawer-open .drawer-overlay {
 .view {
     display: none;
     height: 100%;
-    /* animation: fadeIn 0.3s ease; - MOBİL GÖRÜNÜRLÜK İÇİN KALDIRILDI */
+    /* animation: fadeIn 0.3s ease; - MOBÄ°L GÃ–RÃœNÃœRLÃœK Ä°Ã‡Ä°N KALDIRILDI */
 }
 
 .view.active {
     display: block;
 }
 
-/* fadeIn animasyonu kaldırıldı - mobil uyumluluk sorunu
+/* fadeIn animasyonu kaldÄ±rÄ±ldÄ± - mobil uyumluluk sorunu
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -383,16 +383,22 @@ body.drawer-open .drawer-overlay {
 }
 
 .topbar-row-1 {
-    flex: 1;
     justify-content: flex-end;
 }
 
 .topbar-row-2 {
-    width: 100%;
     justify-content: flex-end;
 }
 
-/* Test Kayıt Butonu */
+.topbar-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+/* Test KayÄ±t Butonu */
 .test-record-btn {
     background: linear-gradient(135deg, #22c55e, #16a34a);
     color: white;
@@ -541,7 +547,7 @@ body.drawer-open .drawer-overlay {
 
 .stat-card:hover {
     transform: translateY(-5px);
-    /* box-shadow iptal - renkli iç parıltıyı (inset glow) korumak için */
+    /* box-shadow iptal - renkli iÃ§ parÄ±ltÄ±yÄ± (inset glow) korumak iÃ§in */
 }
 
 .stat-card h3 {
@@ -561,7 +567,7 @@ body.drawer-open .drawer-overlay {
     min-width: 0;
 }
 
-/* Sıcaklık değeri ve °C yan yana */
+/* SÄ±caklÄ±k deÄŸeri ve Â°C yan yana */
 .temp-num-unit {
     display: inline-flex;
     align-items: baseline;
@@ -591,7 +597,7 @@ body.drawer-open .drawer-overlay {
     opacity: 0.2;
 }
 
-/* Renk Kodları */
+/* Renk KodlarÄ± */
 /* Neon Glows */
 .stat-card.critical {
     border-left: 4px solid var(--accent);
@@ -633,39 +639,39 @@ body.drawer-open .drawer-overlay {
     transition: width 0.5s ease, background 0.3s ease;
 }
 
-/* Akım barı (Yeşil) */
+/* AkÄ±m barÄ± (YeÅŸil) */
 .progress-bar .fill.fill-current {
     background: linear-gradient(90deg, #10b981, #34d399);
 }
 
-/* Voltaj barı (Sarı-Turuncu) */
+/* Voltaj barÄ± (SarÄ±-Turuncu) */
 .progress-bar .fill.fill-voltage {
     background: linear-gradient(90deg, #f59e0b, #fbbf24);
 }
 
-/* Sıcaklık barı (Yeşil -> Sarı -> Turuncu -> Kırmızı) */
-/* Sıcaklık barı (Yeşil -> Sarı -> Turuncu -> Kırmızı) */
+/* SÄ±caklÄ±k barÄ± (YeÅŸil -> SarÄ± -> Turuncu -> KÄ±rmÄ±zÄ±) */
+/* SÄ±caklÄ±k barÄ± (YeÅŸil -> SarÄ± -> Turuncu -> KÄ±rmÄ±zÄ±) */
 .progress-bar .fill.fill-temp {
     background: linear-gradient(90deg,
             #22c55e 0%,
-            /* 0°C - Yeşil */
+            /* 0Â°C - YeÅŸil */
             #eab308 30%,
-            /* 30°C - Sarı */
+            /* 30Â°C - SarÄ± */
             #f97316 50%,
-            /* 50°C - Turuncu */
+            /* 50Â°C - Turuncu */
             #ef4444 70%,
-            /* 70°C - Kırmızı */
+            /* 70Â°C - KÄ±rmÄ±zÄ± */
             #991b1b 100%
-            /* 100°C - Koyu Kırmızı */
+            /* 100Â°C - Koyu KÄ±rmÄ±zÄ± */
         );
     background-size: 100% 100%;
     /* JS ile ezilecek */
     background-repeat: no-repeat;
 }
 
-/* ==================== SICAKLIK UYARI SİSTEMİ ==================== */
+/* ==================== SICAKLIK UYARI SÄ°STEMÄ° ==================== */
 
-/* Uyarı Badge */
+/* UyarÄ± Badge */
 .temp-warning-badge {
     /* position: absolute; removed */
     display: inline-flex;
@@ -700,25 +706,25 @@ body.drawer-open .drawer-overlay {
     flex-shrink: 0;
 }
 
-/* Uyarı aktifken arkadaki soluk ikonu gizle (Çakışmayı önler) */
-/* Uyarı aktifken arkadaki soluk ikonu gizle (Çakışmayı önler) - Artık gizlemiyoruz, kullanıcı istedi */
+/* UyarÄ± aktifken arkadaki soluk ikonu gizle (Ã‡akÄ±ÅŸmayÄ± Ã¶nler) */
+/* UyarÄ± aktifken arkadaki soluk ikonu gizle (Ã‡akÄ±ÅŸmayÄ± Ã¶nler) - ArtÄ±k gizlemiyoruz, kullanÄ±cÄ± istedi */
 #temp-card.temp-normal .stat-icon,
 #temp-card.temp-fan .stat-icon,
 #temp-card.temp-buzzer .stat-icon,
 #temp-card.temp-critical .stat-icon {
     opacity: 0.2;
-    /* Diğerleri gibi soluk gri */
+    /* DiÄŸerleri gibi soluk gri */
     transition: opacity 0.3s;
 }
 
-/* NORMAL MOD (<30°C) - YEŞİL PENCERE */
+/* NORMAL MOD (<30Â°C) - YEÅÄ°L PENCERE */
 #temp-card.temp-normal {
     border-left: 4px solid #22c55e !important;
     background: linear-gradient(145deg, rgba(34, 197, 94, 0.15) 0%, rgba(30, 41, 59, 0.6) 100%) !important;
     box-shadow: 0 0 15px rgba(34, 197, 94, 0.1) inset;
 }
 
-/* FAN Modu (30-50°C) - SARI */
+/* FAN Modu (30-50Â°C) - SARI */
 #temp-card.temp-fan {
     border-left: 4px solid #eab308 !important;
     background: linear-gradient(145deg, rgba(234, 179, 8, 0.15) 0%, rgba(30, 41, 59, 0.6) 100%) !important;
@@ -743,7 +749,7 @@ body.drawer-open .drawer-overlay {
     }
 }
 
-/* BUZZER Modu (50-70°C) - Turuncu */
+/* BUZZER Modu (50-70Â°C) - Turuncu */
 #temp-card.temp-buzzer {
     border-left: 4px solid #f59e0b !important;
     background: linear-gradient(145deg, rgba(245, 158, 11, 0.2) 0%, rgba(30, 41, 59, 0.6) 100%) !important;
@@ -768,7 +774,7 @@ body.drawer-open .drawer-overlay {
     }
 }
 
-/* KONTAKTÖR Modu (>70°C) - KRİTİK Kırmızı */
+/* KONTAKTÃ–R Modu (>70Â°C) - KRÄ°TÄ°K KÄ±rmÄ±zÄ± */
 #temp-card.temp-critical {
     border-left: 6px solid #ef4444 !important;
     background: linear-gradient(145deg, rgba(239, 68, 68, 0.35) 0%, rgba(30, 41, 59, 0.6) 100%) !important;
@@ -791,7 +797,7 @@ body.drawer-open .drawer-overlay {
     grid-template-columns: 2fr 1fr;
     gap: 1.5rem;
     min-height: 400px;
-    /* Sabit yerine minimum yükseklik */
+    /* Sabit yerine minimum yÃ¼kseklik */
 }
 
 .card {
@@ -867,7 +873,7 @@ body.drawer-open .drawer-overlay {
     box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
 }
 
-/* ==================== SPLASH SCREEN (AÇILIŞ EKRANI) ==================== */
+/* ==================== SPLASH SCREEN (AÃ‡ILIÅ EKRANI) ==================== */
 #splash-screen {
     position: fixed;
     top: 0;
@@ -1120,7 +1126,7 @@ body.drawer-open .drawer-overlay {
     white-space: nowrap;
 }
 
-/* Detay görünümü header düzeni */
+/* Detay gÃ¶rÃ¼nÃ¼mÃ¼ header dÃ¼zeni */
 .detail-card-header {
     display: flex !important;
     flex-direction: column !important;
@@ -1214,7 +1220,7 @@ body.drawer-open .drawer-overlay {
 .sw-digit {
     display: inline-block;
     width: 28px;
-    /* Sabit genişlik - her rakam için */
+    /* Sabit geniÅŸlik - her rakam iÃ§in */
     text-align: center;
 }
 
@@ -1225,7 +1231,7 @@ body.drawer-open .drawer-overlay {
 
 .sw-ms-digit {
     width: 18px;
-    /* Milisaniye rakamları daha küçük */
+    /* Milisaniye rakamlarÄ± daha kÃ¼Ã§Ã¼k */
 }
 
 .stopwatch-display .ms {
@@ -1250,17 +1256,17 @@ body.drawer-open .drawer-overlay {
     align-items: center;
     justify-content: center;
     transition: all 0.1s ease;
-    /* Daha hızlı tepki */
+    /* Daha hÄ±zlÄ± tepki */
     min-width: 44px;
     user-select: none;
-    /* Tıklama sırasında seçim engellenir */
+    /* TÄ±klama sÄ±rasÄ±nda seÃ§im engellenir */
     -webkit-tap-highlight-color: transparent;
-    /* Mobilde highlight kaldır */
+    /* Mobilde highlight kaldÄ±r */
 }
 
 .sw-btn:active {
     transform: scale(0.95);
-    /* Anında görsel geri bildirim */
+    /* AnÄ±nda gÃ¶rsel geri bildirim */
 }
 
 .sw-btn.start {
@@ -1363,7 +1369,7 @@ body.drawer-open .drawer-overlay {
         border-right: none;
         border-bottom: 1px solid var(--border);
         z-index: 20002;
-        /* Overlay (19999) üzerinde - stacking context fix */
+        /* Overlay (19999) Ã¼zerinde - stacking context fix */
     }
 
     .logo-area {
@@ -1376,12 +1382,12 @@ body.drawer-open .drawer-overlay {
         display: none !important;
     }
 
-    /* Global hamburger butonu mobilde görünsün */
+    /* Global hamburger butonu mobilde gÃ¶rÃ¼nsÃ¼n */
     .global-menu-btn {
         display: flex;
     }
 
-    /* Race-specific menu button artık yok */
+    /* Race-specific menu button artÄ±k yok */
     .race-menu-btn {
         display: none !important;
     }
@@ -1399,7 +1405,7 @@ body.drawer-open .drawer-overlay {
         -webkit-backdrop-filter: blur(15px);
         border-right: 1px solid rgba(255, 255, 255, 0.15);
         z-index: 20001 !important;
-        /* Drawer-overlay (19999) ve hamburger (20001) üzerinde */
+        /* Drawer-overlay (19999) ve hamburger (20001) Ã¼zerinde */
         padding: 70px 16px 24px 16px;
         margin: 0;
         gap: 4px;
@@ -1407,30 +1413,30 @@ body.drawer-open .drawer-overlay {
         box-shadow: 4px 0 25px rgba(0, 0, 0, 0.5);
         flex-direction: column;
         pointer-events: auto !important;
-        /* Overlay altında bile tıklanabilir */
+        /* Overlay altÄ±nda bile tÄ±klanabilir */
         touch-action: manipulation;
         /* Mobil dokunma optimizasyonu */
         will-change: transform;
         /* Hardware acceleration */
 
-        /* Başlangıç: ekran dışında */
+        /* BaÅŸlangÄ±Ã§: ekran dÄ±ÅŸÄ±nda */
         transform: translateX(-100%) translateZ(0);
         transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
     }
 
-    /* Drawer açık */
+    /* Drawer aÃ§Ä±k */
     body.drawer-open .nav-menu {
         transform: translateX(0) translateZ(0);
     }
 
-    /* Nav item'lar drawer içinde - PARLAK RENKLER */
+    /* Nav item'lar drawer iÃ§inde - PARLAK RENKLER */
     .nav-menu .nav-item {
         padding: 12px 16px;
         font-size: 1rem;
         border-radius: 10px;
         color: #e2e8f0;
-        /* Parlak beyazımsı */
+        /* Parlak beyazÄ±msÄ± */
         transition: all 0.2s ease;
         cursor: pointer;
         -webkit-tap-highlight-color: rgba(59, 130, 246, 0.3);
@@ -1466,7 +1472,7 @@ body.drawer-open .drawer-overlay {
         color: #3b82f6;
     }
 
-    /* .nav-menu.active artık kullanılmıyor, drawer-open ile yönetiliyor */
+    /* .nav-menu.active artÄ±k kullanÄ±lmÄ±yor, drawer-open ile yÃ¶netiliyor */
     .nav-menu.active {
         transform: translateX(-100%);
     }
@@ -1479,12 +1485,12 @@ body.drawer-open .drawer-overlay {
         display: none;
     }
 
-    /* Mobilde overlay drawer'ın ALTINDA kalmayıp tüm ekranı kaplamalı */
+    /* Mobilde overlay drawer'Ä±n ALTINDA kalmayÄ±p tÃ¼m ekranÄ± kaplamalÄ± */
     .drawer-overlay {
         left: 0 !important;
         width: 100% !important;
         z-index: 19999 !important;
-        /* Drawer (20000) altında kalmalı - drawer'ı örtmemeli */
+        /* Drawer (20000) altÄ±nda kalmalÄ± - drawer'Ä± Ã¶rtmemeli */
         pointer-events: auto !important;
     }
 
@@ -1516,7 +1522,7 @@ body.drawer-open .drawer-overlay {
         font-size: 1.1rem;
     }
 
-    /* Sıcaklık badge mobil uyum */
+    /* SÄ±caklÄ±k badge mobil uyum */
     .temp-warning-badge {
         font-size: 0.6rem;
         padding: 2px 4px;
@@ -1545,7 +1551,7 @@ body.drawer-open .drawer-overlay {
         max-height: 200px;
     }
 
-    /* Harita - Mobil tam yükseklik */
+    /* Harita - Mobil tam yÃ¼kseklik */
     #view-map .card {
         height: calc(100vh - 120px);
     }
@@ -1559,7 +1565,7 @@ body.drawer-open .drawer-overlay {
         height: 100% !important;
     }
 
-    /* Geçmiş - Mobil yatay scroll */
+    /* GeÃ§miÅŸ - Mobil yatay scroll */
     .card-body.scrollable {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -1593,22 +1599,22 @@ body.drawer-open .drawer-overlay {
 /* Landscape/Race Mode auto-switch removed per user request */
 
 /* =========================================
-   GALERİ GRID (Eğlence)
+   GALERÄ° GRID (EÄŸlence)
    ========================================= */
 /* =========================================
-   GALERİ GRID (Eğlence)
+   GALERÄ° GRID (EÄŸlence)
    ========================================= */
 .gallery-grid {
     display: grid;
-    /* Masaüstünde 5 sütun: minmax(200px, 1fr) yerine ekran genişliğine göre */
+    /* MasaÃ¼stÃ¼nde 5 sÃ¼tun: minmax(200px, 1fr) yerine ekran geniÅŸliÄŸine gÃ¶re */
     grid-template-columns: repeat(5, 1fr);
     gap: 20px;
     margin-top: 15px;
     padding: 0 20px;
-    /* Kenarlardan boşluk */
+    /* Kenarlardan boÅŸluk */
 }
 
-/* Mobilde 2 sütun */
+/* Mobilde 2 sÃ¼tun */
 @media (max-width: 768px) {
     .gallery-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -1639,7 +1645,7 @@ body.drawer-open .drawer-overlay {
    ========================================= */
 .lightbox {
     display: none;
-    /* Varsayılan gizli */
+    /* VarsayÄ±lan gizli */
     position: fixed;
     z-index: 9999;
     padding-top: 0;
@@ -1690,7 +1696,7 @@ body.drawer-open .drawer-overlay {
     cursor: pointer;
 }
 
-/* Navigasyon Butonları */
+/* Navigasyon ButonlarÄ± */
 .lightbox-prev,
 .lightbox-next {
     cursor: pointer;
@@ -1837,7 +1843,7 @@ body.drawer-open .drawer-overlay {
     color: #94a3b8;
 }
 
-/* ── Race Duty Cycle Bar ── */
+/* â”€â”€ Race Duty Cycle Bar â”€â”€ */
 .race-duty-bar {
     display: flex;
     align-items: center;
@@ -1865,14 +1871,14 @@ body.drawer-open .drawer-overlay {
     border-radius: 99px;
     height: 10px;
     overflow: hidden;
-    position: relative;   /* fill'in absolute konumlanması için */
+    position: relative;   /* fill'in absolute konumlanmasÄ± iÃ§in */
 }
 .race-duty-fill {
     position: absolute;
     top: 0;
     left: 0;
-    height: 100%;   /* yatay modda track yüksekliğini doldurur */
-    width: 0%;      /* JS tarafından güncellenir */
+    height: 100%;   /* yatay modda track yÃ¼ksekliÄŸini doldurur */
+    width: 0%;      /* JS tarafÄ±ndan gÃ¼ncellenir */
     background: linear-gradient(90deg, #3b82f6, #8b5cf6);
     border-radius: 99px;
     transition: width 0.5s ease, height 0.5s ease;
@@ -1906,7 +1912,7 @@ body.drawer-open .drawer-overlay {
 
     .race-metric {
         padding: 10px 8px;
-        min-width: 0; /* grid hücresi taşmasını önler */
+        min-width: 0; /* grid hÃ¼cresi taÅŸmasÄ±nÄ± Ã¶nler */
         overflow: hidden;
     }
 
@@ -1928,7 +1934,7 @@ body.drawer-open .drawer-overlay {
         font-size: 0.7rem;
     }
 
-    /* Duty bar kompakt (portrait / küçük ekran) */
+    /* Duty bar kompakt (portrait / kÃ¼Ã§Ã¼k ekran) */
     .race-duty-bar {
         padding: 10px 14px;
         gap: 10px;
@@ -2164,7 +2170,7 @@ body.drawer-open .drawer-overlay {
     background: rgba(59, 130, 246, 0.3);
 }
 
-/* Yarış modunda hamburger butonu her zaman görünsün */
+/* YarÄ±ÅŸ modunda hamburger butonu her zaman gÃ¶rÃ¼nsÃ¼n */
 body.race-mode-active .race-menu-btn {
     display: block !important;
 }
@@ -2177,10 +2183,10 @@ body.race-mode-active .race-menu-btn {
         display: none !important;
     }
 
-    /* Yarış modunda sidebar'ı görsel olarak gizle (display:none KULLANMA!)
-       display:none render tree'den kaldırır → fixed child nav-menu de kaybolur + animasyon bozulur.
-       overflow:hidden + height:0 → sidebar yer kaplamaz, logo/connection gizlenir,
-       ama position:fixed olan .nav-menu bağımsız render olur ve animasyonu korunur. */
+    /* YarÄ±ÅŸ modunda sidebar'Ä± gÃ¶rsel olarak gizle (display:none KULLANMA!)
+       display:none render tree'den kaldÄ±rÄ±r â†’ fixed child nav-menu de kaybolur + animasyon bozulur.
+       overflow:hidden + height:0 â†’ sidebar yer kaplamaz, logo/connection gizlenir,
+       ama position:fixed olan .nav-menu baÄŸÄ±msÄ±z render olur ve animasyonu korunur. */
     body.race-mode-active .sidebar {
         overflow: hidden !important;
         height: 0 !important;
@@ -2280,7 +2286,7 @@ body.race-mode-active .race-menu-btn {
         font-size: 0.7rem;
     }
 
-    /* Duty bar — portrait fullscreen: biraz aşağıdan başlasın */
+    /* Duty bar â€” portrait fullscreen: biraz aÅŸaÄŸÄ±dan baÅŸlasÄ±n */
     body.race-mode-active .race-duty-bar {
         max-width: 100%;
         padding: 8px 14px;
@@ -2310,7 +2316,7 @@ body.race-mode-active .race-menu-btn {
         display: none !important;
     }
 
-    /* Sidebar görsel olarak gizle (display:none KULLANMA - animasyonu bozar) */
+    /* Sidebar gÃ¶rsel olarak gizle (display:none KULLANMA - animasyonu bozar) */
     body.race-mode-active .sidebar {
         overflow: hidden !important;
         height: 0 !important;
@@ -2417,7 +2423,7 @@ body.race-mode-active .race-menu-btn {
         font-size: 0.65rem;
     }
 
-    /* Duty bar — landscape: sol dikey panel */
+    /* Duty bar â€” landscape: sol dikey panel */
     body.race-mode-active .race-duty-bar {
         flex-direction: column;
         width: 88px;
@@ -2451,38 +2457,38 @@ body.race-mode-active .race-menu-btn {
     }
 }
 
-/* ==================== MOBİLE ÖZEL DÜZENLEMELER ==================== */
+/* ==================== MOBÄ°LE Ã–ZEL DÃœZENLEMELER ==================== */
 
-/* Varsayılan olarak mobil logoyu gizle */
+/* VarsayÄ±lan olarak mobil logoyu gizle */
 .mobile-logo-container {
     display: none;
 }
 
 @media (max-width: 768px) {
 
-    /* SIDEBAR - Tüm alt boşlukları sıfırla */
+    /* SIDEBAR - TÃ¼m alt boÅŸluklarÄ± sÄ±fÄ±rla */
     .sidebar {
         padding: 0.5rem 1rem 0 1rem !important;
-        /* Üst, sağ, alt, sol */
+        /* Ãœst, saÄŸ, alt, sol */
     }
 
-    /* MAIN CONTENT - Üst boşluğu azalt */
+    /* MAIN CONTENT - Ãœst boÅŸluÄŸu azalt */
     .main-content {
         padding-top: 0.5rem !important;
     }
 
-    /* TOP BAR - Alt boşluğu azalt */
+    /* TOP BAR - Alt boÅŸluÄŸu azalt */
     .top-bar {
         margin-bottom: 0.5rem !important;
     }
 
-    /* LOGO DÜZENİ: Yan yana */
+    /* LOGO DÃœZENÄ°: Yan yana */
     .desktop-only-logo {
         display: none !important;
     }
 
     .logo-area {
-        /* Sidebar padding'i mobilde azaltılabilir ama logo alanı için: */
+        /* Sidebar padding'i mobilde azaltÄ±labilir ama logo alanÄ± iÃ§in: */
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -2512,7 +2518,7 @@ body.race-mode-active .race-menu-btn {
 
     .mobile-text .logo-main {
         font-size: 1.2rem;
-        /* Mobilde bi tık küçültülebilir taşmaması için */
+        /* Mobilde bi tÄ±k kÃ¼Ã§Ã¼ltÃ¼lebilir taÅŸmamasÄ± iÃ§in */
     }
 
     .mobile-text .logo-sub {
@@ -2533,12 +2539,12 @@ body.race-mode-active .race-menu-btn {
         object-fit: contain;
     }
 
-    /* Sol menüdeki alt logo'yu mobilde gizle */
+    /* Sol menÃ¼deki alt logo'yu mobilde gizle */
     .connection-status-container .sidebar-logo-c {
         display: none !important;
     }
 
-    /* HISTORY SECTION DÜZENİ */
+    /* HISTORY SECTION DÃœZENÄ° */
     .history-header {
         flex-direction: column;
         align-items: stretch !important;
@@ -2643,7 +2649,7 @@ body.race-mode-active .race-menu-btn {
 
 /* ==================== ANIMASYONLAR (NANO BANANA) ==================== */
 
-/* 1. Kart Giriş Animasyonu (Staggered Fade-In) */
+/* 1. Kart GiriÅŸ Animasyonu (Staggered Fade-In) */
 @keyframes cardEntrance {
     from {
         opacity: 0;
@@ -2662,7 +2668,7 @@ body.race-mode-active .race-menu-btn {
     animation: cardEntrance 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
 }
 
-/* Sıralı giriş için gecikmeler */
+/* SÄ±ralÄ± giriÅŸ iÃ§in gecikmeler */
 .stat-card:nth-child(1) {
     animation-delay: 0.1s;
 }
@@ -2683,7 +2689,7 @@ body.race-mode-active .race-menu-btn {
     animation-delay: 0.5s;
 }
 
-/* 2. Kritik Uyarı Animasyonu (Pulse) */
+/* 2. Kritik UyarÄ± Animasyonu (Pulse) */
 @keyframes pulseDanger {
     0% {
         box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
@@ -2701,24 +2707,24 @@ body.race-mode-active .race-menu-btn {
     }
 }
 
-/* Sadece .danger sınıfı varsa ve aktifse çalışır */
+/* Sadece .danger sÄ±nÄ±fÄ± varsa ve aktifse Ã§alÄ±ÅŸÄ±r */
 .stat-card.danger {
     animation: cardEntrance 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards,
         pulseDanger 2s infinite;
 }
 
-/* MOBİL ANIMASYONLAR KALDIRILDI - GÖRÜNÜRLÜK SORUNU NEDENİYLE */
+/* MOBÄ°L ANIMASYONLAR KALDIRILDI - GÃ–RÃœNÃœRLÃœK SORUNU NEDENÄ°YLE */
 
 
 /* ==================== MICRO-INTERACTIONS & POLISH ==================== */
 
-/* 1. Progress Bar "Akış" (Shimmer) Efekti - İPTAL EDİLDİ */
+/* 1. Progress Bar "AkÄ±ÅŸ" (Shimmer) Efekti - Ä°PTAL EDÄ°LDÄ° */
 .progress-bar {
     overflow: hidden;
-    /* Taşmayı engelle */
+    /* TaÅŸmayÄ± engelle */
     position: relative;
     /* box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5); */
-    /* İç gölge derinlik katar */
+    /* Ä°Ã§ gÃ¶lge derinlik katar */
 }
 
 /*
@@ -2738,7 +2744,7 @@ body.race-mode-active .race-menu-btn {
 }
 */
 
-/* 2. Bağlantı Durumu "Nefes Alma" - İPTAL EDİLDİ */
+/* 2. BaÄŸlantÄ± Durumu "Nefes Alma" - Ä°PTAL EDÄ°LDÄ° */
 .status-indicator.connected {
     /* animation: breathe 2s infinite ease-in-out; */
     box-shadow: 0 0 10px var(--success);
@@ -2764,11 +2770,11 @@ body.race-mode-active .race-menu-btn {
     }
 }
 
-/* 3. Kart Hover Efekti (Hafif Yükselme) */
+/* 3. Kart Hover Efekti (Hafif YÃ¼kselme) */
 .stat-card.info:hover,
 .stat-card:hover {
     transform: translateY(-3px);
-    /* box-shadow iptal - renkli iç parıltıyı (inset glow) korumak için */
+    /* box-shadow iptal - renkli iÃ§ parÄ±ltÄ±yÄ± (inset glow) korumak iÃ§in */
     transition: all 0.3s ease;
 }
 
@@ -2778,7 +2784,7 @@ body.race-mode-active .race-menu-btn {
     border-color: var(--accent);
 }
 
-/* 5. Custom Scrollbar (Premium İnce Çubuk) */
+/* 5. Custom Scrollbar (Premium Ä°nce Ã‡ubuk) */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -2807,7 +2813,7 @@ html {
 
 /* ==================== ANDROID STYLE ANIMATIONS ==================== */
 
-/* 1. Elastik Giriş Animasyonu (Staggered Entrance) */
+/* 1. Elastik GiriÅŸ Animasyonu (Staggered Entrance) */
 @keyframes fadeInUpElastic {
     0% {
         opacity: 0;
@@ -2824,7 +2830,7 @@ html {
     }
 }
 
-/* Tüm kartlara sırasıyla uygula - MOBİL GÖRÜNÜRLÜK İÇİN İPTAL EDİLDİ
+/* TÃ¼m kartlara sÄ±rasÄ±yla uygula - MOBÄ°L GÃ–RÃœNÃœRLÃœK Ä°Ã‡Ä°N Ä°PTAL EDÄ°LDÄ°
 .stats-grid>div,
 .dashboard-split>div,
 .stat-card,
@@ -2841,7 +2847,7 @@ html {
 .dashboard-split .right-panel { animation-delay: 0.6s; }
 */
 
-/* 7. Harita Marker Pulse (Radar) Efekti - SADECE Blue Dot İçin */
+/* 7. Harita Marker Pulse (Radar) Efekti - SADECE Blue Dot Ä°Ã§in */
 .blue-dot-marker {
     position: relative;
 }
@@ -2891,7 +2897,7 @@ html {
     animation-delay: 0.4s;
 }
 
-/* 2. Buton Tıklama Efekti (Haptic Press) */
+/* 2. Buton TÄ±klama Efekti (Haptic Press) */
 button:active,
 .btn-control:active,
 .sw-btn:active,
@@ -2929,7 +2935,7 @@ button:active,
 }
 
 /* 4. Scroll Glow (Android 12+ Overscroll Style) */
-/* Sayfa kenarlarına hafif renk verir */
+/* Sayfa kenarlarÄ±na hafif renk verir */
 body::before,
 body::after {
     content: '';
@@ -2980,12 +2986,12 @@ body::after {
    - Phone Portrait: max-width 767px + orientation: portrait
    ============================================================ */
 
-/* Small Desktop breakpoint kaldırıldı — Chrome'da da tam boyut gösterilsin */
+/* Small Desktop breakpoint kaldÄ±rÄ±ldÄ± â€” Chrome'da da tam boyut gÃ¶sterilsin */
 
 /* ==================== TABLET LANDSCAPE (768-1199px, horizontal) ==================== */
 @media (min-width: 769px) and (max-width: 1199px) and (orientation: landscape) {
 
-    /* Sidebar - tablet landscape için kompakt */
+    /* Sidebar - tablet landscape iÃ§in kompakt */
     .sidebar {
         width: 220px !important;
         padding: 1rem !important;
@@ -3070,7 +3076,7 @@ body::after {
 /* ==================== TABLET PORTRAIT (768-1199px, vertical) ==================== */
 @media (min-width: 769px) and (max-width: 1199px) and (orientation: portrait) {
 
-    /* Sidebar - tablet portrait için kompakt */
+    /* Sidebar - tablet portrait iÃ§in kompakt */
     .sidebar {
         width: 200px !important;
         padding: 0.8rem !important;
@@ -3233,12 +3239,12 @@ body::after {
     .race-container {
         flex-direction: row !important;
         align-items: center !important;
-        justify-content: flex-end !important; /* tüm içerik sağa yaslanır */
-        padding: 0 16px 0 48px !important;    /* sol: hamburger alanı, sağda küçük boşluk */
+        justify-content: flex-end !important; /* tÃ¼m iÃ§erik saÄŸa yaslanÄ±r */
+        padding: 0 16px 0 48px !important;    /* sol: hamburger alanÄ±, saÄŸda kÃ¼Ã§Ã¼k boÅŸluk */
         gap: 14px !important;
     }
 
-    /* Duty bar — yatay modda DİKEY sütun, ekranın en solunda */
+    /* Duty bar â€” yatay modda DÄ°KEY sÃ¼tun, ekranÄ±n en solunda */
     .race-duty-bar {
         flex-direction: column !important;
         width: 80px !important;
@@ -3252,17 +3258,17 @@ body::after {
         padding: 12px 10px !important;
         box-sizing: border-box !important;
         order: 0 !important;
-        margin: 10px 0 !important;     /* üst ve alttan ekran kenarına boşluk */
+        margin: 10px 0 !important;     /* Ã¼st ve alttan ekran kenarÄ±na boÅŸluk */
     }
     .race-duty-label {
         min-width: unset !important;
         font-size: 0.55rem !important;
         text-align: center !important;
-        order: 0 !important;           /* EN ÜSTTE */
+        order: 0 !important;           /* EN ÃœSTTE */
         margin-bottom: 8px !important;
         flex-shrink: 0 !important;
     }
-    /* Dikey bar track — kalan yüksekliği doldurur */
+    /* Dikey bar track â€” kalan yÃ¼ksekliÄŸi doldurur */
     .race-duty-track {
         width: 14px !important;
         height: auto !important;
@@ -3273,19 +3279,19 @@ body::after {
         order: 1 !important;
         margin-bottom: 8px !important;
     }
-    /* Fill: alttan yukarıya doğru büyür */
+    /* Fill: alttan yukarÄ±ya doÄŸru bÃ¼yÃ¼r */
     .race-duty-fill {
         position: absolute !important;
         top: auto !important;       /* top:0 base'ini iptal et */
-        bottom: 0 !important;       /* alttan yukarı dolar */
+        bottom: 0 !important;       /* alttan yukarÄ± dolar */
         left: 0 !important;
-        width: 100%;                /* landscape'de fill her zaman tam genişlikte */
-        /* height JS tarafından set edilir */
+        width: 100%;                /* landscape'de fill her zaman tam geniÅŸlikte */
+        /* height JS tarafÄ±ndan set edilir */
         background: linear-gradient(0deg, #3b82f6, #8b5cf6) !important;
-        transition: height 0.5s ease !important;  /* sadece yükseklik animate edilir */
+        transition: height 0.5s ease !important;  /* sadece yÃ¼kseklik animate edilir */
         border-radius: 99px !important;
     }
-    /* Değer altta */
+    /* DeÄŸer altta */
     .race-duty-valunit {
         min-width: unset !important;
         justify-content: center !important;
@@ -3343,7 +3349,7 @@ body::after {
         opacity: 0.6;
     }
 
-    /* Top bar — ortala (race olmayan sayfalar için de geçerli) */
+    /* Top bar â€” ortala (race olmayan sayfalar iÃ§in de geÃ§erli) */
     .top-bar {
         justify-content: center !important;
         text-align: center !important;
@@ -3352,6 +3358,11 @@ body::after {
     .topbar-row-2 {
         justify-content: center !important;
     }
+
+      .topbar-controls {
+          align-items: center !important;
+          width: 100% !important;
+      }
 
     /* Hide non-essential elements */
     .desktop-only-header,
@@ -3401,7 +3412,7 @@ body::after {
         display: none !important;
     }
 
-    /* Satır 1: Cihaz + kullanıcı + çıkış - TEK SATIR, SARIMAMA */
+    /* SatÄ±r 1: Cihaz + kullanÄ±cÄ± + Ã§Ä±kÄ±ÅŸ - TEK SATIR, SARIMAMA */
     .topbar-row-1 {
         width: 100% !important;
         justify-content: center !important;
@@ -3410,7 +3421,7 @@ body::after {
         overflow: hidden;
     }
 
-    /* Satır 2: Credit + test butonu + saat */
+    /* SatÄ±r 2: Credit + test butonu + saat */
     .topbar-row-2 {
         width: 100% !important;
         justify-content: center !important;
@@ -3435,7 +3446,7 @@ body::after {
         font-size: 0.75rem !important;
     }
 
-    /* Üst bilgi satırları - tüm elemanlar kompakt */
+    /* Ãœst bilgi satÄ±rlarÄ± - tÃ¼m elemanlar kompakt */
     .user-display {
         flex-shrink: 0;
     }
@@ -3591,7 +3602,7 @@ body::after {
         overflow: hidden !important;
     }
 
-    /* Strateji kartlarında overflow korunmalı */
+    /* Strateji kartlarÄ±nda overflow korunmalÄ± */
     .strategy-card,
     .strategy-card .card-body {
         overflow: visible !important;
@@ -3606,7 +3617,7 @@ body::after {
 .user-display {
     display: flex;
     align-items: center;
-    /* Dış gri kutu kaldırıldı - sadece rozet kalır */
+    /* DÄ±ÅŸ gri kutu kaldÄ±rÄ±ldÄ± - sadece rozet kalÄ±r */
     background: none;
     border: none;
     padding: 0;
@@ -3663,7 +3674,7 @@ body::after {
 /* Mobile adjustments for user display */
 @media (max-width: 768px) {
     .user-display {
-        /* Container artık saydam, sadece rozet var */
+        /* Container artÄ±k saydam, sadece rozet var */
         padding: 0;
         background: none;
         border: none;
@@ -3688,11 +3699,11 @@ body::after {
 .notification-container {
     position: fixed;
     z-index: 100000;
-    /* Hamburger menüden (10000) her zaman üstte */
+    /* Hamburger menÃ¼den (10000) her zaman Ã¼stte */
     pointer-events: none;
 }
 
-/* Desktop/Tablet: Sağ üst */
+/* Desktop/Tablet: SaÄŸ Ã¼st */
 @media (min-width: 769px) {
     .notification-container {
         top: 20px;
@@ -3701,7 +3712,7 @@ body::after {
     }
 }
 
-/* Mobile: Üst kısım, tam genişlik */
+/* Mobile: Ãœst kÄ±sÄ±m, tam geniÅŸlik */
 @media (max-width: 768px) {
     .notification-container {
         top: 0;
@@ -3732,7 +3743,7 @@ body::after {
     }
 }
 
-/* Mobile: Yarı saydam */
+/* Mobile: YarÄ± saydam */
 @media (max-width: 768px) {
     .notification-toast {
         background: rgba(30, 41, 59, 0.75);
@@ -3758,7 +3769,7 @@ body::after {
     }
 }
 
-/* Mobile: Yukarıdan gelsin */
+/* Mobile: YukarÄ±dan gelsin */
 @media (max-width: 768px) {
     @keyframes slideIn {
         from {
@@ -4266,7 +4277,7 @@ body::after {
         font-size: 2.5rem;
     }
 
-    /* Strateji kartlarının tam görünmesi */
+    /* Strateji kartlarÄ±nÄ±n tam gÃ¶rÃ¼nmesi */
     .strategy-card {
         overflow: visible !important;
         min-height: auto !important;
@@ -4309,7 +4320,7 @@ body::after {
         grid-column: span 1;
     }
 
-    /* Progress ve budget elemanları için ekstra alan */
+    /* Progress ve budget elemanlarÄ± iÃ§in ekstra alan */
     .progress-main,
     .budget-bar-container,
     .efficiency-main,
@@ -4377,7 +4388,7 @@ body::after {
 }
 
 /* ==================== STRATEGY SMALL SCREEN RESPONSIVE ==================== */
-/* iPhone SE (375px), Samsung S23 (360px), küçük Android'ler */
+/* iPhone SE (375px), Samsung S23 (360px), kÃ¼Ã§Ã¼k Android'ler */
 @media (max-width: 480px) {
 
     /* Kronometre display - fluid typography */
@@ -4389,7 +4400,7 @@ body::after {
         box-sizing: border-box;
     }
 
-    /* Digit genişlikleri fluid */
+    /* Digit geniÅŸlikleri fluid */
     .strategy-stopwatch-display .sw-digit {
         width: clamp(16px, 5vw, 28px);
     }
@@ -4406,7 +4417,7 @@ body::after {
         font-size: clamp(0.75rem, 3vw, 1.2rem);
     }
 
-    /* Butonlar - mobil dokunma alanı korunur (min 44px) */
+    /* Butonlar - mobil dokunma alanÄ± korunur (min 44px) */
     .stopwatch-strategy-card .sw-btn {
         width: 50px;
         height: 50px;
@@ -4427,7 +4438,7 @@ body::after {
         max-height: 180px;
     }
 
-    /* Genel strategy kartları */
+    /* Genel strategy kartlarÄ± */
     .strategy-body {
         padding: 0.75rem !important;
     }
@@ -4436,7 +4447,7 @@ body::after {
         font-size: 0.9rem;
     }
 
-    /* Verimlilik ve pace değerleri */
+    /* Verimlilik ve pace deÄŸerleri */
     .efficiency-value,
     .pace-value {
         font-size: clamp(1.5rem, 6vw, 2rem) !important;
@@ -4446,7 +4457,7 @@ body::after {
         font-size: clamp(1.8rem, 7vw, 2.5rem) !important;
     }
 
-    /* Setup input'ları */
+    /* Setup input'larÄ± */
     .race-setup-grid {
         gap: 1rem;
     }
@@ -4475,9 +4486,9 @@ body::after {
         min-height: 80px;
     }
 
-    /* ==================== DASHBOARD RESPONSIVE (≤480px) ==================== */
+    /* ==================== DASHBOARD RESPONSIVE (â‰¤480px) ==================== */
 
-    /* Stat kartları daha compact */
+    /* Stat kartlarÄ± daha compact */
     .stat-card {
         padding: 0.6rem !important;
         border-radius: 12px;
@@ -4503,7 +4514,7 @@ body::after {
         font-size: 0.9rem;
     }
 
-    /* KONTAKTÖR badge - küçük ekranlarda explicit override */
+    /* KONTAKTÃ–R badge - kÃ¼Ã§Ã¼k ekranlarda explicit override */
     #temp-card.temp-critical .temp-warning-badge {
         font-size: 0.65rem !important;
         padding: 3px 6px !important;
@@ -4512,7 +4523,7 @@ body::after {
 
     #temp-card.temp-critical {
         transform: none !important;
-        /* scale(1.02) küçük ekranda taşmaya neden olur */
+        /* scale(1.02) kÃ¼Ã§Ã¼k ekranda taÅŸmaya neden olur */
     }
 
     .temp-warning-badge {
@@ -4590,7 +4601,7 @@ body::after {
         margin-bottom: 0.75rem;
     }
 
-    /* Geçmiş tabloları */
+    /* GeÃ§miÅŸ tablolarÄ± */
     .test-card {
         padding: 0.75rem;
         font-size: 0.85rem;
@@ -4603,7 +4614,7 @@ body::after {
     }
 }
 
-/* ==================== EXTRA SMALL SCREENS (≤360px) ==================== */
+/* ==================== EXTRA SMALL SCREENS (â‰¤360px) ==================== */
 /* Samsung S23 (360px), Samsung S8+ (360px), iPhone SE 1st gen (320px) */
 @media (max-width: 360px) {
 
@@ -4653,7 +4664,7 @@ body::after {
         gap: 0.4rem !important;
     }
 
-    /* KONTAKTÖR - en küçük ekran */
+    /* KONTAKTÃ–R - en kÃ¼Ã§Ã¼k ekran */
     #temp-card.temp-critical .temp-warning-badge {
         font-size: 0.65rem !important;
         padding: 2px 5px !important;
@@ -4693,8 +4704,8 @@ body::after {
 }
 
 /* ==================== SIDEBAR HEIGHT RESPONSIVE ==================== */
-/* Kısa ekranlar için sidebar öğelerini kompaktlaştır */
-/* ==================== ORTA YÜKSEKLİK (621-850px) — Laptop tipi ekranlar ==================== */
+/* KÄ±sa ekranlar iÃ§in sidebar Ã¶ÄŸelerini kompaktlaÅŸtÄ±r */
+/* ==================== ORTA YÃœKSEKLÄ°K (621-850px) â€” Laptop tipi ekranlar ==================== */
 @media (max-height: 850px) and (min-height: 621px) and (min-width: 769px) {
     .logo-area {
         margin-bottom: 1rem !important;
@@ -4777,7 +4788,7 @@ body::after {
     }
 }
 
-/* Çok kısa ekranlar (520px ve altı yükseklik) */
+/* Ã‡ok kÄ±sa ekranlar (520px ve altÄ± yÃ¼kseklik) */
 @media (max-height: 520px) and (min-width: 769px) {
     .sidebar {
         padding: 0.5rem !important;
@@ -4870,15 +4881,15 @@ body.light-mode .theme-toggle-btn:hover {
     box-shadow: 0 0 12px rgba(71, 85, 105, 0.2);
 }
 
-/* ── Sidebar ── */
+/* â”€â”€ Sidebar â”€â”€ */
 body.light-mode .sidebar {
     background: linear-gradient(180deg, rgba(241, 245, 249, 0.97) 0%, rgba(226, 232, 240, 0.97) 100%);
     border-right: 1px solid rgba(0, 0, 0, 0.08);
     box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
 }
 
-/* Desktop'ta backdrop-filter uygula, mobilde HAYIR —
-   backdrop-filter containing block oluşturur ve
+/* Desktop'ta backdrop-filter uygula, mobilde HAYIR â€”
+   backdrop-filter containing block oluÅŸturur ve
    position:fixed nav-menu'yu sidebar'a hapseder */
 @media (min-width: 769px) {
     body.light-mode .sidebar {
@@ -4894,7 +4905,7 @@ body.light-mode .sidebar::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.2);
 }
 
-/* Logo — beyaz PNG'yi lacivert'e çevir */
+/* Logo â€” beyaz PNG'yi lacivert'e Ã§evir */
 body.light-mode .logo-img {
     filter: invert(1) sepia(1) saturate(3) hue-rotate(200deg) brightness(0.35);
 }
@@ -4903,7 +4914,7 @@ body.light-mode .mobile-logo-img {
     filter: invert(1) sepia(1) saturate(3) hue-rotate(200deg) brightness(0.35);
 }
 
-/* Çukurova logosu — lacivert ton */
+/* Ã‡ukurova logosu â€” lacivert ton */
 body.light-mode .sidebar-logo-c {
     filter: invert(1) sepia(1) saturate(2) hue-rotate(200deg) brightness(0.4);
 }
@@ -4944,8 +4955,8 @@ body.light-mode .connection-status {
     color: #475569;
 }
 
-/* ── Header Sketch Images ── */
-/* Cyan çizimler → lacivert'e dönüştür */
+/* â”€â”€ Header Sketch Images â”€â”€ */
+/* Cyan Ã§izimler â†’ lacivert'e dÃ¶nÃ¼ÅŸtÃ¼r */
 body.light-mode .header-sketch-img {
     filter: invert(1) sepia(1) saturate(5) hue-rotate(200deg) brightness(0.25) contrast(1.2) !important;
     opacity: 0.7 !important;
@@ -4975,7 +4986,7 @@ body.light-mode .header-sketch-img:nth-child(4) { animation-delay: 0.55s !import
     }
 }
 
-/* ── Top Bar ── */
+/* â”€â”€ Top Bar â”€â”€ */
 body.light-mode .top-bar {
     color: #1e293b;
 }
@@ -4990,7 +5001,7 @@ body.light-mode .credit-box {
     border-color: rgba(30, 41, 59, 0.1);
 }
 
-/* ── Device Selector ── */
+/* â”€â”€ Device Selector â”€â”€ */
 body.light-mode #device-select {
     background: rgba(255, 255, 255, 0.9) !important;
     color: #1e293b !important;
@@ -5012,7 +5023,7 @@ body.light-mode .device-selector select {
     border-color: rgba(0, 0, 0, 0.12);
 }
 
-/* ── Stat Cards — Renkli cam efektli, daha belirgin ── */
+/* â”€â”€ Stat Cards â€” Renkli cam efektli, daha belirgin â”€â”€ */
 body.light-mode .stat-card {
     background: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(12px);
@@ -5067,7 +5078,7 @@ body.light-mode .progress-bar {
     background: rgba(0, 0, 0, 0.07);
 }
 
-/* ── Cards (Chart panels, map panels, genel paneller) ── */
+/* â”€â”€ Cards (Chart panels, map panels, genel paneller) â”€â”€ */
 body.light-mode .card {
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(12px);
@@ -5084,7 +5095,7 @@ body.light-mode .card-header h3 {
     color: #0f172a;
 }
 
-/* ── Sessions (Geçmiş Kayıtlar) ── */
+/* â”€â”€ Sessions (GeÃ§miÅŸ KayÄ±tlar) â”€â”€ */
 body.light-mode .session-tabs {
     background: rgba(30, 41, 59, 0.05);
     border-color: rgba(0, 0, 0, 0.1);
@@ -5112,7 +5123,7 @@ body.light-mode #session-list-container {
     border-color: rgba(0, 0, 0, 0.08);
 }
 
-/* Session Cards — geçmiş kayıt kartları */
+/* Session Cards â€” geÃ§miÅŸ kayÄ±t kartlarÄ± */
 body.light-mode .session-card {
     background: linear-gradient(135deg, rgba(241, 245, 249, 0.95) 0%, rgba(226, 232, 240, 0.8) 100%);
     border: 1px solid rgba(59, 130, 246, 0.15);
@@ -5133,7 +5144,7 @@ body.light-mode .session-card p {
     color: #64748b;
 }
 
-/* ── Tables ── */
+/* â”€â”€ Tables â”€â”€ */
 body.light-mode .history-table th {
     background-color: #e2e8f0;
     color: #334155;
@@ -5149,7 +5160,7 @@ body.light-mode .history-table tr:hover {
     background-color: rgba(59, 130, 246, 0.05);
 }
 
-/* ── Buttons ── */
+/* â”€â”€ Buttons â”€â”€ */
 body.light-mode .btn-recenter {
     background: rgba(255, 255, 255, 0.9);
     border-color: rgba(0, 0, 0, 0.12);
@@ -5184,7 +5195,7 @@ body.light-mode .btn-refresh {
     color: white;
 }
 
-/* ── User Display & Logout ── */
+/* â”€â”€ User Display & Logout â”€â”€ */
 body.light-mode .user-display .user-name {
     color: #334155;
 }
@@ -5213,7 +5224,7 @@ body.light-mode .logout-btn:hover {
     background: rgba(239, 68, 68, 0.2);
 }
 
-/* ── Notification ── */
+/* â”€â”€ Notification â”€â”€ */
 body.light-mode .notification {
     background: rgba(255, 255, 255, 0.96);
     border-color: rgba(0, 0, 0, 0.1);
@@ -5221,12 +5232,12 @@ body.light-mode .notification {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* ── Drawer overlay ── */
+/* â”€â”€ Drawer overlay â”€â”€ */
 body.light-mode .drawer-overlay {
     background: rgba(0, 0, 0, 0.2);
 }
 
-/* ── Mobil Drawer (nav-menu) light mode ── */
+/* â”€â”€ Mobil Drawer (nav-menu) light mode â”€â”€ */
 @media (max-width: 768px) {
     body.light-mode .nav-menu {
         background: #ffffff !important;
@@ -5271,13 +5282,13 @@ body.light-mode .drawer-overlay {
         color: #ffffff !important;
     }
 
-    /* Drawer overlay — daha koyu, drawer'ı belirginleştir */
+    /* Drawer overlay â€” daha koyu, drawer'Ä± belirginleÅŸtir */
     body.light-mode .drawer-overlay {
         background: rgba(0, 0, 0, 0.35) !important;
     }
 }
 
-/* ── Global menu button ── */
+/* â”€â”€ Global menu button â”€â”€ */
 body.light-mode .global-menu-btn {
     background: rgba(255, 255, 255, 0.92);
     border-color: rgba(0, 0, 0, 0.1);
@@ -5289,7 +5300,7 @@ body.light-mode .global-menu-btn:hover {
     background: rgba(255, 255, 255, 1);
 }
 
-/* ── Temp & Current alarm states ── */
+/* â”€â”€ Temp & Current alarm states â”€â”€ */
 body.light-mode .stat-card.temp-fan {
     border-left-color: #eab308;
     background: linear-gradient(145deg, rgba(234, 179, 8, 0.12) 0%, rgba(255, 255, 255, 0.85) 100%) !important;
@@ -5314,7 +5325,7 @@ body.light-mode .stat-card.current-warning {
     box-shadow: 0 2px 12px rgba(249, 115, 22, 0.12) !important;
 }
 
-/* ── Race Mode ── */
+/* â”€â”€ Race Mode â”€â”€ */
 body.light-mode .race-container {
     background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%);
 }
@@ -5373,13 +5384,13 @@ body.light-mode .race-duty-unit {
     color: #94a3b8;
 }
 
-/* Race bg image — lacivert ton, belirgin */
+/* Race bg image â€” lacivert ton, belirgin */
 body.light-mode .race-speed-main::before {
     opacity: 0.22;
     filter: invert(1) sepia(1) saturate(5) hue-rotate(200deg) brightness(0.25) contrast(1.2);
 }
 
-/* ── Strategy panel ── */
+/* â”€â”€ Strategy panel â”€â”€ */
 body.light-mode .strategy-panel,
 body.light-mode .strategy-card {
     background: rgba(255, 255, 255, 0.8);
@@ -5396,7 +5407,7 @@ body.light-mode .strategy-value {
     color: #0f172a;
 }
 
-/* ── Scrollbar ── */
+/* â”€â”€ Scrollbar â”€â”€ */
 body.light-mode ::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.15);
 }
@@ -5405,7 +5416,7 @@ body.light-mode ::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.03);
 }
 
-/* ── Modal & Custom Sessions ── */
+/* â”€â”€ Modal & Custom Sessions â”€â”€ */
 body.light-mode .modal-overlay {
     background: rgba(0, 0, 0, 0.3);
 }
@@ -5426,14 +5437,14 @@ body.light-mode .modal-content select {
     border-color: rgba(0, 0, 0, 0.12);
 }
 
-/* ── Media Gallery ── */
+/* â”€â”€ Media Gallery â”€â”€ */
 body.light-mode .media-grid .media-item {
     background: rgba(255, 255, 255, 0.9);
     border-color: rgba(0, 0, 0, 0.08);
 }
 
-/* ── Medya sayfası — inline style override'ları ── */
-/* Alarm builder & YouTube player panelleri inline bg ile siyah kalıyor */
+/* â”€â”€ Medya sayfasÄ± â€” inline style override'larÄ± â”€â”€ */
+/* Alarm builder & YouTube player panelleri inline bg ile siyah kalÄ±yor */
 body.light-mode [data-owner-only] [style*="background: linear-gradient"],
 body.light-mode [data-admin-only] [style*="background: linear-gradient(135deg, #0a0a0a"],
 body.light-mode [data-admin-only] [style*="background: linear-gradient(135deg, #020508"] {
@@ -5441,7 +5452,7 @@ body.light-mode [data-admin-only] [style*="background: linear-gradient(135deg, #
     border-color: rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Medya sayfası tüm koyu paneller */
+/* Medya sayfasÄ± tÃ¼m koyu paneller */
 body.light-mode .card-body input[style*="background: var(--bg-dark)"],
 body.light-mode input[style*="background: rgba(0,0,0"] {
     background: #f1f5f9 !important;
@@ -5449,7 +5460,7 @@ body.light-mode input[style*="background: rgba(0,0,0"] {
     border-color: rgba(0, 0, 0, 0.12) !important;
 }
 
-/* ── Chart wrapper (grafik arka planları) ── */
+/* â”€â”€ Chart wrapper (grafik arka planlarÄ±) â”€â”€ */
 body.light-mode .chart-wrapper {
     background: rgba(255, 255, 255, 0.6);
     border-radius: 12px;
@@ -5459,7 +5470,7 @@ body.light-mode .chart-wrapper h4 {
     color: #334155;
 }
 
-/* ── Sistem Detayları (sağ panel tablosu) ── */
+/* â”€â”€ Sistem DetaylarÄ± (saÄŸ panel tablosu) â”€â”€ */
 body.light-mode .card-body.scrollable table td {
     color: #334155;
     border-bottom-color: rgba(0, 0, 0, 0.05);
@@ -5470,11 +5481,11 @@ body.light-mode .card-body.scrollable table td:last-child {
     font-weight: 600;
 }
 
-/* ── Test Kayıt Butonları (yeşil/kırmızı — değişmesin) ── */
+/* â”€â”€ Test KayÄ±t ButonlarÄ± (yeÅŸil/kÄ±rmÄ±zÄ± â€” deÄŸiÅŸmesin) â”€â”€ */
 
-/* ── Splash screen — koyu kalsın ── */
+/* â”€â”€ Splash screen â€” koyu kalsÄ±n â”€â”€ */
 
-/* ── Genel var() override — CSS custom properties ── */
+/* â”€â”€ Genel var() override â€” CSS custom properties â”€â”€ */
 body.light-mode {
     --bg-dark: #e2e8f0;
     --bg-card: rgba(255, 255, 255, 0.8);
@@ -5485,8 +5496,8 @@ body.light-mode {
     --border: rgba(0, 0, 0, 0.1);
 }
 
-/* ── Medya Sayfası — inline dark style override'ları ── */
-/* Panel 1: Şaka Bildirimi (gold-black neon) */
+/* â”€â”€ Medya SayfasÄ± â€” inline dark style override'larÄ± â”€â”€ */
+/* Panel 1: Åaka Bildirimi (gold-black neon) */
 body.light-mode [data-owner-only] > div,
 body.light-mode [data-admin-only] > div {
     background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%) !important;
@@ -5501,7 +5512,7 @@ body.light-mode [data-admin-only] > div > div:first-child {
     border-bottom-color: rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Header text — gold → koyu amber */
+/* Header text â€” gold â†’ koyu amber */
 body.light-mode [data-owner-only] > div > div:first-child span,
 body.light-mode [data-admin-only] > div > div:first-child span {
     color: #92400e !important;
@@ -5515,7 +5526,7 @@ body.light-mode [data-admin-only] > div > div:first-child i {
     filter: none !important;
 }
 
-/* İç container: emoji grid, renk seçici, input arka planları */
+/* Ä°Ã§ container: emoji grid, renk seÃ§ici, input arka planlarÄ± */
 body.light-mode [data-owner-only] div[style*="background:rgba(0,0,0"],
 body.light-mode [data-owner-only] div[style*="background: rgba(0,0,0"],
 body.light-mode [data-admin-only] div[style*="background:rgba(0,0,0"],
@@ -5524,7 +5535,7 @@ body.light-mode [data-admin-only] div[style*="background: rgba(0,0,0"] {
     border-color: rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Input alanları */
+/* Input alanlarÄ± */
 body.light-mode [data-owner-only] input[type="text"],
 body.light-mode [data-admin-only] input[type="text"] {
     background: #f1f5f9 !important;
@@ -5537,19 +5548,19 @@ body.light-mode [data-admin-only] input[type="text"]::placeholder {
     color: #94a3b8 !important;
 }
 
-/* Label text renkleri (gold → slate) */
+/* Label text renkleri (gold â†’ slate) */
 body.light-mode [data-owner-only] div[style*="color:#b8860b"],
 body.light-mode [data-owner-only] div[style*="color: #b8860b"] {
     color: #78350f !important;
 }
 
-/* Cyan label text (YouTube panel) → dark cyan */
+/* Cyan label text (YouTube panel) â†’ dark cyan */
 body.light-mode [data-owner-only] div[style*="color:#0e7490"],
 body.light-mode [data-owner-only] div[style*="color: #0e7490"] {
     color: #155e75 !important;
 }
 
-/* Özel label renkler: #4a3800 → koyu */
+/* Ã–zel label renkler: #4a3800 â†’ koyu */
 body.light-mode [data-owner-only] span[style*="color:#4a3800"],
 body.light-mode [data-owner-only] span[style*="color: #4a3800"] {
     color: #92400e !important;
@@ -5562,7 +5573,7 @@ body.light-mode [data-owner-only] div[style*="background: rgba(6,182,212"] {
     border-color: rgba(14, 116, 144, 0.15) !important;
 }
 
-/* Buton override'ları — gönder butonları */
+/* Buton override'larÄ± â€” gÃ¶nder butonlarÄ± */
 body.light-mode [data-owner-only] button[style*="background:linear-gradient"],
 body.light-mode [data-admin-only] button[style*="background:linear-gradient"] {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
@@ -5575,7 +5586,7 @@ body.light-mode [data-owner-only] #yt-player-status {
     color: #64748b !important;
 }
 
-/* Önizleme paneli */
+/* Ã–nizleme paneli */
 body.light-mode [data-owner-only] #prank-preview {
     background: rgba(0, 0, 0, 0.03) !important;
     border-color: rgba(184, 134, 11, 0.2) !important;
@@ -5585,7 +5596,7 @@ body.light-mode [data-owner-only] #prank-preview #prev-title {
     color: #78350f !important;
 }
 
-/* Seçili emoji container */
+/* SeÃ§ili emoji container */
 body.light-mode [data-owner-only] #prank-selected-emoji {
     color: #1e293b;
 }
@@ -5597,7 +5608,7 @@ body.light-mode #yt-search-input {
     border-color: rgba(0, 0, 0, 0.12) !important;
 }
 
-/* Medya kısmı genel text */
+/* Medya kÄ±smÄ± genel text */
 body.light-mode #view-media h4 {
     color: #334155;
 }
@@ -5606,14 +5617,14 @@ body.light-mode #view-media p {
     color: #64748b;
 }
 
-/* Medya hızlı erişim butonları — bunlar renkli kalabilir */
+/* Medya hÄ±zlÄ± eriÅŸim butonlarÄ± â€” bunlar renkli kalabilir */
 
-/* Ayırıcı çizgi (hr) */
+/* AyÄ±rÄ±cÄ± Ã§izgi (hr) */
 body.light-mode #view-media hr {
     border-color: rgba(0, 0, 0, 0.08) !important;
 }
 
-/* ── Login sayfası ── */
+/* â”€â”€ Login sayfasÄ± â”€â”€ */
 body.light-mode .login-container {
     background: rgba(255, 255, 255, 0.9);
     border-color: rgba(0, 0, 0, 0.1);
@@ -5625,4 +5636,4 @@ body.light-mode .login-container input {
     border-color: rgba(0, 0, 0, 0.12);
 }
 
-/* Chart.js — JS'den güncelleniyor (updateChartTheme) */
+/* Chart.js â€” JS'den gÃ¼ncelleniyor (updateChartTheme) */

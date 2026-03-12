@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr">
 
 <head>
@@ -15,16 +15,16 @@
     <link rel="icon" href="img/favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="img/logo_white.png">
 
-    <!-- Yazı Tipleri (Fonts) -->
+    <!-- YazÄ± Tipleri (Fonts) -->
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap"
         rel="stylesheet">
 
-    <!-- İkonlar (Icons) -->
+    <!-- Ä°konlar (Icons) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=106">
+    <link rel="stylesheet" href="css/style.css?v=116">
 
     <!-- FAST SPLASH CHECK -->
     <script>
@@ -33,11 +33,11 @@
         }
     </script>
 
-    <!-- Leaflet CSS (Harita Kütüphanesi) -->
+    <!-- Leaflet CSS (Harita KÃ¼tÃ¼phanesi) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Kritik Mobil Düzeltmeler -->
+    <!-- Kritik Mobil DÃ¼zeltmeler -->
     <style>
-        /* Harita Yükseklik Fix */
+        /* Harita YÃ¼kseklik Fix */
         #main-map {
             height: 400px !important;
             min-height: 400px !important;
@@ -60,29 +60,29 @@
         /* Grafik Mobil Layout Fix */
         @media (max-width: 768px) {
 
-            /* === HEADER BOŞLUK FIX - AGRESİF === */
+            /* === HEADER BOÅLUK FIX - AGRESÄ°F === */
             .sidebar {
                 padding: 0.5rem 0.5rem 0 0.5rem !important;
             }
 
-            /* Nav menü artık sol drawer olarak yönetiliyor - CSS'te */
+            /* Nav menÃ¼ artÄ±k sol drawer olarak yÃ¶netiliyor - CSS'te */
 
-            /* Connection status container mobilde gizle (drawer içinde gösterilir) */
+            /* Connection status container mobilde gizle (drawer iÃ§inde gÃ¶sterilir) */
             .connection-status-container {
                 display: none !important;
             }
 
-            /* Main content üst boşluğu minimize et */
+            /* Main content Ã¼st boÅŸluÄŸu minimize et */
             .main-content {
                 padding: 0.25rem 0.5rem !important;
             }
 
-            /* Top bar alt boşluğu minimize et */
+            /* Top bar alt boÅŸluÄŸu minimize et */
             .top-bar {
                 margin-bottom: 0.25rem !important;
             }
 
-            /* Logo area margin sıfırla */
+            /* Logo area margin sÄ±fÄ±rla */
             .logo-area {
                 margin-bottom: 0 !important;
             }
@@ -104,7 +104,7 @@
             }
         }
 
-        /* Geçmiş Tablo Scroll Fix */
+        /* GeÃ§miÅŸ Tablo Scroll Fix */
         .card-body.scrollable {
             display: block !important;
             width: 100% !important;
@@ -116,7 +116,7 @@
             min-width: 800px !important;
         }
 
-        /* === ARAÇ SEÇİCİ ANİMASYON === */
+        /* === ARAÃ‡ SEÃ‡Ä°CÄ° ANÄ°MASYON === */
         #device-select {
             border: 2px solid #a855f7;
             box-shadow: 0 0 10px #a855f755;
@@ -188,11 +188,11 @@
     <div id="notification-container" class="notification-container"></div>
 
     <div class="app-container">
-        <!-- GLOBAL Mobile Hamburger Button (Sol Üst - Tüm Sekmelerde) -->
+        <!-- GLOBAL Mobile Hamburger Button (Sol Ãœst - TÃ¼m Sekmelerde) -->
         <button class="global-menu-btn" id="global-menu-toggle" onclick="toggleMobileDrawer()">
             <i class="fa-solid fa-bars"></i>
         </button>
-        <!-- Drawer Overlay (Arkaplan Karartması) -->
+        <!-- Drawer Overlay (Arkaplan KarartmasÄ±) -->
         <div class="drawer-overlay" id="drawer-overlay" onclick="closeMobileDrawer()"></div>
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -201,16 +201,16 @@
                     <img src="img/logo_white.png" alt="1.5 Adana Telemetri" class="logo-img">
                     <div class="logo-text">
                         <span class="logo-main">1.5 ADANA</span>
-                        <span class="logo-sub">ELEKTROMOBİL</span>
-                        <span class="logo-sub">TELEMETRİ</span>
+                        <span class="logo-sub">ELEKTROMOBÄ°L</span>
+                        <span class="logo-sub">TELEMETRÄ°</span>
                     </div>
                 </div>
 
-                <!-- Mobilde yan yana görünüm için özel yapı -->
+                <!-- Mobilde yan yana gÃ¶rÃ¼nÃ¼m iÃ§in Ã¶zel yapÄ± -->
                 <div class="mobile-logo-container">
                     <div class="mobile-logos-row">
                         <img src="img/logo_white.png" class="mobile-logo-img" alt="1.5 Adana Telemetri">
-                        <img src="img/logo_c.png" class="mobile-logo-c" alt="Çukurova Logo">
+                        <img src="img/logo_c.png" class="mobile-logo-c" alt="Ã‡ukurova Logo">
                     </div>
                     <div class="logo-text mobile-text">
                         <span class="logo-main">1.5 ADANA</span>
@@ -235,7 +235,7 @@
                     <i class="fa-solid fa-gauge-high"></i> Dashboard
                 </a>
                 <a href="#" class="nav-item" data-page="race">
-                    <i class="fa-solid fa-flag-checkered"></i> Yarış
+                    <i class="fa-solid fa-flag-checkered"></i> YarÄ±ÅŸ
                 </a>
                 <a href="#" class="nav-item" data-page="charts">
                     <i class="fa-solid fa-chart-line"></i> Grafikler
@@ -244,7 +244,7 @@
                     <i class="fa-solid fa-map-location-dot"></i> Harita
                 </a>
                 <a href="#" class="nav-item" data-page="history">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Geçmiş
+                    <i class="fa-solid fa-clock-rotate-left"></i> GeÃ§miÅŸ
                 </a>
                 <a href="#" class="nav-item" data-page="strategy">
                     <i class="fa-solid fa-chess"></i> Stratejist
@@ -255,10 +255,10 @@
             </nav>
 
             <div class="connection-status-container">
-                <img src="img/logo_c.png" class="sidebar-logo-c" alt="Çukurova Logo">
+                <img src="img/logo_c.png" class="sidebar-logo-c" alt="Ã‡ukurova Logo">
                 <div class="connection-status">
                     <span class="status-indicator"></span>
-                    <span id="conn-text">Bağlanıyor...</span>
+                    <span id="conn-text">BaÄŸlanÄ±yor...</span>
                 </div>
             </div>
 
@@ -273,6 +273,7 @@
                     <img src="img/header-top.png" alt="Top View" class="header-sketch-img">
                     <img src="img/header-iso.png" alt="Iso View" class="header-sketch-img">
                 </div>
+                <div class="topbar-controls">
                 <!-- Mobil: Satır 1 - Kullanıcı bilgileri + cihaz + saat -->
                 <div class="topbar-row topbar-row-1">
                     <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Tema Değiştir">
@@ -298,12 +299,13 @@
                     <div class="time-display" id="clock">00:00:00</div>
                     <div class="credit-box">Designed by Ali Enes Akalın</div>
                 </div>
-            </header>
+            </div>
+        </header>
 
             <!-- Dashboard View -->
             <div id="view-dashboard" class="view active">
 
-                <!-- Üst Kartlar (Kritik Veriler) -->
+                <!-- Ãœst Kartlar (Kritik Veriler) -->
                 <div class="stats-grid">
                     <div class="stat-card critical">
                         <div class="stat-icon"><i class="fa-solid fa-gauge"></i></div>
@@ -343,7 +345,7 @@
                         <div class="stat-info">
                             <h3>SICAKLIK</h3>
                             <div class="value temp-value-row">
-                                <span class="temp-num-unit"><span id="val-temp">0</span><small>°C</small></span>
+                                <span class="temp-num-unit"><span id="val-temp">0</span><small>Â°C</small></span>
                                 <span class="temp-warning-badge" id="temp-warning-badge" style="display: none;">
                                     <img id="temp-warning-icon" src="" alt="" class="temp-warning-icon">
                                     <span id="temp-warning-text"></span>
@@ -356,12 +358,12 @@
                     </div>
                 </div>
 
-                <!-- Alt Bölüm: Harita ve Diğer Detaylar -->
+                <!-- Alt BÃ¶lÃ¼m: Harita ve DiÄŸer Detaylar -->
                 <div class="dashboard-split">
-                    <!-- Canlı Harita -->
+                    <!-- CanlÄ± Harita -->
                     <div class="card map-card">
                         <div class="card-header map-header">
-                            <h3><i class="fa-solid fa-location-dot"></i> Canlı Konum</h3>
+                            <h3><i class="fa-solid fa-location-dot"></i> CanlÄ± Konum</h3>
                             <button id="btn-main-recenter" class="btn-recenter active" onclick="toggleMainTracking()"
                                 title="Takip Et">
                                 <i class="fa-solid fa-location-crosshairs"></i>
@@ -372,11 +374,11 @@
                         </div>
                     </div>
 
-                    <!-- Detaylı Veriler -->
+                    <!-- DetaylÄ± Veriler -->
                     <div class="right-panel">
                         <div class="card details-card">
                             <div class="card-header">
-                                <h3><i class="fa-solid fa-list"></i> Sistem Detayları</h3>
+                                <h3><i class="fa-solid fa-list"></i> Sistem DetaylarÄ±</h3>
                             </div>
                             <div class="card-body scrollable">
                                 <table class="data-table">
@@ -394,27 +396,27 @@
                                             <td id="val-soc">0 %</td>
                                         </tr>
                                         <tr>
-                                            <td>Tüketim</td>
+                                            <td>TÃ¼ketim</td>
                                             <td id="val-energy">0 mWh</td>
                                         </tr>
                                         <tr id="row-iso-pos">
-                                            <td>İzolasyon (+)</td>
-                                            <td id="val-iso-pos">0 kΩ</td>
+                                            <td>Ä°zolasyon (+)</td>
+                                            <td id="val-iso-pos">0 kÎ©</td>
                                         </tr>
                                         <tr id="row-iso-neg">
-                                            <td>İzolasyon (-)</td>
-                                            <td id="val-iso-neg">0 kΩ</td>
+                                            <td>Ä°zolasyon (-)</td>
+                                            <td id="val-iso-neg">0 kÎ©</td>
                                         </tr>
                                         <tr id="row-h2">
                                             <td>H2 (Hidrojen)</td>
                                             <td id="val-h2">0 ppm</td>
                                         </tr>
                                         <tr id="row-h2-temp">
-                                            <td>H2 Sıcaklık</td>
-                                            <td id="val-h2-temp">0 °C</td>
+                                            <td>H2 SÄ±caklÄ±k</td>
+                                            <td id="val-h2-temp">0 Â°C</td>
                                         </tr>
                                         <tr>
-                                            <td>Son Güncelleme</td>
+                                            <td>Son GÃ¼ncelleme</td>
                                             <td id="val-last-update">-</td>
                                         </tr>
                                     </tbody>
@@ -424,7 +426,7 @@
                     </div>
                 </div>
 
-                <!-- Kronometre (Sadece Gösterim) -->
+                <!-- Kronometre (Sadece GÃ¶sterim) -->
                 <div class="card stopwatch-card">
                     <div class="card-header">
                         <h3><i class="fa-solid fa-stopwatch"></i> Kronometre</h3>
@@ -437,18 +439,18 @@
                                 id="sw-s1">0</span><span class="sw-digit" id="sw-s2">0</span><span class="ms">.<span
                                     class="sw-digit sw-ms-digit" id="sw-c1">0</span><span class="sw-digit sw-ms-digit"
                                     id="sw-c2">0</span></span></div>
-                        <!-- Kontrol butonları kaldırıldı - Stratejist sekmesinde kontrol edilir -->
+                        <!-- Kontrol butonlarÄ± kaldÄ±rÄ±ldÄ± - Stratejist sekmesinde kontrol edilir -->
                         <div class="lap-list" id="lap-list"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Race View (Yarış Modu) -->
+            <!-- Race View (YarÄ±ÅŸ Modu) -->
             <div id="view-race" class="view">
                 <div class="race-container">
-                    <!-- Race menu btn kaldırıldı - artık global-menu-btn var -->
+                    <!-- Race menu btn kaldÄ±rÄ±ldÄ± - artÄ±k global-menu-btn var -->
 
-                    <!-- Duty Cycle Göstergesi -->
+                    <!-- Duty Cycle GÃ¶stergesi -->
                     <div class="race-duty-bar">
                         <span class="race-duty-label">DUTY CYCLE</span>
                         <div class="race-duty-track">
@@ -460,7 +462,7 @@
                         </div>
                     </div>
 
-                    <!-- Ana Hız Göstergesi -->
+                    <!-- Ana HÄ±z GÃ¶stergesi -->
                     <div class="race-speed-main">
                         <div class="race-speed-value" id="race-speed">0</div>
                         <div class="race-speed-unit">km/h</div>
@@ -481,7 +483,7 @@
                         <div class="race-metric">
                             <div class="race-metric-label">SICAKLIK</div>
                             <div class="race-metric-value" id="race-temp">0</div>
-                            <div class="race-metric-unit">°C</div>
+                            <div class="race-metric-unit">Â°C</div>
                         </div>
                     </div>
                 </div>
@@ -495,15 +497,15 @@
                     </div>
                     <div class="card-body charts-container">
                         <div class="chart-wrapper">
-                            <h4>Hız & RPM</h4>
+                            <h4>HÄ±z & RPM</h4>
                             <canvas id="chart-speed"></canvas>
                         </div>
                         <div class="chart-wrapper">
-                            <h4>Voltaj & Akım</h4>
+                            <h4>Voltaj & AkÄ±m</h4>
                             <canvas id="chart-energy"></canvas>
                         </div>
                         <div class="chart-wrapper">
-                            <h4>Sıcaklık (°C)</h4>
+                            <h4>SÄ±caklÄ±k (Â°C)</h4>
                             <canvas id="chart-temp"></canvas>
                         </div>
                         <div class="chart-wrapper">
@@ -511,7 +513,7 @@
                             <canvas id="chart-soc"></canvas>
                         </div>
                         <div class="chart-wrapper" data-chart="iso" id="chart-iso-wrapper">
-                            <h4>İzolasyon (kΩ)</h4>
+                            <h4>Ä°zolasyon (kÎ©)</h4>
                             <canvas id="chart-iso"></canvas>
                         </div>
                     </div>
@@ -522,7 +524,7 @@
             <div id="view-map" class="view">
                 <div class="card full-height">
                     <div class="card-header map-header">
-                        <h3><i class="fa-solid fa-map-location-dot"></i> Detaylı Harita</h3>
+                        <h3><i class="fa-solid fa-map-location-dot"></i> DetaylÄ± Harita</h3>
                         <button id="btn-recenter" class="btn-recenter active" onclick="toggleTrackingMode()"
                             title="Konum Takip Aktif">
                             <i class="fa-solid fa-location-crosshairs"></i>
@@ -540,11 +542,11 @@
                 <div id="session-list-container" class="card">
                     <div class="card-header history-header">
                         <div class="header-left-group">
-                            <h3 style="margin:0;"><i class="fa-solid fa-folder-open"></i> Geçmiş Kayıtlar</h3>
+                            <h3 style="margin:0;"><i class="fa-solid fa-folder-open"></i> GeÃ§miÅŸ KayÄ±tlar</h3>
                             <div class="session-tabs">
                                 <button id="tab-system" class="sw-btn active"
                                     onclick="switchSessionTab('system')">Oturumlar</button>
-                                <button id="tab-custom" class="sw-btn" onclick="switchSessionTab('custom')">Özel
+                                <button id="tab-custom" class="sw-btn" onclick="switchSessionTab('custom')">Ã–zel
                                     Paketler</button>
                                 <button id="tab-tests" class="sw-btn"
                                     onclick="switchSessionTab('tests')">Testler</button>
@@ -564,10 +566,10 @@
                     </div>
 
                     <div class="card-body scrollable">
-                        <!-- Sistem Oturumları -->
+                        <!-- Sistem OturumlarÄ± -->
                         <div id="session-list" class="session-grid"></div>
 
-                        <!-- Özel Paketler -->
+                        <!-- Ã–zel Paketler -->
                         <div id="custom-packet-list" class="session-grid" style="display: none;"></div>
 
                         <!-- Testler -->
@@ -575,53 +577,53 @@
                     </div>
                 </div>
 
-                <!-- Paket Oluşturma Modalı -->
+                <!-- Paket OluÅŸturma ModalÄ± -->
                 <div id="packet-modal" class="lightbox" style="background: rgba(0,0,0,0.8); z-index: 10002;">
                     <div class="card" style="width: 90%; max-width: 400px; margin: auto; padding: 20px;">
-                        <h3 style="margin-bottom: 20px;">Yeni Veri Paketi Oluştur</h3>
+                        <h3 style="margin-bottom: 20px;">Yeni Veri Paketi OluÅŸtur</h3>
 
-                        <label>Paket İsmi:</label>
-                        <input type="text" id="packet-name" class="sw-input" placeholder="Örn: Yokuş Testi 1">
+                        <label>Paket Ä°smi:</label>
+                        <input type="text" id="packet-name" class="sw-input" placeholder="Ã–rn: YokuÅŸ Testi 1">
 
-                        <label style="margin-top: 10px;">Başlangıç:</label>
+                        <label style="margin-top: 10px;">BaÅŸlangÄ±Ã§:</label>
                         <input type="datetime-local" id="packet-start" class="sw-input">
 
-                        <label style="margin-top: 10px;">Bitiş:</label>
+                        <label style="margin-top: 10px;">BitiÅŸ:</label>
                         <input type="datetime-local" id="packet-end" class="sw-input">
 
                         <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
                             <button class="sw-btn" onclick="closeCreatePacketModal()"
-                                style="background: #444;">İptal</button>
+                                style="background: #444;">Ä°ptal</button>
                             <button class="sw-btn" onclick="saveCustomPacket()" style="background: #22c55e;"
-                                data-admin-only="hide">Oluştur</button>
+                                data-admin-only="hide">OluÅŸtur</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Oturum Detayı -->
+                <!-- Oturum DetayÄ± -->
                 <div id="session-detail-container" class="card" style="display:none;">
                     <div class="card-header detail-card-header">
-                        <!-- Geri butonu satırı -->
+                        <!-- Geri butonu satÄ±rÄ± -->
                         <div class="detail-nav">
                             <button class="btn-back" onclick="backToSessions()"><i class="fa-solid fa-arrow-left"></i>
                                 Geri</button>
                         </div>
-                        <!-- Başlık + CSV (sağa yaslı) -->
+                        <!-- BaÅŸlÄ±k + CSV (saÄŸa yaslÄ±) -->
                         <div class="detail-title-row">
-                            <h3 id="session-title">Oturum Detayı</h3>
+                            <h3 id="session-title">Oturum DetayÄ±</h3>
                             <button class="btn-csv" onclick="downloadSessionCSV()"><i class="fa-solid fa-download"></i>
-                                CSV İndir</button>
+                                CSV Ä°ndir</button>
                         </div>
-                        <!-- İsim + Açıklama alanı (sadece Testler için gösterilir) -->
+                        <!-- Ä°sim + AÃ§Ä±klama alanÄ± (sadece Testler iÃ§in gÃ¶sterilir) -->
                         <div id="test-description-section" style="display:none; margin-top:10px;">
-                            <!-- İsim (label) editörü -->
+                            <!-- Ä°sim (label) editÃ¶rÃ¼ -->
                             <div id="test-label-section" style="margin-bottom:10px;">
                                 <p id="test-label-text"
                                     style="font-size:0.92rem; font-weight:600; color:#f1f5f9; margin:0 0 6px; white-space:pre-wrap;">
                                 </p>
                                 <button class="sw-btn" onclick="editTestLabelDetail()" id="label-toggle-btn"
                                     style="background:#3b82f6; padding:4px 14px; font-size:0.8rem;">
-                                    <i class="fa-solid fa-pen"></i> <span id="label-btn-text">İsim Ekle</span>
+                                    <i class="fa-solid fa-pen"></i> <span id="label-btn-text">Ä°sim Ekle</span>
                                 </button>
                                 <div id="test-label-editor" style="display:none; margin-top:10px;">
                                     <input id="test-label-input" type="text" maxlength="80"
@@ -631,25 +633,25 @@
                                         <button class="sw-btn" onclick="saveTestLabel()"
                                             style="background:#22c55e; padding:4px 14px; font-size:0.8rem;">Kaydet</button>
                                         <button class="sw-btn" onclick="cancelTestLabel()"
-                                            style="background:#475569; padding:4px 14px; font-size:0.8rem;">İptal</button>
+                                            style="background:#475569; padding:4px 14px; font-size:0.8rem;">Ä°ptal</button>
                                     </div>
                                 </div>
                             </div>
-                            <!-- Açıklama editörü -->
+                            <!-- AÃ§Ä±klama editÃ¶rÃ¼ -->
                             <p id="test-description-text"
                                 style="color:#94a3b8; font-size:0.88rem; white-space:pre-wrap; margin:0 0 8px;"></p>
                             <button class="sw-btn" onclick="editTestDescription()" id="desc-toggle-btn"
                                 style="background:#3b82f6; padding:4px 14px; font-size:0.8rem;">
-                                <i class="fa-solid fa-pen"></i> <span id="desc-btn-text">Açıklama Ekle</span>
+                                <i class="fa-solid fa-pen"></i> <span id="desc-btn-text">AÃ§Ä±klama Ekle</span>
                             </button>
                             <div id="test-description-editor" style="display:none; margin-top:10px;">
-                                <textarea id="test-description-input" rows="3" placeholder="Açıklama girin..."
+                                <textarea id="test-description-input" rows="3" placeholder="AÃ§Ä±klama girin..."
                                     style="width:100%; background:#1e293b; color:#f1f5f9; border:1px solid #334155; border-radius:6px; padding:8px; font-family:inherit; resize:vertical; box-sizing:border-box;"></textarea>
                                 <div style="display:flex; gap:8px; margin-top:6px;">
                                     <button class="sw-btn" onclick="saveTestDescription()"
                                         style="background:#22c55e; padding:4px 14px; font-size:0.8rem;">Kaydet</button>
                                     <button class="sw-btn" onclick="cancelTestDescription()"
-                                        style="background:#475569; padding:4px 14px; font-size:0.8rem;">İptal</button>
+                                        style="background:#475569; padding:4px 14px; font-size:0.8rem;">Ä°ptal</button>
                                 </div>
                             </div>
                         </div>
@@ -659,12 +661,12 @@
                             <thead>
                                 <tr>
                                     <th>Zaman</th>
-                                    <th>Hız</th>
+                                    <th>HÄ±z</th>
                                     <th>Duty %</th>
                                     <th>Voltaj</th>
-                                    <th>Akım</th>
+                                    <th>AkÄ±m</th>
                                     <th>SOC</th>
-                                    <th>Sıcaklık</th>
+                                    <th>SÄ±caklÄ±k</th>
                                     <th>RPM</th>
                                 </tr>
                             </thead>
@@ -675,28 +677,28 @@
                 </div>
             </div>
 
-            <!-- Strategy View (Stratejist Ekranı - Verimlilik Yarışı) -->
+            <!-- Strategy View (Stratejist EkranÄ± - Verimlilik YarÄ±ÅŸÄ±) -->
             <div id="view-strategy" class="view">
                 <div class="strategy-grid">
-                    <!-- Yarış Ayarları (Tam Genişlik) -->
+                    <!-- YarÄ±ÅŸ AyarlarÄ± (Tam GeniÅŸlik) -->
                     <div class="card strategy-card race-setup-card">
                         <div class="card-header">
-                            <h3><i class="fa-solid fa-flag-checkered"></i> Yarış Ayarları</h3>
+                            <h3><i class="fa-solid fa-flag-checkered"></i> YarÄ±ÅŸ AyarlarÄ±</h3>
                         </div>
                         <div class="card-body">
                             <div class="race-setup-grid">
                                 <div class="setup-input-group">
-                                    <label>Hedef Tur Sayısı</label>
+                                    <label>Hedef Tur SayÄ±sÄ±</label>
                                     <input type="number" id="target-laps" value="10" min="1" max="50"
                                         class="setup-input">
                                 </div>
                                 <div class="setup-input-group">
-                                    <label>Hedef Süre (dakika)</label>
+                                    <label>Hedef SÃ¼re (dakika)</label>
                                     <input type="number" id="target-time" value="30" min="5" max="120"
                                         class="setup-input">
                                 </div>
                                 <div class="setup-input-group">
-                                    <label>Tur Uzunluğu (metre)</label>
+                                    <label>Tur UzunluÄŸu (metre)</label>
                                     <input type="number" id="lap-distance" value="3000" min="500" max="10000"
                                         class="setup-input">
                                 </div>
@@ -708,10 +710,10 @@
                         </div>
                     </div>
 
-                    <!-- Anlık Verimlilik -->
+                    <!-- AnlÄ±k Verimlilik -->
                     <div class="card strategy-card">
                         <div class="card-header">
-                            <h3><i class="fa-solid fa-bolt"></i> Anlık Verimlilik</h3>
+                            <h3><i class="fa-solid fa-bolt"></i> AnlÄ±k Verimlilik</h3>
                         </div>
                         <div class="card-body strategy-body">
                             <div class="efficiency-main">
@@ -720,11 +722,11 @@
                             </div>
                             <div class="efficiency-details">
                                 <div class="eff-detail">
-                                    <span class="eff-label">Anlık Güç</span>
+                                    <span class="eff-label">AnlÄ±k GÃ¼Ã§</span>
                                     <span class="eff-value" id="instant-power">-- W</span>
                                 </div>
                                 <div class="eff-detail">
-                                    <span class="eff-label">Ortalama Tüketim</span>
+                                    <span class="eff-label">Ortalama TÃ¼ketim</span>
                                     <span class="eff-value" id="avg-wh-km">-- Wh/km</span>
                                 </div>
                                 <div class="eff-detail">
@@ -747,25 +749,25 @@
                             </div>
                             <div class="pace-details">
                                 <div class="pace-detail">
-                                    <span class="pace-label">Tur Başına Süre</span>
+                                    <span class="pace-label">Tur BaÅŸÄ±na SÃ¼re</span>
                                     <span class="pace-val" id="target-lap-time">--:--</span>
                                 </div>
                                 <div class="pace-detail">
-                                    <span class="pace-label">Anlık Hız</span>
+                                    <span class="pace-label">AnlÄ±k HÄ±z</span>
                                     <span class="pace-val" id="current-speed">-- km/h</span>
                                 </div>
                                 <div class="pace-detail status-indicator-pace" id="pace-status">
                                     <span class="pace-label">Durum</span>
-                                    <span class="pace-val">Ayarlanmadı</span>
+                                    <span class="pace-val">AyarlanmadÄ±</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Yarış İlerlemesi -->
+                    <!-- YarÄ±ÅŸ Ä°lerlemesi -->
                     <div class="card strategy-card">
                         <div class="card-header">
-                            <h3><i class="fa-solid fa-route"></i> Yarış İlerlemesi</h3>
+                            <h3><i class="fa-solid fa-route"></i> YarÄ±ÅŸ Ä°lerlemesi</h3>
                         </div>
                         <div class="card-body strategy-body">
                             <div class="progress-main">
@@ -777,7 +779,7 @@
                             </div>
                             <div class="progress-details">
                                 <div class="prog-detail">
-                                    <span class="prog-label">Kalan Süre</span>
+                                    <span class="prog-label">Kalan SÃ¼re</span>
                                     <span class="prog-value" id="remaining-time">--:--</span>
                                 </div>
                                 <div class="prog-detail">
@@ -796,10 +798,10 @@
                         </div>
                     </div>
 
-                    <!-- Enerji Bütçesi -->
+                    <!-- Enerji BÃ¼tÃ§esi -->
                     <div class="card strategy-card">
                         <div class="card-header">
-                            <h3><i class="fa-solid fa-piggy-bank"></i> Enerji Bütçesi</h3>
+                            <h3><i class="fa-solid fa-piggy-bank"></i> Enerji BÃ¼tÃ§esi</h3>
                         </div>
                         <div class="card-body strategy-body">
                             <div class="budget-bar-container">
@@ -815,7 +817,7 @@
                             </div>
                             <div class="budget-status" id="budget-status">
                                 <i class="fa-solid fa-circle-check"></i>
-                                <span>Yarış ayarlarını girin</span>
+                                <span>YarÄ±ÅŸ ayarlarÄ±nÄ± girin</span>
                             </div>
                         </div>
                     </div>
@@ -843,7 +845,7 @@
                                     <i class="fa-solid fa-flag"></i>
                                 </button>
                                 <button id="strat-sw-reset" class="sw-btn reset" data-admin-only="disable"
-                                    title="Sıfırla">
+                                    title="SÄ±fÄ±rla">
                                     <i class="fa-solid fa-rotate-left"></i>
                                 </button>
                             </div>
@@ -853,12 +855,12 @@
                 </div>
             </div>
 
-            <!-- Media View (Müzik & Video) -->
+            <!-- Media View (MÃ¼zik & Video) -->
             <div id="view-media" class="view">
 
-                <!-- ═══════════════════════════════════════════════════════════
-                     PANEL 1: ŞAKA BİLDİRİM — sadece alienes.akalin görür
-                ═══════════════════════════════════════════════════════════ -->
+                <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                     PANEL 1: ÅAKA BÄ°LDÄ°RÄ°M â€” sadece alienes.akalin gÃ¶rÃ¼r
+                â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
                 <div data-owner-only style="display:none; margin-bottom:20px;">
 
                     <!-- Premium Gold-Black-Neon kart -->
@@ -881,22 +883,22 @@
                             <i class="fa-solid fa-ghost"
                                 style="color:#f59e0b; font-size:1.1rem; filter:drop-shadow(0 0 6px rgba(245,158,11,0.7));"></i>
                             <span
-                                style="color:#f59e0b; font-weight:700; font-size:1rem; letter-spacing:0.03em; text-shadow:0 0 12px rgba(245,158,11,0.4);">Şaka
-                                Bildirimi Gönder</span>
-                            <span style="font-size:0.7rem; color:#78571a; margin-left:4px;">— sadece sen görürsün
-                                😏</span>
+                                style="color:#f59e0b; font-weight:700; font-size:1rem; letter-spacing:0.03em; text-shadow:0 0 12px rgba(245,158,11,0.4);">Åaka
+                                Bildirimi GÃ¶nder</span>
+                            <span style="font-size:0.7rem; color:#78571a; margin-left:4px;">â€” sadece sen gÃ¶rÃ¼rsÃ¼n
+                                ğŸ˜</span>
                         </div>
 
                         <!-- Body -->
                         <div style="padding: 20px 24px;">
 
-                            <!-- Emoji Seçici -->
+                            <!-- Emoji SeÃ§ici -->
                             <div style="margin-bottom:18px;">
                                 <div
                                     style="font-size:0.68rem; color:#b8860b; text-transform:uppercase; letter-spacing:0.1em; font-weight:600; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-                                    <i class="fa-solid fa-face-laugh-squint"></i> Emoji Seç
+                                    <i class="fa-solid fa-face-laugh-squint"></i> Emoji SeÃ§
                                     <span
-                                        style="color:#4a3800; font-weight:400; text-transform:none; letter-spacing:normal;">(başlığa
+                                        style="color:#4a3800; font-weight:400; text-transform:none; letter-spacing:normal;">(baÅŸlÄ±ÄŸa
                                         eklenecek)</span>
                                 </div>
                                 <div id="prank-emoji-grid"
@@ -905,16 +907,16 @@
                                 </div>
                                 <div
                                     style="margin-top:10px; font-size:1.6rem; text-align:center; background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 0; border:1px solid rgba(184,134,11,0.1);">
-                                    Seçili: <span id="prank-selected-emoji">⚠️</span>
+                                    SeÃ§ili: <span id="prank-selected-emoji">âš ï¸</span>
                                 </div>
                             </div>
 
-                            <!-- Ayırıcı -->
+                            <!-- AyÄ±rÄ±cÄ± -->
                             <div
                                 style="height:1px; background:linear-gradient(90deg,transparent,rgba(184,134,11,0.4),transparent); margin:16px 0;">
                             </div>
 
-                            <!-- Bildirim Rengi + İkon (yan yana) -->
+                            <!-- Bildirim Rengi + Ä°kon (yan yana) -->
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
 
                                 <div>
@@ -928,19 +930,19 @@
                                             style="display:flex; align-items:center; gap:7px; cursor:pointer; font-size:0.85rem;">
                                             <input type="radio" name="prank-type" value="danger" checked
                                                 style="accent-color:#ef4444;">
-                                            <span style="color:#ef4444;">⛔ Kırmızı</span>
+                                            <span style="color:#ef4444;">â›” KÄ±rmÄ±zÄ±</span>
                                         </label>
                                         <label
                                             style="display:flex; align-items:center; gap:7px; cursor:pointer; font-size:0.85rem;">
                                             <input type="radio" name="prank-type" value="warning"
                                                 style="accent-color:#f59e0b;">
-                                            <span style="color:#f59e0b;">⚠️ Sarı</span>
+                                            <span style="color:#f59e0b;">âš ï¸ SarÄ±</span>
                                         </label>
                                         <label
                                             style="display:flex; align-items:center; gap:7px; cursor:pointer; font-size:0.85rem;">
                                             <input type="radio" name="prank-type" value="info"
                                                 style="accent-color:#3b82f6;">
-                                            <span style="color:#3b82f6;">ℹ️ Mavi</span>
+                                            <span style="color:#3b82f6;">â„¹ï¸ Mavi</span>
                                         </label>
                                     </div>
                                 </div>
@@ -948,7 +950,7 @@
                                 <div>
                                     <div
                                         style="font-size:0.68rem; color:#b8860b; text-transform:uppercase; letter-spacing:0.1em; font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                                        <i class="fa-solid fa-icons"></i> İkon
+                                        <i class="fa-solid fa-icons"></i> Ä°kon
                                     </div>
                                     <div
                                         style="display:flex; flex-direction:column; gap:7px; background:rgba(0,0,0,0.3); border-radius:8px; padding:10px 12px; border:1px solid rgba(184,134,11,0.12);">
@@ -962,47 +964,47 @@
                                             style="display:flex; align-items:center; gap:7px; cursor:pointer; font-size:0.85rem;">
                                             <input type="radio" name="prank-icon" value="fa-triangle-exclamation"> <i
                                                 class="fa-solid fa-triangle-exclamation"
-                                                style="color:#f59e0b;width:14px;text-align:center;"></i> Uyarı
+                                                style="color:#f59e0b;width:14px;text-align:center;"></i> UyarÄ±
                                         </label>
                                         <label
                                             style="display:flex; align-items:center; gap:7px; cursor:pointer; font-size:0.85rem;">
                                             <input type="radio" name="prank-icon" value="fa-bolt"> <i
                                                 class="fa-solid fa-bolt"
-                                                style="color:#f59e0b;width:14px;text-align:center;"></i> Şimşek
+                                                style="color:#f59e0b;width:14px;text-align:center;"></i> ÅimÅŸek
                                         </label>
                                         <label
                                             style="display:flex; align-items:center; gap:7px; cursor:pointer; font-size:0.85rem;">
                                             <input type="radio" name="prank-icon" value="fa-plug-circle-xmark"> <i
                                                 class="fa-solid fa-plug-circle-xmark"
-                                                style="color:#f59e0b;width:14px;text-align:center;"></i> Kontaktör
+                                                style="color:#f59e0b;width:14px;text-align:center;"></i> KontaktÃ¶r
                                         </label>
                                         <label
                                             style="display:flex; align-items:center; gap:7px; cursor:pointer; font-size:0.85rem;">
                                             <input type="radio" name="prank-icon" value="fa-fire"> <i
                                                 class="fa-solid fa-fire"
-                                                style="color:#f59e0b;width:14px;text-align:center;"></i> Ateş
+                                                style="color:#f59e0b;width:14px;text-align:center;"></i> AteÅŸ
                                         </label>
                                         <label
                                             style="display:flex; align-items:center; gap:7px; cursor:pointer; font-size:0.85rem;">
                                             <input type="radio" name="prank-icon" value="fa-skull-crossbones"> <i
                                                 class="fa-solid fa-skull-crossbones"
-                                                style="color:#f59e0b;width:14px;text-align:center;"></i> Kafatası
+                                                style="color:#f59e0b;width:14px;text-align:center;"></i> KafatasÄ±
                                         </label>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Başlık -->
+                            <!-- BaÅŸlÄ±k -->
                             <div style="margin-bottom:12px;">
                                 <div
                                     style="font-size:0.68rem; color:#b8860b; text-transform:uppercase; letter-spacing:0.1em; font-weight:600; margin-bottom:7px; display:flex; align-items:center; gap:6px;">
-                                    <i class="fa-solid fa-heading"></i> Başlık
+                                    <i class="fa-solid fa-heading"></i> BaÅŸlÄ±k
                                     <span
                                         style="color:#4a3800; font-weight:400; text-transform:none; letter-spacing:normal;">(emoji
                                         otomatik eklenir)</span>
                                 </div>
                                 <input type="text" id="prank-title-input" maxlength="80"
-                                    placeholder="örn: Sıcaklık Yüksek!"
+                                    placeholder="Ã¶rn: SÄ±caklÄ±k YÃ¼ksek!"
                                     style="width:100%; padding:11px 14px; border-radius:8px; border:1px solid rgba(184,134,11,0.3); background:rgba(0,0,0,0.5); color:#fef3c7; font-size:0.95rem; box-sizing:border-box; outline:none; transition:border-color 0.2s;"
                                     onfocus="this.style.borderColor='#f59e0b'"
                                     onblur="this.style.borderColor='rgba(184,134,11,0.3)'">
@@ -1012,21 +1014,21 @@
                             <div style="margin-bottom:18px;">
                                 <div
                                     style="font-size:0.68rem; color:#b8860b; text-transform:uppercase; letter-spacing:0.1em; font-weight:600; margin-bottom:7px; display:flex; align-items:center; gap:6px;">
-                                    <i class="fa-solid fa-comment"></i> Altyazı / Mesaj
+                                    <i class="fa-solid fa-comment"></i> AltyazÄ± / Mesaj
                                 </div>
                                 <input type="text" id="prank-message-input" maxlength="180"
-                                    placeholder="örn: Akım kritik seviyeye ulaştı! Araç durduruluyor..."
+                                    placeholder="Ã¶rn: AkÄ±m kritik seviyeye ulaÅŸtÄ±! AraÃ§ durduruluyor..."
                                     style="width:100%; padding:11px 14px; border-radius:8px; border:1px solid rgba(184,134,11,0.3); background:rgba(0,0,0,0.5); color:#fef3c7; font-size:0.95rem; box-sizing:border-box; outline:none; transition:border-color 0.2s;"
                                     onfocus="this.style.borderColor='#f59e0b'"
                                     onblur="this.style.borderColor='rgba(184,134,11,0.3)'">
                             </div>
 
-                            <!-- Önizleme -->
+                            <!-- Ã–nizleme -->
                             <div id="prank-preview"
                                 style="display:none; margin-bottom:16px; border:1px solid rgba(184,134,11,0.25); border-radius:10px; padding:12px 14px; background:rgba(0,0,0,0.5);">
                                 <div
                                     style="font-size:0.65rem; color:#78571a; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px;">
-                                    Önizleme</div>
+                                    Ã–nizleme</div>
                                 <div style="display:flex; align-items:center; gap:12px;">
                                     <div id="prev-icon"
                                         style="font-size:1.4rem; color:#ef4444; filter:drop-shadow(0 0 4px currentColor);">
@@ -1046,13 +1048,13 @@
                                     style="padding:10px 22px; border-radius:8px; border:1px solid rgba(184,134,11,0.4); background:rgba(184,134,11,0.08); color:#b8860b; cursor:pointer; font-size:0.9rem; transition:all 0.2s; display:flex; align-items:center; gap:7px;"
                                     onmouseenter="this.style.background='rgba(184,134,11,0.15)'"
                                     onmouseleave="this.style.background='rgba(184,134,11,0.08)'">
-                                    <i class="fa-solid fa-eye"></i> Önizle
+                                    <i class="fa-solid fa-eye"></i> Ã–nizle
                                 </button>
                                 <button onclick="sendPrankNotification()" id="prank-send-btn"
                                     style="padding:10px 26px; border-radius:8px; border:1px solid #b8860b; background:linear-gradient(135deg,#7a4800 0%,#b8860b 50%,#7a4800 100%); color:#fef3c7; cursor:pointer; font-size:0.9rem; font-weight:700; letter-spacing:0.04em; box-shadow:0 0 18px rgba(245,158,11,0.3); transition:all 0.2s; display:flex; align-items:center; gap:7px;"
                                     onmouseenter="this.style.boxShadow='0 0 28px rgba(245,158,11,0.5)'"
                                     onmouseleave="this.style.boxShadow='0 0 18px rgba(245,158,11,0.3)'">
-                                    <i class="fa-solid fa-ghost"></i> Herkese Gönder
+                                    <i class="fa-solid fa-ghost"></i> Herkese GÃ¶nder
                                 </button>
                             </div>
 
@@ -1063,11 +1065,11 @@
                         </div><!-- /body -->
                     </div><!-- /premium card -->
                 </div>
-                <!-- ═══════════════════════ PANEL 1 SONU ═══════════════════════ -->
+                <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PANEL 1 SONU â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
-                <!-- ═══════════════════════════════════════════════════════════
-                     PANEL 2: YOUTUBE PLAYER — sadece alienes.akalin görür
-                ═══════════════════════════════════════════════════════════ -->
+                <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                     PANEL 2: YOUTUBE PLAYER â€” sadece alienes.akalin gÃ¶rÃ¼r
+                â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
                 <div data-owner-only style="display:none; margin-bottom:20px;">
 
                     <div style="
@@ -1090,9 +1092,9 @@
                                 style="color:#06b6d4; font-size:1.1rem; filter:drop-shadow(0 0 6px rgba(6,182,212,0.7));"></i>
                             <span
                                 style="color:#06b6d4; font-weight:700; font-size:1rem; letter-spacing:0.03em; text-shadow:0 0 12px rgba(6,182,212,0.4);">Gizli
-                                Ses Oynatıcı</span>
-                            <span style="font-size:0.7rem; color:#0e4a5a; margin-left:4px;">— YouTube linkini yapıştır,
-                                ses sitede çalar 🎵</span>
+                                Ses OynatÄ±cÄ±</span>
+                            <span style="font-size:0.7rem; color:#0e4a5a; margin-left:4px;">â€” YouTube linkini yapÄ±ÅŸtÄ±r,
+                                ses sitede Ã§alar ğŸµ</span>
                         </div>
 
                         <!-- Body -->
@@ -1115,7 +1117,7 @@
                                     style="padding:11px 22px; border-radius:8px; border:1px solid #0e7490; background:linear-gradient(135deg,#063f54 0%,#0e7490 50%,#063f54 100%); color:#cffafe; cursor:pointer; font-size:0.9rem; font-weight:700; letter-spacing:0.03em; box-shadow:0 0 18px rgba(6,182,212,0.25); transition:all 0.2s; white-space:nowrap; display:flex; align-items:center; gap:7px;"
                                     onmouseenter="this.style.boxShadow='0 0 28px rgba(6,182,212,0.45)'"
                                     onmouseleave="this.style.boxShadow='0 0 18px rgba(6,182,212,0.25)'">
-                                    <i class="fa-solid fa-play"></i> Çal
+                                    <i class="fa-solid fa-play"></i> Ã‡al
                                 </button>
 
                                 <button onclick="stopYoutubeAudio()"
@@ -1132,29 +1134,29 @@
                             <div
                                 style="background:rgba(6,182,212,0.06); border:1px solid rgba(14,116,144,0.2); border-radius:8px; padding:10px 14px;">
                                 <p style="font-size:0.76rem; color:#0e7490; margin:0 0 4px 0;">
-                                    🎯 <strong style="color:#06b6d4;">Nasıl çalışır?</strong> Çal'a basınca video
-                                    <strong>TÜM bağlı kullanıcılarda</strong> büyük tam-ekran popup açılır.
+                                    ğŸ¯ <strong style="color:#06b6d4;">NasÄ±l Ã§alÄ±ÅŸÄ±r?</strong> Ã‡al'a basÄ±nca video
+                                    <strong>TÃœM baÄŸlÄ± kullanÄ±cÄ±larda</strong> bÃ¼yÃ¼k tam-ekran popup aÃ§Ä±lÄ±r.
                                 </p>
                                 <p style="font-size:0.74rem; color:#0e4a5a; margin:0;">
-                                    Desteklenen: youtube.com/watch, youtu.be/, /shorts/ — Durdur butonu herkesi kapatır.
+                                    Desteklenen: youtube.com/watch, youtu.be/, /shorts/ â€” Durdur butonu herkesi kapatÄ±r.
                                 </p>
                             </div>
 
                         </div><!-- /body -->
                     </div><!-- /premium card -->
                 </div>
-                <!-- ═══════════════════════ PANEL 2 SONU ═══════════════════════ -->
+                <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PANEL 2 SONU â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 
-                <!-- Normal Medya Merkezi Kartı -->
+                <!-- Normal Medya Merkezi KartÄ± -->
                 <div class="card">
                     <div class="card-header">
-                        <h3><i class="fa-solid fa-compact-disc"></i> Medya Merkezi (Eğlence)</h3>
+                        <h3><i class="fa-solid fa-compact-disc"></i> Medya Merkezi (EÄŸlence)</h3>
                     </div>
                     <div class="card-body" style="text-align: center;">
 
                         <!-- Arama Kutusu -->
                         <div class="media-section" style="max-width: 600px; margin: 0 auto;">
-                            <h4><i class="fa-brands fa-youtube" style="color:#ff0000"></i> Video & Müzik Ara</h4>
+                            <h4><i class="fa-brands fa-youtube" style="color:#ff0000"></i> Video & MÃ¼zik Ara</h4>
 
                             <div class="search-box" style="display: flex; gap: 10px; margin-bottom: 20px;">
                                 <input type="text" id="yt-search-input" placeholder="Ne dinlemek istersin?"
@@ -1168,9 +1170,9 @@
 
                         <hr style="border-color: var(--border); margin: 20px 0;">
 
-                        <!-- Hızlı Erişim Butonları -->
+                        <!-- HÄ±zlÄ± EriÅŸim ButonlarÄ± -->
                         <div class="app-shortcuts">
-                            <h4>Hızlı Erişim</h4>
+                            <h4>HÄ±zlÄ± EriÅŸim</h4>
                             <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                                 <button onclick="openMediaApp('spotify','https://open.spotify.com')" class="sw-btn"
                                     style="background: #1DB954; width: 150px;">
@@ -1186,17 +1188,17 @@
                                 </button>
                             </div>
                             <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 15px;">
-                                * Butonlar hem masaüstünde hem mobilde çalışır.
+                                * Butonlar hem masaÃ¼stÃ¼nde hem mobilde Ã§alÄ±ÅŸÄ±r.
                             </p>
                         </div>
 
                         <hr style="border-color: var(--border); margin: 20px 0;">
 
-                        <!-- Takım Galerisi -->
+                        <!-- TakÄ±m Galerisi -->
                         <div class="gallery-section">
-                            <h4><i class="fa-solid fa-images" style="color:#f59e0b"></i> Takım Galerisi</h4>
+                            <h4><i class="fa-solid fa-images" style="color:#f59e0b"></i> TakÄ±m Galerisi</h4>
                             <div id="team-gallery-grid" class="gallery-grid">
-                                <p style="color:#94a3b8; width:100%;">Görüntülenecek fotoğraf yok.</p>
+                                <p style="color:#94a3b8; width:100%;">GÃ¶rÃ¼ntÃ¼lenecek fotoÄŸraf yok.</p>
                             </div>
                         </div>
 
@@ -1221,7 +1223,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <!-- Custom Scripts (Minified for Production) -->
-    <script src="js/app.min.js?v=115"></script>
+    <script src="js/app.min.js?v=116"></script>
 
     <!-- Service Worker & Pull-to-Refresh -->
     <script>
@@ -1231,7 +1233,7 @@
                 navigator.serviceWorker.register('/sw.js')
                     .then(reg => {
                         console.log('SW registered:', reg.scope);
-                        // Her sayfa yüklemesinde güncelleme kontrolü yap
+                        // Her sayfa yÃ¼klemesinde gÃ¼ncelleme kontrolÃ¼ yap
                         reg.update();
                     })
                     .catch(err => console.log('SW registration failed:', err));
@@ -1264,3 +1266,4 @@
 </body>
 
 </html>
+
