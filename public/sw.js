@@ -10,7 +10,7 @@
 // ============================================================
 
 // Ã–nbellek versiyonu - Her gÃ¼ncellemede artÄ±rÄ±lmalÄ±
-const CACHE_NAME = 'telemetri-v117';
+const CACHE_NAME = 'telemetri-v118';
 
 // Statik dosyalar - Cache First (sadece ikonlar ve manifest)
 const STATIC_ASSETS = [
@@ -193,5 +193,6 @@ self.addEventListener('sync', event => {
         console.log('[SW] Background sync triggered');
     }
 });
+
 
 

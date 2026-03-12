@@ -243,7 +243,14 @@ function switchVehicle(newDeviceId) {
     // Header çizim görsellerini araç tipine göre değiştir
     if (cfg.imgs) {
         document.querySelectorAll('.header-sketch-img').forEach((img, i) => {
-            if (cfg.imgs[i]) img.src = cfg.imgs[i];
+            if (cfg.imgs[i]) {
+                img.src = cfg.imgs[i];
+                
+                // Araç değiştirildiğinde animasyonu sıfırlayıp tekrar oynat
+                img.style.animation = 'none';
+                void img.offsetHeight; // DOM reflow'u zorla
+                img.style.animation = null;
+            }
         });
     }
 
