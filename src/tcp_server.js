@@ -10,7 +10,14 @@
 
 const net = require('net');
 const mongoose = require('mongoose');
-require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+
+// .env dosyasını yükle — önce .env, yoksa .env.production dene
+const envFile = fs.existsSync(path.join(__dirname, '..', '.env'))
+  ? '.env'
+  : '.env.production';
+require('dotenv').config({ path: path.join(__dirname, '..', envFile) });
 
 const logger = require('./logger');
 

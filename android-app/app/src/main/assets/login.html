@@ -137,7 +137,8 @@
             pointer-events: none;
         }
 
-        .input-wrapper input {
+        .input-wrapper input,
+        .input-wrapper select {
             width: 100%;
             padding: 14px 44px 14px 44px;
             background: rgba(15, 23, 42, 0.6);
@@ -148,7 +149,14 @@
             transition: all 0.3s;
         }
 
-        .input-wrapper input:focus {
+        .input-wrapper select {
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .input-wrapper input:focus,
+        .input-wrapper select:focus {
             outline: none;
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
@@ -158,7 +166,6 @@
             color: #475569;
         }
 
-        /* Password Toggle Button */
         .password-toggle {
             position: absolute;
             right: 14px;
@@ -175,74 +182,6 @@
 
         .password-toggle:hover {
             color: #3b82f6;
-        }
-
-        /* Role Selection */
-        .role-selection {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .role-option {
-            flex: 1;
-            position: relative;
-        }
-
-        .role-option input {
-            position: absolute;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
-        .role-option label {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 16px;
-            background: rgba(15, 23, 42, 0.6);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .role-option label i {
-            font-size: 1.5rem;
-            margin-bottom: 8px;
-            color: #64748b;
-            transition: color 0.3s;
-        }
-
-        .role-option label span {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: #94a3b8;
-            transition: color 0.3s;
-        }
-
-        .role-option input:checked+label {
-            border-color: #3b82f6;
-            background: rgba(59, 130, 246, 0.1);
-        }
-
-        .role-option input:checked+label i {
-            color: #3b82f6;
-        }
-
-        .role-option input:checked+label span {
-            color: #f1f5f9;
-        }
-
-        .role-option:first-child input:checked+label {
-            border-color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
-        }
-
-        .role-option:first-child input:checked+label i {
-            color: #10b981;
         }
 
         .login-btn {
@@ -319,6 +258,41 @@
             display: flex;
         }
 
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            color: #6ee7b7;
+            font-size: 0.85rem;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .success-message.show {
+            display: flex;
+        }
+
+        .toggle-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .toggle-link a {
+            color: #3b82f6;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .toggle-link a:hover {
+            text-decoration: underline;
+        }
+
         .footer-text {
             text-align: center;
             margin-top: 24px;
@@ -331,7 +305,7 @@
             text-decoration: none;
         }
 
-        /* ==================== SUCCESS ANIMATION ==================== */
+        /* Success Overlay */
         .success-overlay {
             position: fixed;
             top: 0;
@@ -429,7 +403,11 @@
             font-size: 0.9rem;
         }
 
-        /* Mobile responsive */
+        /* Hidden form */
+        .form-hidden {
+            display: none;
+        }
+
         @media (max-width: 480px) {
             .login-card {
                 padding: 24px;
@@ -437,10 +415,6 @@
 
             .logo-section h1 {
                 font-size: 1.25rem;
-            }
-
-            .role-selection {
-                flex-direction: column;
             }
 
             .success-logo {
@@ -474,50 +448,31 @@
                 <p>Elektromobil Telemetri Sistemi</p>
             </div>
 
+            <!-- ==================== GİRİŞ FORMU ==================== -->
             <form id="login-form">
-                <div class="error-message" id="error-message">
+                <div class="error-message" id="login-error">
                     <i class="fa-solid fa-circle-exclamation"></i>
-                    <span id="error-text">Hata oluştu</span>
+                    <span id="login-error-text">Hata oluştu</span>
                 </div>
 
                 <div class="form-group">
-                    <label for="username">Kullanıcı Adı</label>
+                    <label for="login-username">Kullanıcı Adı</label>
                     <div class="input-wrapper">
                         <i class="fa-solid fa-user input-icon"></i>
-                        <input type="text" id="username" name="username" placeholder="Kullanıcı adınızı girin" required
+                        <input type="text" id="login-username" placeholder="Kullanıcı adınızı girin" required
                             autocomplete="username">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Şifre</label>
+                    <label for="login-password">Şifre</label>
                     <div class="input-wrapper">
                         <i class="fa-solid fa-lock input-icon"></i>
-                        <input type="password" id="password" name="password" placeholder="Şifrenizi girin" required
+                        <input type="password" id="login-password" placeholder="Şifrenizi girin" required
                             autocomplete="current-password">
-                        <button type="button" class="password-toggle" id="password-toggle" onclick="togglePassword()">
+                        <button type="button" class="password-toggle" onclick="togglePassword('login-password', this)">
                             <i class="fa-solid fa-eye"></i>
                         </button>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Giriş Türü</label>
-                    <div class="role-selection">
-                        <div class="role-option">
-                            <input type="radio" name="role" id="role-member" value="member" checked>
-                            <label for="role-member">
-                                <i class="fa-solid fa-user"></i>
-                                <span>Üye</span>
-                            </label>
-                        </div>
-                        <div class="role-option">
-                            <input type="radio" name="role" id="role-admin" value="admin">
-                            <label for="role-admin">
-                                <i class="fa-solid fa-user-shield"></i>
-                                <span>Admin</span>
-                            </label>
-                        </div>
                     </div>
                 </div>
 
@@ -526,17 +481,87 @@
                     <span>Giriş Yap</span>
                     <i class="fa-solid fa-arrow-right"></i>
                 </button>
+
+                <div class="toggle-link">
+                    Hesabınız yok mu? <a onclick="showRegister()">Kayıt Ol</a>
+                </div>
+            </form>
+
+            <!-- ==================== KAYIT FORMU ==================== -->
+            <form id="register-form" class="form-hidden">
+                <div class="error-message" id="register-error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span id="register-error-text">Hata oluştu</span>
+                </div>
+
+                <div class="success-message" id="register-success">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span id="register-success-text">Kayıt talebiniz oluşturuldu</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="reg-username">Kullanıcı Adı</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        <input type="text" id="reg-username" placeholder="Kullanıcı adı (3-20 karakter)" required
+                            minlength="3" maxlength="20">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reg-password">Şifre</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="reg-password" placeholder="Şifre (min 6 karakter)" required
+                            minlength="6">
+                        <button type="button" class="password-toggle" onclick="togglePassword('reg-password', this)">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reg-password2">Şifre Tekrar</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="reg-password2" placeholder="Şifreyi tekrar girin" required
+                            minlength="6">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reg-role">İstenilen Rütbe</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-shield-halved input-icon"></i>
+                        <select id="reg-role">
+                            <option value="member">Üye (Member)</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-btn" id="register-btn"
+                    style="background: linear-gradient(135deg, #10b981, #059669);">
+                    <div class="spinner"></div>
+                    <span>Kayıt Talebi Gönder</span>
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+
+                <div class="toggle-link">
+                    Zaten hesabınız var mı? <a onclick="showLogin()">Giriş Yap</a>
+                </div>
             </form>
 
             <p class="footer-text">
-                © 2026 <span onclick="openLinkedIn()" style="cursor:pointer; text-decoration:underline;">Ali Enes Akalın</span> - Çukurova
+                © 2026 <span onclick="openLinkedIn()" style="cursor:pointer; text-decoration:underline;">Ali Enes
+                    Akalın</span> - Çukurova
                 Üniversitesi
             </p>
         </div>
     </div>
 
     <script>
-        // LinkedIn'i native uygulamada, yoksa tarayıcıda aç
+        // LinkedIn handler
         function openLinkedIn() {
             const profileUrl = 'https://www.linkedin.com/in/aliakalin/';
             const isAndroidWebView = !!window.AndroidNotification;
@@ -548,60 +573,68 @@
             }
         }
 
-        // Check if already logged in
+        // Already logged in check
         const token = localStorage.getItem('authToken');
         if (token) {
             window.location.href = 'index.html';
         }
 
-        const form = document.getElementById('login-form');
-        const loginBtn = document.getElementById('login-btn');
-        const errorMessage = document.getElementById('error-message');
-        const errorText = document.getElementById('error-text');
-        const successOverlay = document.getElementById('success-overlay');
-        
-        // API Base URL - Android ve Web uyumlu
-        const API_BASE = window.location.protocol === 'file:' 
-            ? 'https://telemetry-aliakalin.com.tr' 
+        // API Base URL
+        const API_BASE = window.location.protocol === 'file:'
+            ? 'https://telemetry-aliakalin.com.tr'
             : '';
 
-        // Password Toggle Function
-        function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const toggleBtn = document.getElementById('password-toggle');
-            const icon = toggleBtn.querySelector('i');
+        // Form references
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
 
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
+        // Toggle between login and register
+        function showRegister() {
+            loginForm.classList.add('form-hidden');
+            registerForm.classList.remove('form-hidden');
+            document.getElementById('register-error').classList.remove('show');
+            document.getElementById('register-success').classList.remove('show');
+        }
+
+        function showLogin() {
+            registerForm.classList.add('form-hidden');
+            loginForm.classList.remove('form-hidden');
+            document.getElementById('login-error').classList.remove('show');
+        }
+
+        // Password toggle
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
                 icon.classList.remove('fa-eye');
                 icon.classList.add('fa-eye-slash');
             } else {
-                passwordInput.type = 'password';
+                input.type = 'password';
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
             }
         }
 
-        form.addEventListener('submit', async (e) => {
+        // ==================== LOGIN ====================
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const role = document.querySelector('input[name="role"]:checked').value;
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            const loginBtn = document.getElementById('login-btn');
+            const errorEl = document.getElementById('login-error');
+            const errorText = document.getElementById('login-error-text');
 
-            // Hide previous error
-            errorMessage.classList.remove('show');
-
-            // Show loading
+            errorEl.classList.remove('show');
             loginBtn.classList.add('loading');
             loginBtn.disabled = true;
 
             try {
                 const response = await fetch(`${API_BASE}/api/auth/login`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
 
@@ -611,29 +644,82 @@
                     throw new Error(data.error || 'Giriş başarısız');
                 }
 
-                // Check if user role matches selected role
-                if (data.user.role !== role) {
-                    throw new Error(`Bu hesap ${role === 'admin' ? 'admin' : 'üye'} hesabı değil`);
-                }
-
                 // Save auth data
                 localStorage.setItem('authToken', data.token);
                 if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
                 localStorage.setItem('user', JSON.stringify(data.user));
 
                 // Show success animation
-                successOverlay.classList.add('show');
+                document.getElementById('success-overlay').classList.add('show');
 
-                // Wait for animation then redirect
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 2000);
 
             } catch (err) {
                 errorText.textContent = err.message;
-                errorMessage.classList.add('show');
+                errorEl.classList.add('show');
                 loginBtn.classList.remove('loading');
                 loginBtn.disabled = false;
+            }
+        });
+
+        // ==================== REGISTER ====================
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const passwordConfirm = document.getElementById('reg-password2').value;
+            const requestedRole = document.getElementById('reg-role').value;
+            const registerBtn = document.getElementById('register-btn');
+            const errorEl = document.getElementById('register-error');
+            const errorText = document.getElementById('register-error-text');
+            const successEl = document.getElementById('register-success');
+            const successText = document.getElementById('register-success-text');
+
+            errorEl.classList.remove('show');
+            successEl.classList.remove('show');
+
+            // Client-side validation
+            if (password !== passwordConfirm) {
+                errorText.textContent = 'Şifreler eşleşmiyor';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            registerBtn.classList.add('loading');
+            registerBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, passwordConfirm, requestedRole })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Kayıt başarısız');
+                }
+
+                // Show success
+                successText.textContent = 'Kayıt talebiniz oluşturuldu! Süperadmin onayı bekleniyor.';
+                successEl.classList.add('show');
+
+                // Reset form
+                registerForm.reset();
+
+                // 3 saniye sonra login formuna geç
+                setTimeout(() => showLogin(), 4000);
+
+            } catch (err) {
+                errorText.textContent = err.message;
+                errorEl.classList.add('show');
+            } finally {
+                registerBtn.classList.remove('loading');
+                registerBtn.disabled = false;
             }
         });
     </script>

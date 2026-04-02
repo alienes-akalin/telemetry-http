@@ -10,7 +10,7 @@
 // ============================================================
 
 // Önbellek versiyonu - Her güncellemede artırılmalı
-const CACHE_NAME = 'telemetri-v120';
+const CACHE_NAME = 'telemetri-v121';
 
 // Statik dosyalar - Cache First (sadece ikonlar ve manifest)
 const STATIC_ASSETS = [
@@ -76,7 +76,7 @@ const OFFLINE_HTML = `
 </head>
 <body>
     <div class="offline-container">
-        <div class="offline-icon">ğŸ“¡</div>
+        <div class="offline-icon">📡</div>
         <h1>Bağlantı Yok</h1>
         <p>İnternet bağlantınızı kontrol edin ve tekrar deneyin.</p>
         <button class="retry-btn" onclick="location.reload()">Yeniden Dene</button>
@@ -131,7 +131,7 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Network First: HTML, JS ve CSS dosyaları â€” önce ağdan al, hata olursa cache'den sun
+    // Network First: HTML, JS ve CSS dosyaları — önce ağdan al, hata olursa cache'den sun
     const isNetworkFirst = url.pathname === '/' ||
         NETWORK_FIRST_ASSETS.some(asset => url.pathname === asset || url.pathname.endsWith(asset.split('/').pop()));
 

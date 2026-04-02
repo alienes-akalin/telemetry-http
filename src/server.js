@@ -1,6 +1,13 @@
 // src/server.js
 // Ana HTTP sunucu dosyası — Express, Socket.io, JWT Auth, MongoDB bağlantısını başlatır.
-require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+
+// .env dosyasını yükle — önce .env, yoksa .env.production dene
+const envFile = fs.existsSync(path.join(__dirname, '..', '.env'))
+  ? '.env'
+  : '.env.production';
+require('dotenv').config({ path: path.join(__dirname, '..', envFile) });
 
 const express = require('express');
 const http = require('http');
@@ -8,7 +15,6 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
-const path = require('path');
 
 const rateLimit = require('express-rate-limit');
 

@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=120">
+    <link rel="stylesheet" href="css/style.css?v=121">
 
     <!-- FAST SPLASH CHECK -->
     <script>
@@ -274,33 +274,38 @@
                     <img src="img/header-iso.png" alt="Iso View" class="header-sketch-img">
                 </div>
                 <div class="topbar-controls">
-                <!-- Mobil: Satır 1 - Kullanıcı bilgileri + cihaz + saat -->
-                <div class="topbar-row topbar-row-1">
-                    <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Tema Değiştir">
-                        <i class="fa-solid fa-sun"></i>
-                    </button>
-                    <div class="device-selector">
-                        <select id="device-select">
-                            <option value="a1">🟣 Hidromobil</option>
-                            <option value="a2">🔵 Shell</option>
-                        </select>
+                    <!-- Mobil: Satır 1 - Kullanıcı bilgileri + cihaz + saat -->
+                    <div class="topbar-row topbar-row-1">
+                        <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()"
+                            title="Tema Değiştir">
+                            <i class="fa-solid fa-sun"></i>
+                        </button>
+                        <div class="device-selector">
+                            <select id="device-select">
+                                <option value="a1">🟣 Hidromobil</option>
+                                <option value="a2">🔵 Shell</option>
+                            </select>
+                        </div>
+                        <button id="btn-superadmin-settings" onclick="openSuperAdminPanel()" class="logout-btn"
+                            title="Ayarlar" style="display:none; color:#f59e0b;">
+                            <i class="fa-solid fa-gear"></i>
+                        </button>
+                        <div id="user-display" class="user-display"></div>
+                        <button onclick="logout()" class="logout-btn" title="Çıkış Yap">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
                     </div>
-                    <div id="user-display" class="user-display"></div>
-                    <button onclick="logout()" class="logout-btn" title="Çıkış Yap">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                    </button>
+                    <!-- Mobil: Satır 2 - Test butonu + Saat + credit -->
+                    <div class="topbar-row topbar-row-2">
+                        <button id="btn-test-record" class="test-record-btn" onclick="toggleTestRecording()" disabled
+                            data-admin-only="hide">
+                            <i class="fa-solid fa-circle"></i> <span id="test-btn-text">Testi Başlat</span>
+                        </button>
+                        <div class="time-display" id="clock">00:00:00</div>
+                        <div class="credit-box">Designed by Ali Enes Akalın</div>
+                    </div>
                 </div>
-                <!-- Mobil: Satır 2 - Test butonu + Saat + credit -->
-                <div class="topbar-row topbar-row-2">
-                    <button id="btn-test-record" class="test-record-btn" onclick="toggleTestRecording()" disabled
-                        data-admin-only="hide">
-                        <i class="fa-solid fa-circle"></i> <span id="test-btn-text">Testi Başlat</span>
-                    </button>
-                    <div class="time-display" id="clock">00:00:00</div>
-                    <div class="credit-box">Designed by Ali Enes Akalın</div>
-                </div>
-            </div>
-        </header>
+            </header>
 
             <!-- Dashboard View -->
             <div id="view-dashboard" class="view active">
@@ -345,7 +350,7 @@
                         <div class="stat-info">
                             <h3>SICAKLIK</h3>
                             <div class="value temp-value-row">
-                                <span class="temp-num-unit"><span id="val-temp">0</span><small>Â°C</small></span>
+                                <span class="temp-num-unit"><span id="val-temp">0</span><small>°C</small></span>
                                 <span class="temp-warning-badge" id="temp-warning-badge" style="display: none;">
                                     <img id="temp-warning-icon" src="" alt="" class="temp-warning-icon">
                                     <span id="temp-warning-text"></span>
@@ -401,11 +406,11 @@
                                         </tr>
                                         <tr id="row-iso-pos">
                                             <td>İzolasyon (+)</td>
-                                            <td id="val-iso-pos">0 kÎ©</td>
+                                            <td id="val-iso-pos">0 kΩ</td>
                                         </tr>
                                         <tr id="row-iso-neg">
                                             <td>İzolasyon (-)</td>
-                                            <td id="val-iso-neg">0 kÎ©</td>
+                                            <td id="val-iso-neg">0 kΩ</td>
                                         </tr>
                                         <tr id="row-h2">
                                             <td>H2 (Hidrojen)</td>
@@ -413,7 +418,7 @@
                                         </tr>
                                         <tr id="row-h2-temp">
                                             <td>H2 Sıcaklık</td>
-                                            <td id="val-h2-temp">0 Â°C</td>
+                                            <td id="val-h2-temp">0 °C</td>
                                         </tr>
                                         <tr>
                                             <td>Son Güncelleme</td>
@@ -483,7 +488,7 @@
                         <div class="race-metric">
                             <div class="race-metric-label">SICAKLIK</div>
                             <div class="race-metric-value" id="race-temp">0</div>
-                            <div class="race-metric-unit">Â°C</div>
+                            <div class="race-metric-unit">°C</div>
                         </div>
                     </div>
                 </div>
@@ -505,7 +510,7 @@
                             <canvas id="chart-energy"></canvas>
                         </div>
                         <div class="chart-wrapper">
-                            <h4>Sıcaklık (Â°C)</h4>
+                            <h4>Sıcaklık (°C)</h4>
                             <canvas id="chart-temp"></canvas>
                         </div>
                         <div class="chart-wrapper">
@@ -513,7 +518,7 @@
                             <canvas id="chart-soc"></canvas>
                         </div>
                         <div class="chart-wrapper" data-chart="iso" id="chart-iso-wrapper">
-                            <h4>İzolasyon (kÎ©)</h4>
+                            <h4>İzolasyon (kΩ)</h4>
                             <canvas id="chart-iso"></canvas>
                         </div>
                     </div>
@@ -858,9 +863,9 @@
             <!-- Media View (Müzik & Video) -->
             <div id="view-media" class="view">
 
-                <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-                     PANEL 1: ŞAKA BİLDİRİM â€” sadece alienes.akalin görür
-                â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+                <!-- ═══════════════════════════════════════════════════════════
+                     PANEL 1: ŞAKA BİLDİRİM — sadece alienes.akalin görür
+                ═══════════════════════════════════════════════════════════ -->
                 <div data-owner-only style="display:none; margin-bottom:20px;">
 
                     <!-- Premium Gold-Black-Neon kart -->
@@ -885,8 +890,8 @@
                             <span
                                 style="color:#f59e0b; font-weight:700; font-size:1rem; letter-spacing:0.03em; text-shadow:0 0 12px rgba(245,158,11,0.4);">Şaka
                                 Bildirimi Gönder</span>
-                            <span style="font-size:0.7rem; color:#78571a; margin-left:4px;">â€” sadece sen görürsün
-                                ğŸ˜</span>
+                            <span style="font-size:0.7rem; color:#78571a; margin-left:4px;">— sadece sen görürsün
+                                😏</span>
                         </div>
 
                         <!-- Body -->
@@ -907,7 +912,7 @@
                                 </div>
                                 <div
                                     style="margin-top:10px; font-size:1.6rem; text-align:center; background:rgba(0,0,0,0.3); border-radius:8px; padding:6px 0; border:1px solid rgba(184,134,11,0.1);">
-                                    Seçili: <span id="prank-selected-emoji">âš ï¸</span>
+                                    Seçili: <span id="prank-selected-emoji">⚠️</span>
                                 </div>
                             </div>
 
@@ -930,19 +935,19 @@
                                             style="display:flex; align-items:center; gap:7px; cursor:pointer; font-size:0.85rem;">
                                             <input type="radio" name="prank-type" value="danger" checked
                                                 style="accent-color:#ef4444;">
-                                            <span style="color:#ef4444;">â›” Kırmızı</span>
+                                            <span style="color:#ef4444;">⛔ Kırmızı</span>
                                         </label>
                                         <label
                                             style="display:flex; align-items:center; gap:7px; cursor:pointer; font-size:0.85rem;">
                                             <input type="radio" name="prank-type" value="warning"
                                                 style="accent-color:#f59e0b;">
-                                            <span style="color:#f59e0b;">âš ï¸ Sarı</span>
+                                            <span style="color:#f59e0b;">⚠️ Sarı</span>
                                         </label>
                                         <label
                                             style="display:flex; align-items:center; gap:7px; cursor:pointer; font-size:0.85rem;">
                                             <input type="radio" name="prank-type" value="info"
                                                 style="accent-color:#3b82f6;">
-                                            <span style="color:#3b82f6;">â„¹ï¸ Mavi</span>
+                                            <span style="color:#3b82f6;">ℹ️ Mavi</span>
                                         </label>
                                     </div>
                                 </div>
@@ -1032,7 +1037,8 @@
                                 <div style="display:flex; align-items:center; gap:12px;">
                                     <div id="prev-icon"
                                         style="font-size:1.4rem; color:#ef4444; filter:drop-shadow(0 0 4px currentColor);">
-                                        <i class="fa-solid fa-bell"></i></div>
+                                        <i class="fa-solid fa-bell"></i>
+                                    </div>
                                     <div>
                                         <div id="prev-title" style="font-weight:700; font-size:0.95rem; color:#fef3c7;">
                                         </div>
@@ -1065,11 +1071,11 @@
                         </div><!-- /body -->
                     </div><!-- /premium card -->
                 </div>
-                <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PANEL 1 SONU â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+                <!-- ═══════════════════════ PANEL 1 SONU ═══════════════════════ -->
 
-                <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-                     PANEL 2: YOUTUBE PLAYER â€” sadece alienes.akalin görür
-                â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+                <!-- ═══════════════════════════════════════════════════════════
+                     PANEL 2: YOUTUBE PLAYER — sadece alienes.akalin görür
+                ═══════════════════════════════════════════════════════════ -->
                 <div data-owner-only style="display:none; margin-bottom:20px;">
 
                     <div style="
@@ -1093,8 +1099,9 @@
                             <span
                                 style="color:#06b6d4; font-weight:700; font-size:1rem; letter-spacing:0.03em; text-shadow:0 0 12px rgba(6,182,212,0.4);">Gizli
                                 Ses Oynatıcı</span>
-                            <span style="font-size:0.7rem; color:#0e4a5a; margin-left:4px;">â€” YouTube linkini yapıştır,
-                                ses sitede çalar ğŸµ</span>
+                            <span style="font-size:0.7rem; color:#0e4a5a; margin-left:4px;">— YouTube linkini
+                                yapıştır,
+                                ses sitede çalar 🎵</span>
                         </div>
 
                         <!-- Body -->
@@ -1134,18 +1141,19 @@
                             <div
                                 style="background:rgba(6,182,212,0.06); border:1px solid rgba(14,116,144,0.2); border-radius:8px; padding:10px 14px;">
                                 <p style="font-size:0.76rem; color:#0e7490; margin:0 0 4px 0;">
-                                    ğŸ¯ <strong style="color:#06b6d4;">Nasıl çalışır?</strong> Çal'a basınca video
+                                    🎯 <strong style="color:#06b6d4;">Nasıl çalışır?</strong> Çal'a basınca video
                                     <strong>TÜM bağlı kullanıcılarda</strong> büyük tam-ekran popup açılır.
                                 </p>
                                 <p style="font-size:0.74rem; color:#0e4a5a; margin:0;">
-                                    Desteklenen: youtube.com/watch, youtu.be/, /shorts/ â€” Durdur butonu herkesi kapatır.
+                                    Desteklenen: youtube.com/watch, youtu.be/, /shorts/ — Durdur butonu herkesi
+                                    kapatır.
                                 </p>
                             </div>
 
                         </div><!-- /body -->
                     </div><!-- /premium card -->
                 </div>
-                <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PANEL 2 SONU â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+                <!-- ═══════════════════════ PANEL 2 SONU ═══════════════════════ -->
 
                 <!-- Normal Medya Merkezi Kartı -->
                 <div class="card">
@@ -1223,7 +1231,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <!-- Custom Scripts (Minified for Production) -->
-    <script src="js/app.min.js?v=120"></script>
+    <script src="js/app.min.js?v=121"></script>
 
     <!-- Service Worker & Pull-to-Refresh -->
     <script>
@@ -1263,11 +1271,38 @@
             }
         });
     </script>
+
+    <!-- ==================== SÜPERADMIN YÖNETİM PANELİ ==================== -->
+    <div id="superadmin-modal" class="lightbox" style="background: rgba(0,0,0,0.85); z-index: 10005;">
+        <div class="card"
+            style="width: 95%; max-width: 600px; margin: auto; padding: 24px; max-height: 85vh; overflow-y: auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h3><i class="fa-solid fa-gear"></i> Süperadmin Paneli</h3>
+                <button onclick="closeSuperAdminPanel()" class="sw-btn" style="background:#ef4444; padding:6px 12px;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Bekleyen Kayıt Talepleri -->
+            <div style="margin-bottom: 24px;">
+                <h4 style="color:#f59e0b; margin-bottom: 12px;"><i class="fa-solid fa-user-clock"></i> Bekleyen Kayıt
+                    Talepleri</h4>
+                <div id="pending-requests-list" style="min-height: 40px;">
+                    <p style="color:#aaa;">Yükleniyor...</p>
+                </div>
+            </div>
+
+            <!-- Mevcut Kullanıcılar -->
+            <div>
+                <h4 style="color:#3b82f6; margin-bottom: 12px;"><i class="fa-solid fa-users"></i> Kayıtlı Kullanıcılar
+                </h4>
+                <div id="users-list" style="min-height: 40px;">
+                    <p style="color:#aaa;">Yükleniyor...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>
-
-
-
-
-

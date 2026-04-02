@@ -1,4 +1,4 @@
-﻿/* public/css/style.css */
+/* public/css/style.css */
 :root {
     /* Glassmorphism & Neon Palette */
     --bg-dark: #0f172a;
@@ -371,7 +371,7 @@ body.drawer-open .drawer-overlay {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;  /* Desktop'ta wrap yok — kayma önlenir */
     gap: 8px;
 }
 
@@ -396,6 +396,8 @@ body.drawer-open .drawer-overlay {
     gap: 8px;
     align-items: flex-end;
     justify-content: center;
+    flex-shrink: 0;  /* Sağ tarafa sabit kalır — küçülmez */
+    min-width: 0;    /* Overflow engeli */
 }
 
 /* Test Kayıt Butonu */
@@ -567,7 +569,7 @@ body.drawer-open .drawer-overlay {
     min-width: 0;
 }
 
-/* Sıcaklık değeri ve Â°C yan yana */
+/* Sıcaklık değeri ve °C yan yana */
 .temp-num-unit {
     display: inline-flex;
     align-items: baseline;
@@ -654,15 +656,15 @@ body.drawer-open .drawer-overlay {
 .progress-bar .fill.fill-temp {
     background: linear-gradient(90deg,
             #22c55e 0%,
-            /* 0Â°C - Yeşil */
+            /* 0°C - Yeşil */
             #eab308 30%,
-            /* 30Â°C - Sarı */
+            /* 30°C - Sarı */
             #f97316 50%,
-            /* 50Â°C - Turuncu */
+            /* 50°C - Turuncu */
             #ef4444 70%,
-            /* 70Â°C - Kırmızı */
+            /* 70°C - Kırmızı */
             #991b1b 100%
-            /* 100Â°C - Koyu Kırmızı */
+            /* 100°C - Koyu Kırmızı */
         );
     background-size: 100% 100%;
     /* JS ile ezilecek */
@@ -717,14 +719,14 @@ body.drawer-open .drawer-overlay {
     transition: opacity 0.3s;
 }
 
-/* NORMAL MOD (<30Â°C) - YEŞİL PENCERE */
+/* NORMAL MOD (<30°C) - YEŞİL PENCERE */
 #temp-card.temp-normal {
     border-left: 4px solid #22c55e !important;
     background: linear-gradient(145deg, rgba(34, 197, 94, 0.15) 0%, rgba(30, 41, 59, 0.6) 100%) !important;
     box-shadow: 0 0 15px rgba(34, 197, 94, 0.1) inset;
 }
 
-/* FAN Modu (30-50Â°C) - SARI */
+/* FAN Modu (30-50°C) - SARI */
 #temp-card.temp-fan {
     border-left: 4px solid #eab308 !important;
     background: linear-gradient(145deg, rgba(234, 179, 8, 0.15) 0%, rgba(30, 41, 59, 0.6) 100%) !important;
@@ -749,7 +751,7 @@ body.drawer-open .drawer-overlay {
     }
 }
 
-/* BUZZER Modu (50-70Â°C) - Turuncu */
+/* BUZZER Modu (50-70°C) - Turuncu */
 #temp-card.temp-buzzer {
     border-left: 4px solid #f59e0b !important;
     background: linear-gradient(145deg, rgba(245, 158, 11, 0.2) 0%, rgba(30, 41, 59, 0.6) 100%) !important;
@@ -774,7 +776,7 @@ body.drawer-open .drawer-overlay {
     }
 }
 
-/* KONTAKTÖR Modu (>70Â°C) - KRİTİK Kırmızı */
+/* KONTAKTÖR Modu (>70°C) - KRİTİK Kırmızı */
 #temp-card.temp-critical {
     border-left: 6px solid #ef4444 !important;
     background: linear-gradient(145deg, rgba(239, 68, 68, 0.35) 0%, rgba(30, 41, 59, 0.6) 100%) !important;
@@ -1843,7 +1845,7 @@ body.drawer-open .drawer-overlay {
     color: #94a3b8;
 }
 
-/* â”€â”€ Race Duty Cycle Bar â”€â”€ */
+/* ── Race Duty Cycle Bar ── */
 .race-duty-bar {
     display: flex;
     align-items: center;
@@ -1985,13 +1987,15 @@ body.drawer-open .drawer-overlay {
 
 /* Header Sketch */
 .header-sketch-container {
-    flex-grow: 1;
+    flex: 1 1 auto;   /* Büyür ama şart değil */
+    max-width: calc(100% - 380px); /* Kontrollere yeterli alan bırak */
     display: flex;
     justify-content: center;
     align-items: center;
     margin: 0 20px -10px 20px;
     gap: 30px;
     opacity: 1;
+    overflow: hidden;  /* Taşma engeli */
 }
 
 .header-sketch-img {
@@ -2037,6 +2041,47 @@ body.drawer-open .drawer-overlay {
         opacity: 1;
         transform: scale(1) translateY(0);
         filter: blur(0);
+    }
+}
+
+/* ==================== SMALL DESKTOP / LAPTOP FIX (1200-1600px) ==================== */
+/* 15.6" 1080p laptop Windows %125 DPI scaling => efektif ~1536x864 viewport */
+@media (min-width: 769px) and (max-width: 1600px) {
+    .header-sketch-container {
+        gap: 12px !important;
+        margin: 0 8px -10px 8px !important;
+        max-width: calc(100% - 340px) !important;
+    }
+
+    .header-sketch-img {
+        height: 65px !important;
+    }
+
+    .top-bar {
+        gap: 4px !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .topbar-controls {
+        gap: 4px !important;
+    }
+
+    .topbar-row-1,
+    .topbar-row-2 {
+        gap: 6px !important;
+    }
+
+    .time-display {
+        font-size: 0.95rem !important;
+    }
+
+    .credit-box {
+        font-size: 0.65rem !important;
+    }
+
+    .test-record-btn {
+        padding: 5px 10px !important;
+        font-size: 0.78rem !important;
     }
 }
 
@@ -2184,8 +2229,8 @@ body.race-mode-active .race-menu-btn {
     }
 
     /* Yarış modunda sidebar'ı görsel olarak gizle (display:none KULLANMA!)
-       display:none render tree'den kaldırır â†’ fixed child nav-menu de kaybolur + animasyon bozulur.
-       overflow:hidden + height:0 â†’ sidebar yer kaplamaz, logo/connection gizlenir,
+       display:none render tree'den kaldırır → fixed child nav-menu de kaybolur + animasyon bozulur.
+       overflow:hidden + height:0 → sidebar yer kaplamaz, logo/connection gizlenir,
        ama position:fixed olan .nav-menu bağımsız render olur ve animasyonu korunur. */
     body.race-mode-active .sidebar {
         overflow: hidden !important;
@@ -2286,7 +2331,7 @@ body.race-mode-active .race-menu-btn {
         font-size: 0.7rem;
     }
 
-    /* Duty bar â€” portrait fullscreen: biraz aşağıdan başlasın */
+    /* Duty bar — portrait fullscreen: biraz aşağıdan başlasın */
     body.race-mode-active .race-duty-bar {
         max-width: 100%;
         padding: 8px 14px;
@@ -2423,7 +2468,7 @@ body.race-mode-active .race-menu-btn {
         font-size: 0.65rem;
     }
 
-    /* Duty bar â€” landscape: sol dikey panel */
+    /* Duty bar — landscape: sol dikey panel */
     body.race-mode-active .race-duty-bar {
         flex-direction: column;
         width: 88px;
@@ -2986,7 +3031,7 @@ body::after {
    - Phone Portrait: max-width 767px + orientation: portrait
    ============================================================ */
 
-/* Small Desktop breakpoint kaldırıldı â€” Chrome'da da tam boyut gösterilsin */
+/* Small Desktop breakpoint kaldırıldı — Chrome'da da tam boyut gösterilsin */
 
 /* ==================== TABLET LANDSCAPE (768-1199px, horizontal) ==================== */
 @media (min-width: 769px) and (max-width: 1199px) and (orientation: landscape) {
@@ -3244,7 +3289,7 @@ body::after {
         gap: 14px !important;
     }
 
-    /* Duty bar â€” yatay modda DİKEY sütun, ekranın en solunda */
+    /* Duty bar — yatay modda DİKEY sütun, ekranın en solunda */
     .race-duty-bar {
         flex-direction: column !important;
         width: 80px !important;
@@ -3268,7 +3313,7 @@ body::after {
         margin-bottom: 8px !important;
         flex-shrink: 0 !important;
     }
-    /* Dikey bar track â€” kalan yüksekliği doldurur */
+    /* Dikey bar track — kalan yüksekliği doldurur */
     .race-duty-track {
         width: 14px !important;
         height: auto !important;
@@ -3349,7 +3394,7 @@ body::after {
         opacity: 0.6;
     }
 
-    /* Top bar â€” ortala (race olmayan sayfalar için de geçerli) */
+    /* Top bar — ortala (race olmayan sayfalar için de geçerli) */
     .top-bar {
         justify-content: center !important;
         text-align: center !important;
@@ -4486,7 +4531,7 @@ body::after {
         min-height: 80px;
     }
 
-    /* ==================== DASHBOARD RESPONSIVE (â‰¤480px) ==================== */
+    /* ==================== DASHBOARD RESPONSIVE (≤480px) ==================== */
 
     /* Stat kartları daha compact */
     .stat-card {
@@ -4614,7 +4659,7 @@ body::after {
     }
 }
 
-/* ==================== EXTRA SMALL SCREENS (â‰¤360px) ==================== */
+/* ==================== EXTRA SMALL SCREENS (≤360px) ==================== */
 /* Samsung S23 (360px), Samsung S8+ (360px), iPhone SE 1st gen (320px) */
 @media (max-width: 360px) {
 
@@ -4705,7 +4750,7 @@ body::after {
 
 /* ==================== SIDEBAR HEIGHT RESPONSIVE ==================== */
 /* Kısa ekranlar için sidebar öğelerini kompaktlaştır */
-/* ==================== ORTA YÜKSEKLİK (621-850px) â€” Laptop tipi ekranlar ==================== */
+/* ==================== ORTA YÜKSEKLİK (621-850px) — Laptop tipi ekranlar ==================== */
 @media (max-height: 850px) and (min-height: 621px) and (min-width: 769px) {
     .logo-area {
         margin-bottom: 1rem !important;
@@ -4881,14 +4926,14 @@ body.light-mode .theme-toggle-btn:hover {
     box-shadow: 0 0 12px rgba(71, 85, 105, 0.2);
 }
 
-/* â”€â”€ Sidebar â”€â”€ */
+/* ── Sidebar ── */
 body.light-mode .sidebar {
     background: linear-gradient(180deg, rgba(241, 245, 249, 0.97) 0%, rgba(226, 232, 240, 0.97) 100%);
     border-right: 1px solid rgba(0, 0, 0, 0.08);
     box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
 }
 
-/* Desktop'ta backdrop-filter uygula, mobilde HAYIR â€”
+/* Desktop'ta backdrop-filter uygula, mobilde HAYIR —
    backdrop-filter containing block oluşturur ve
    position:fixed nav-menu'yu sidebar'a hapseder */
 @media (min-width: 769px) {
@@ -4905,7 +4950,7 @@ body.light-mode .sidebar::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.2);
 }
 
-/* Logo â€” beyaz PNG'yi lacivert'e çevir */
+/* Logo — beyaz PNG'yi lacivert'e çevir */
 body.light-mode .logo-img {
     filter: invert(1) sepia(1) saturate(3) hue-rotate(200deg) brightness(0.35);
 }
@@ -4914,7 +4959,7 @@ body.light-mode .mobile-logo-img {
     filter: invert(1) sepia(1) saturate(3) hue-rotate(200deg) brightness(0.35);
 }
 
-/* Çukurova logosu â€” lacivert ton */
+/* Çukurova logosu — lacivert ton */
 body.light-mode .sidebar-logo-c {
     filter: invert(1) sepia(1) saturate(2) hue-rotate(200deg) brightness(0.4);
 }
@@ -4955,8 +5000,8 @@ body.light-mode .connection-status {
     color: #475569;
 }
 
-/* â”€â”€ Header Sketch Images â”€â”€ */
-/* Cyan çizimler â†’ lacivert'e dönüştür */
+/* ── Header Sketch Images ── */
+/* Cyan çizimler → lacivert'e dönüştür */
 body.light-mode .header-sketch-img {
     filter: invert(1) sepia(1) saturate(5) hue-rotate(200deg) brightness(0.25) contrast(1.2) !important;
     opacity: 0.7 !important;
@@ -4986,7 +5031,7 @@ body.light-mode .header-sketch-img:nth-child(4) { animation-delay: 0.55s !import
     }
 }
 
-/* â”€â”€ Top Bar â”€â”€ */
+/* ── Top Bar ── */
 body.light-mode .top-bar {
     color: #1e293b;
 }
@@ -5001,7 +5046,7 @@ body.light-mode .credit-box {
     border-color: rgba(30, 41, 59, 0.1);
 }
 
-/* â”€â”€ Device Selector â”€â”€ */
+/* ── Device Selector ── */
 body.light-mode #device-select {
     background: rgba(255, 255, 255, 0.9) !important;
     color: #1e293b !important;
@@ -5023,7 +5068,7 @@ body.light-mode .device-selector select {
     border-color: rgba(0, 0, 0, 0.12);
 }
 
-/* â”€â”€ Stat Cards â€” Renkli cam efektli, daha belirgin â”€â”€ */
+/* ── Stat Cards — Renkli cam efektli, daha belirgin ── */
 body.light-mode .stat-card {
     background: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(12px);
@@ -5078,7 +5123,7 @@ body.light-mode .progress-bar {
     background: rgba(0, 0, 0, 0.07);
 }
 
-/* â”€â”€ Cards (Chart panels, map panels, genel paneller) â”€â”€ */
+/* ── Cards (Chart panels, map panels, genel paneller) ── */
 body.light-mode .card {
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(12px);
@@ -5095,7 +5140,7 @@ body.light-mode .card-header h3 {
     color: #0f172a;
 }
 
-/* â”€â”€ Sessions (Geçmiş Kayıtlar) â”€â”€ */
+/* ── Sessions (Geçmiş Kayıtlar) ── */
 body.light-mode .session-tabs {
     background: rgba(30, 41, 59, 0.05);
     border-color: rgba(0, 0, 0, 0.1);
@@ -5123,7 +5168,7 @@ body.light-mode #session-list-container {
     border-color: rgba(0, 0, 0, 0.08);
 }
 
-/* Session Cards â€” geçmiş kayıt kartları */
+/* Session Cards — geçmiş kayıt kartları */
 body.light-mode .session-card {
     background: linear-gradient(135deg, rgba(241, 245, 249, 0.95) 0%, rgba(226, 232, 240, 0.8) 100%);
     border: 1px solid rgba(59, 130, 246, 0.15);
@@ -5144,7 +5189,7 @@ body.light-mode .session-card p {
     color: #64748b;
 }
 
-/* â”€â”€ Tables â”€â”€ */
+/* ── Tables ── */
 body.light-mode .history-table th {
     background-color: #e2e8f0;
     color: #334155;
@@ -5160,7 +5205,7 @@ body.light-mode .history-table tr:hover {
     background-color: rgba(59, 130, 246, 0.05);
 }
 
-/* â”€â”€ Buttons â”€â”€ */
+/* ── Buttons ── */
 body.light-mode .btn-recenter {
     background: rgba(255, 255, 255, 0.9);
     border-color: rgba(0, 0, 0, 0.12);
@@ -5195,7 +5240,7 @@ body.light-mode .btn-refresh {
     color: white;
 }
 
-/* â”€â”€ User Display & Logout â”€â”€ */
+/* ── User Display & Logout ── */
 body.light-mode .user-display .user-name {
     color: #334155;
 }
@@ -5224,7 +5269,7 @@ body.light-mode .logout-btn:hover {
     background: rgba(239, 68, 68, 0.2);
 }
 
-/* â”€â”€ Notification â”€â”€ */
+/* ── Notification ── */
 body.light-mode .notification {
     background: rgba(255, 255, 255, 0.96);
     border-color: rgba(0, 0, 0, 0.1);
@@ -5232,12 +5277,12 @@ body.light-mode .notification {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* â”€â”€ Drawer overlay â”€â”€ */
+/* ── Drawer overlay ── */
 body.light-mode .drawer-overlay {
     background: rgba(0, 0, 0, 0.2);
 }
 
-/* â”€â”€ Mobil Drawer (nav-menu) light mode â”€â”€ */
+/* ── Mobil Drawer (nav-menu) light mode ── */
 @media (max-width: 768px) {
     body.light-mode .nav-menu {
         background: #ffffff !important;
@@ -5282,13 +5327,13 @@ body.light-mode .drawer-overlay {
         color: #ffffff !important;
     }
 
-    /* Drawer overlay â€” daha koyu, drawer'ı belirginleştir */
+    /* Drawer overlay — daha koyu, drawer'ı belirginleştir */
     body.light-mode .drawer-overlay {
         background: rgba(0, 0, 0, 0.35) !important;
     }
 }
 
-/* â”€â”€ Global menu button â”€â”€ */
+/* ── Global menu button ── */
 body.light-mode .global-menu-btn {
     background: rgba(255, 255, 255, 0.92);
     border-color: rgba(0, 0, 0, 0.1);
@@ -5300,7 +5345,7 @@ body.light-mode .global-menu-btn:hover {
     background: rgba(255, 255, 255, 1);
 }
 
-/* â”€â”€ Temp & Current alarm states â”€â”€ */
+/* ── Temp & Current alarm states ── */
 body.light-mode .stat-card.temp-fan {
     border-left-color: #eab308;
     background: linear-gradient(145deg, rgba(234, 179, 8, 0.12) 0%, rgba(255, 255, 255, 0.85) 100%) !important;
@@ -5325,7 +5370,7 @@ body.light-mode .stat-card.current-warning {
     box-shadow: 0 2px 12px rgba(249, 115, 22, 0.12) !important;
 }
 
-/* â”€â”€ Race Mode â”€â”€ */
+/* ── Race Mode ── */
 body.light-mode .race-container {
     background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%);
 }
@@ -5384,13 +5429,13 @@ body.light-mode .race-duty-unit {
     color: #94a3b8;
 }
 
-/* Race bg image â€” lacivert ton, belirgin */
+/* Race bg image — lacivert ton, belirgin */
 body.light-mode .race-speed-main::before {
     opacity: 0.22;
     filter: invert(1) sepia(1) saturate(5) hue-rotate(200deg) brightness(0.25) contrast(1.2);
 }
 
-/* â”€â”€ Strategy panel â”€â”€ */
+/* ── Strategy panel ── */
 body.light-mode .strategy-panel,
 body.light-mode .strategy-card {
     background: rgba(255, 255, 255, 0.8);
@@ -5407,7 +5452,7 @@ body.light-mode .strategy-value {
     color: #0f172a;
 }
 
-/* â”€â”€ Scrollbar â”€â”€ */
+/* ── Scrollbar ── */
 body.light-mode ::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.15);
 }
@@ -5416,7 +5461,7 @@ body.light-mode ::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.03);
 }
 
-/* â”€â”€ Modal & Custom Sessions â”€â”€ */
+/* ── Modal & Custom Sessions ── */
 body.light-mode .modal-overlay {
     background: rgba(0, 0, 0, 0.3);
 }
@@ -5437,13 +5482,13 @@ body.light-mode .modal-content select {
     border-color: rgba(0, 0, 0, 0.12);
 }
 
-/* â”€â”€ Media Gallery â”€â”€ */
+/* ── Media Gallery ── */
 body.light-mode .media-grid .media-item {
     background: rgba(255, 255, 255, 0.9);
     border-color: rgba(0, 0, 0, 0.08);
 }
 
-/* â”€â”€ Medya sayfası â€” inline style override'ları â”€â”€ */
+/* ── Medya sayfası — inline style override'ları ── */
 /* Alarm builder & YouTube player panelleri inline bg ile siyah kalıyor */
 body.light-mode [data-owner-only] [style*="background: linear-gradient"],
 body.light-mode [data-admin-only] [style*="background: linear-gradient(135deg, #0a0a0a"],
@@ -5460,7 +5505,7 @@ body.light-mode input[style*="background: rgba(0,0,0"] {
     border-color: rgba(0, 0, 0, 0.12) !important;
 }
 
-/* â”€â”€ Chart wrapper (grafik arka planları) â”€â”€ */
+/* ── Chart wrapper (grafik arka planları) ── */
 body.light-mode .chart-wrapper {
     background: rgba(255, 255, 255, 0.6);
     border-radius: 12px;
@@ -5470,7 +5515,7 @@ body.light-mode .chart-wrapper h4 {
     color: #334155;
 }
 
-/* â”€â”€ Sistem Detayları (sağ panel tablosu) â”€â”€ */
+/* ── Sistem Detayları (sağ panel tablosu) ── */
 body.light-mode .card-body.scrollable table td {
     color: #334155;
     border-bottom-color: rgba(0, 0, 0, 0.05);
@@ -5481,11 +5526,11 @@ body.light-mode .card-body.scrollable table td:last-child {
     font-weight: 600;
 }
 
-/* â”€â”€ Test Kayıt Butonları (yeşil/kırmızı â€” değişmesin) â”€â”€ */
+/* ── Test Kayıt Butonları (yeşil/kırmızı — değişmesin) ── */
 
-/* â”€â”€ Splash screen â€” koyu kalsın â”€â”€ */
+/* ── Splash screen — koyu kalsın ── */
 
-/* â”€â”€ Genel var() override â€” CSS custom properties â”€â”€ */
+/* ── Genel var() override — CSS custom properties ── */
 body.light-mode {
     --bg-dark: #e2e8f0;
     --bg-card: rgba(255, 255, 255, 0.8);
@@ -5496,7 +5541,7 @@ body.light-mode {
     --border: rgba(0, 0, 0, 0.1);
 }
 
-/* â”€â”€ Medya Sayfası â€” inline dark style override'ları â”€â”€ */
+/* ── Medya Sayfası — inline dark style override'ları ── */
 /* Panel 1: Şaka Bildirimi (gold-black neon) */
 body.light-mode [data-owner-only] > div,
 body.light-mode [data-admin-only] > div {
@@ -5512,7 +5557,7 @@ body.light-mode [data-admin-only] > div > div:first-child {
     border-bottom-color: rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Header text â€” gold â†’ koyu amber */
+/* Header text — gold → koyu amber */
 body.light-mode [data-owner-only] > div > div:first-child span,
 body.light-mode [data-admin-only] > div > div:first-child span {
     color: #92400e !important;
@@ -5548,19 +5593,19 @@ body.light-mode [data-admin-only] input[type="text"]::placeholder {
     color: #94a3b8 !important;
 }
 
-/* Label text renkleri (gold â†’ slate) */
+/* Label text renkleri (gold → slate) */
 body.light-mode [data-owner-only] div[style*="color:#b8860b"],
 body.light-mode [data-owner-only] div[style*="color: #b8860b"] {
     color: #78350f !important;
 }
 
-/* Cyan label text (YouTube panel) â†’ dark cyan */
+/* Cyan label text (YouTube panel) → dark cyan */
 body.light-mode [data-owner-only] div[style*="color:#0e7490"],
 body.light-mode [data-owner-only] div[style*="color: #0e7490"] {
     color: #155e75 !important;
 }
 
-/* Özel label renkler: #4a3800 â†’ koyu */
+/* Özel label renkler: #4a3800 → koyu */
 body.light-mode [data-owner-only] span[style*="color:#4a3800"],
 body.light-mode [data-owner-only] span[style*="color: #4a3800"] {
     color: #92400e !important;
@@ -5573,7 +5618,7 @@ body.light-mode [data-owner-only] div[style*="background: rgba(6,182,212"] {
     border-color: rgba(14, 116, 144, 0.15) !important;
 }
 
-/* Buton override'ları â€” gönder butonları */
+/* Buton override'ları — gönder butonları */
 body.light-mode [data-owner-only] button[style*="background:linear-gradient"],
 body.light-mode [data-admin-only] button[style*="background:linear-gradient"] {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
@@ -5617,14 +5662,14 @@ body.light-mode #view-media p {
     color: #64748b;
 }
 
-/* Medya hızlı erişim butonları â€” bunlar renkli kalabilir */
+/* Medya hızlı erişim butonları — bunlar renkli kalabilir */
 
 /* Ayırıcı çizgi (hr) */
 body.light-mode #view-media hr {
     border-color: rgba(0, 0, 0, 0.08) !important;
 }
 
-/* â”€â”€ Login sayfası â”€â”€ */
+/* ── Login sayfası ── */
 body.light-mode .login-container {
     background: rgba(255, 255, 255, 0.9);
     border-color: rgba(0, 0, 0, 0.1);
@@ -5636,4 +5681,4 @@ body.light-mode .login-container input {
     border-color: rgba(0, 0, 0, 0.12);
 }
 
-/* Chart.js â€” JS'den güncelleniyor (updateChartTheme) */
+/* Chart.js — JS'den güncelleniyor (updateChartTheme) */

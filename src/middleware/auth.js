@@ -12,7 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-in-productio
  */
 const authenticateToken = async (req, res, next) => {
     try {
-        const token = req.headers['authorization']?.split(' ')[1]; // "Bearer TOKEN"
+        const token = req.headers['authorization']?.split(' ')[1];
 
         if (!token) {
             return res.status(401).json({ error: 'Token gerekli' });
@@ -42,20 +42,28 @@ const authenticateToken = async (req, res, next) => {
 };
 
 /**
- * Admin rolü kontrolü — authenticateToken sonrası kullanılır.
- * Kullanıcı admin değilse 403 döner.
+ * Admin veya Süperadmin rolü kontrolü — authenticateToken sonrası kullanılır.
  */
 const requireAdmin = (req, res, next) => {
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
         return res.status(403).json({ error: 'Admin yetkisi gerekli' });
     }
     next();
 };
 
 /**
+ * Süperadmin rolü kontrolü — sadece alienes.akalin erişebilir.
+ */
+const requireSuperAdmin = (req, res, next) => {
+    if (req.user.role !== 'superadmin') {
+        return res.status(403).json({ error: 'Süperadmin yetkisi gerekli' });
+    }
+    next();
+};
+
+/**
  * Opsiyonel kimlik doğrulama — token geçerliyse JWT payload'ını req.user'a ekler.
- * DB sorgusu YAPILMAZ (Plan 2.4) — /latest gibi yüksek frekanslı endpoint'lerde
- * her istek için DB round-trip'i önlemek kritiktir.
+ * DB sorgusu YAPILMAZ — /latest gibi yüksek frekanslı endpoint'lerde performans için.
  * Token yoksa veya geçersizse isteğe devam eder (401 dönmez).
  */
 const optionalAuth = (req, res, next) => {
@@ -63,13 +71,11 @@ const optionalAuth = (req, res, next) => {
         const token = req.headers['authorization']?.split(' ')[1];
 
         if (token) {
-            // verify() token geçersizse exception fırlatır → catch bloğuna düşer
-            req.user = jwt.verify(token, JWT_SECRET); // Payload: { userId, iat, exp }
+            req.user = jwt.verify(token, JWT_SECRET);
         }
 
         next();
     } catch {
-        // Süresi dolmuş veya geçersiz token — sessizce devam et
         next();
     }
 };
@@ -77,6 +83,7 @@ const optionalAuth = (req, res, next) => {
 module.exports = {
     authenticateToken,
     requireAdmin,
+    requireSuperAdmin,
     optionalAuth,
     JWT_SECRET
 };

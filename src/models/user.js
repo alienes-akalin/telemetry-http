@@ -9,7 +9,7 @@ const UserSchema = new Schema({
         type: String,
         required: true,
         unique: true,
-        lowercase: true,  // Büyük/küçük harf farkını ortadan kaldırır
+        lowercase: true,
         trim: true
     },
     password: {
@@ -18,29 +18,27 @@ const UserSchema = new Schema({
     },
     role: {
         type: String,
-        enum: ['admin', 'member', 'viewer'],
+        enum: ['superadmin', 'admin', 'member', 'viewer'],
         default: 'member'
     },
     createdAt: {
         type: Date,
         default: Date.now
     },
-    lastLogin: Date  // Her başarılı girişte güncellenir
+    lastLogin: Date
 });
 
 /**
  * Şifre değiştiyse kayıt öncesi otomatik hash'le (bcrypt, 10 round)
  */
 UserSchema.pre('save', async function () {
-    if (!this.isModified('password')) return;
+    if (this.$skipPasswordHash || !this.isModified('password')) return;
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
 });
 
 /**
  * Giriş sırasında şifreyi doğrular
- * @param {string} candidatePassword - Kullanıcının girdiği ham şifre
- * @returns {Promise<boolean>} Şifre doğruysa true
  */
 UserSchema.methods.comparePassword = async function (candidatePassword) {
     return bcrypt.compare(candidatePassword, this.password);

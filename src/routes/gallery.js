@@ -1,63 +1,48 @@
 // src/routes/gallery.js
 // Google Drive galeri proxy endpoint'i.
-// GOOGLE_SCRIPT_URL'yi .env'den okur ve frontend'e iletir — key client-side'da görünmez.
+// Sunucudaki Node fetch/https modulleri Google'a baglanamadiginda
+// curl kullanarak veri cekilir (curl TLS/DNS'i daha iyi yonetir).
 
 const express = require('express');
-const https = require('https');
+const { execSync } = require('child_process');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
+const authMiddleware = require('../middleware/auth');
+const authenticateToken = authMiddleware.authenticateToken || authMiddleware;
 const logger = require('../logger');
 
 /**
- * Google Apps Script URL'sine HTTPS GET isteği atar, redirect takip eder, JSON döner.
- * Google Apps Script web app'leri genellikle 302 redirect döndürür.
- */
-function fetchJson(url, redirectCount = 0) {
-  return new Promise((resolve, reject) => {
-    if (redirectCount > 5) return reject(new Error('Çok fazla redirect'));
-
-    https.get(url, (res) => {
-      // Redirect'i takip et
-      if ((res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307) && res.headers.location) {
-        return resolve(fetchJson(res.headers.location, redirectCount + 1));
-      }
-
-      let data = '';
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => {
-        if (res.statusCode !== 200) {
-          return reject(new Error(`Drive API yanıt kodu: ${res.statusCode}`));
-        }
-        try {
-          resolve(JSON.parse(data));
-        } catch (e) {
-          reject(new Error('JSON parse hatası'));
-        }
-      });
-    }).on('error', reject);
-  });
-}
-
-/**
  * GET /api/v1/gallery
- * Google Apps Script üzerinden Drive galerisi fotoğraflarını döner.
- * Kimlik doğrulaması gerektirir (JWT).
+ * Google Apps Script uzerinden Drive galerisi fotograflarini doner.
+ * curl ile istek atar — VDS'te Node fetch'ten daha guvenilir.
  */
 router.get('/', authenticateToken, async (req, res) => {
   const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
 
   if (!scriptUrl) {
-    return res.status(503).json({ error: 'Galeri yapılandırılmamış' });
+    logger.warn('Gallery: GOOGLE_SCRIPT_URL tanimli degil');
+    return res.status(503).json({ error: 'Galeri yapilandirilmamis (GOOGLE_SCRIPT_URL eksik)' });
   }
 
   try {
-    const data = await fetchJson(scriptUrl);
+    // curl ile Google Apps Script'e istek at
+    // -s: sessiz, -L: redirect takip, --max-time: toplam timeout, --connect-timeout: baglanti timeout
+    const output = execSync(
+      `curl -s -L --max-time 60 --connect-timeout 30 "${scriptUrl}"`,
+      { encoding: 'utf8', timeout: 65000 }
+    );
+
+    const data = JSON.parse(output);
+    logger.info('Gallery: basarili', { imageCount: data?.data?.length || 0 });
     res.json(data);
+
   } catch (err) {
-    logger.error('Gallery proxy hatası:', err.message);
-    res.status(502).json({ error: 'Drive API yanıt vermedi' });
+    let msg = err.message;
+    if (err.status) msg = `curl cikis kodu: ${err.status}`;
+    if (err.stderr) msg += ` (${err.stderr.trim()})`;
+
+    logger.error('Gallery proxy hatasi', { error: msg, url: scriptUrl?.substring(0, 60) });
+    res.status(502).json({ error: `Drive API yanit vermedi: ${msg}` });
   }
 });
 
 module.exports = router;
-

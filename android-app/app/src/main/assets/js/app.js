@@ -1,4 +1,4 @@
-﻿// public/js/app.js
+// public/js/app.js
 // ============================================================
 // 1.5 ADANA ELEKTROMOBİL TELEMETRİ - ANA UYGULAMA DOSYASI
 // ============================================================
@@ -93,10 +93,14 @@ const API_BASE = (window.location.protocol === 'file:')
 
 // Araç konfigürasyonu
 const VEHICLE_CONFIG = {
-    'a1': { name: 'Hidromobil', hasIso: true, hasH2: true, color: '#a855f7',
-        imgs: ['img/header-hydro-side.png','img/header-hydro-front.png','img/header-hydro-top.png','img/header-hydro-iso.png'] },
-    'a2': { name: 'Shell', hasIso: false, hasH2: false, color: '#3b82f6',
-        imgs: ['img/header-side.png','img/header-front.png','img/header-top.png','img/header-iso.png'] }
+    'a1': {
+        name: 'Hidromobil', hasIso: true, hasH2: true, color: '#a855f7',
+        imgs: ['img/header-hydro-side.png', 'img/header-hydro-front.png', 'img/header-hydro-top.png', 'img/header-hydro-iso.png']
+    },
+    'a2': {
+        name: 'Shell', hasIso: false, hasH2: false, color: '#3b82f6',
+        imgs: ['img/header-side.png', 'img/header-front.png', 'img/header-top.png', 'img/header-iso.png']
+    }
 };
 
 // Cihaz ID alias'ları (socket filter için)
@@ -189,7 +193,7 @@ function switchVehicle(newDeviceId) {
 
     // Detaylı harita — tüm renkli rota segmentlerini kaldır
     if (mapInitialized && fullMap) {
-        routePolylines.forEach(p => { try { fullMap.removeLayer(p); } catch(e) {} });
+        routePolylines.forEach(p => { try { fullMap.removeLayer(p); } catch (e) { } });
         routePolylines = [];
         routeSegments = [];
         if (fullPath) fullPath.setLatLngs([]);
@@ -245,7 +249,7 @@ function switchVehicle(newDeviceId) {
         document.querySelectorAll('.header-sketch-img').forEach((img, i) => {
             if (cfg.imgs[i]) {
                 img.src = cfg.imgs[i];
-                
+
                 // Araç değiştirildiğinde animasyonu sıfırlayıp tekrar oynat
                 img.style.animation = 'none';
                 void img.offsetHeight; // DOM reflow'u zorla
@@ -330,17 +334,17 @@ function renderPrankEmojiGrid() {
 
     const emojis = [
         // Tehlike & Uyarı
-        '⚠️','🚨','🔥','💀','⛔','🛑','💥','⚡','☢️','☠️','🆘','🚒',
+        '⚠️', '🚨', '🔥', '💀', '⛔', '🛑', '💥', '⚡', '☢️', '☠️', '🆘', '🚒',
         // Araç & Teknik
-        '🌡️','🔋','🛞','🏎️','⚙️','🔌','💡','🧲','🔧','🛠️','📡','🖥️',
+        '🌡️', '🔋', '🛞', '🏎️', '⚙️', '🔌', '💡', '🧲', '🔧', '🛠️', '📡', '🖥️',
         // Ses & Bildirim
-        '🔔','📢','📣','🔕','🎺','📻','🔊','🔇','📳','📴','🔑','🚪',
+        '🔔', '📢', '📣', '🔕', '🎺', '📻', '🔊', '🔇', '📳', '📴', '🔑', '🚪',
         // Duygu & Reaksiyon
-        '🤯','😱','😈','😤','🤬','😨','🥶','🤡','👻','🎃','💀','🤙',
+        '🤯', '😱', '😈', '😤', '🤬', '😨', '🥶', '🤡', '👻', '🎃', '💀', '🤙',
         // Silah & Patlama
-        '🧨','💣','🔫','🪃','🗡️','⚔️','🛡️','💢','💫','✨','🌪️','❄️',
+        '🧨', '💣', '🔫', '🪃', '🗡️', '⚔️', '🛡️', '💢', '💫', '✨', '🌪️', '❄️',
         // Eğlence
-        '🎉','🎊','🎭','🏆','👑','🎯','🎲','🎮','🕹️','🎬','🎤','🪗'
+        '🎉', '🎊', '🎭', '🏆', '👑', '🎯', '🎲', '🎮', '🕹️', '🎬', '🎤', '🪗'
     ];
 
     emojis.forEach(emoji => {
@@ -530,8 +534,9 @@ function logout() {
 
 // Rol bazlı UI kısıtlamalarını uygula
 function applyRoleRestrictions() {
-    const isAdmin = currentUserRole === 'admin';
-    const isOwner = currentUsername === 'alienes.akalin';
+    const isSuperAdmin = currentUserRole === 'superadmin';
+    const isAdmin = currentUserRole === 'admin' || isSuperAdmin;
+    const isOwner = isSuperAdmin || currentUsername === 'alienes.akalin';
 
     // Admin-only elementleri bul ve gizle/göster
     document.querySelectorAll('[data-admin-only]').forEach(el => {
@@ -544,7 +549,6 @@ function applyRoleRestrictions() {
             }
             el.disabled = false;
         } else {
-            // Gizle veya devre dışı bırak
             const action = el.dataset.adminOnly || 'hide';
             if (action === 'disable') {
                 el.disabled = true;
@@ -557,27 +561,53 @@ function applyRoleRestrictions() {
         }
     });
 
-    // Owner-only elementleri bul ve gizle/göster (sadece alienes.akalin)
+    // Owner-only elementleri bul ve gizle/göster (sadece alienes.akalin / superadmin)
     document.querySelectorAll('[data-owner-only]').forEach(el => {
         if (isOwner) {
-            el.style.display = 'block';  // Kesin görünürlük (cache/CSS etkisini sıfırla)
-            renderPrankEmojiGrid();      // Emoji ızgarasını doldur
+            el.style.display = 'block';
+            renderPrankEmojiGrid();
         } else {
             el.style.display = 'none';
         }
     });
 
+    // Süperadmin ayar butonu
+    const saBtn = document.getElementById('btn-superadmin-settings');
+    if (saBtn) {
+        saBtn.style.display = isSuperAdmin ? 'inline-flex' : 'none';
+    }
+
     // Kullanıcı bilgisini header'a ekle
     const userDisplay = document.getElementById('user-display');
     if (userDisplay) {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const ownerBadge = isOwner ? '<span style="font-size:0.75rem;color:#f59e0b;vertical-align:middle;line-height:1;">👑</span>' : '';
+        const ownerBadge = isOwner ? '<span style="font-size:0.75rem;color:#f59e0b;vertical-align:middle;line-height:1;margin-left:3px;">👑</span>' : '';
+
+        // Rütbeye göre renk ve isim
+        let roleLabel, bgColor, textColor, borderColor;
+        if (isSuperAdmin) {
+            roleLabel = 'SA';
+            bgColor = 'rgba(245,158,11,0.2)';
+            textColor = '#f59e0b';
+            borderColor = 'rgba(245,158,11,0.4)';
+        } else if (user.role === 'admin') {
+            roleLabel = 'Admin';
+            bgColor = 'rgba(239,68,68,0.2)';
+            textColor = '#fca5a5';
+            borderColor = 'rgba(239,68,68,0.4)';
+        } else {
+            roleLabel = 'Üye';
+            bgColor = 'rgba(59,130,246,0.2)';
+            textColor = '#93c5fd';
+            borderColor = 'rgba(59,130,246,0.4)';
+        }
+
         userDisplay.innerHTML = `
-            <span class="user-role ${user.role}" style="display:inline-flex;align-items:center;gap:4px;">${user.role === 'admin' ? 'Admin' : 'Üye'}${ownerBadge}</span>
+            <span style="display:inline-flex;align-items:center;gap:2px;background:${bgColor};color:${textColor};border:1px solid ${borderColor};border-radius:8px;padding:4px 10px;font-size:0.8rem;font-weight:600;letter-spacing:0.03em;">${roleLabel}${ownerBadge}</span>
         `;
     }
 
-    console.log('🔒 Rol kısıtlamaları uygulandı:', isAdmin ? 'Admin yetkileri' : 'Üye yetkileri', isOwner ? '| 👑 Owner' : '');
+    console.log('🔒 Rol kısıtlamaları uygulandı:', isAdmin ? 'Admin yetkileri' : 'Üye yetkileri', isSuperAdmin ? '| 👑 SuperAdmin' : '');
 }
 
 // ==================== YOUTUBE PLAYER (ŞAKA) ====================
@@ -695,7 +725,7 @@ function showPrankPlayer(videoId) {
 
     // YouTube iframe postMessage ile hata dinle
     // enablejsapi olmadan da YouTube bazı hataları window.message ile yayar
-    const ytMsgHandler = function(e) {
+    const ytMsgHandler = function (e) {
         if (!e.data) return;
         try {
             const raw = typeof e.data === 'string' ? e.data : JSON.stringify(e.data);
@@ -2162,9 +2192,9 @@ function formatStopwatchSimple(totalCentiseconds) {
  */
 function openMediaApp(app, webUrl) {
     const intentMap = {
-        spotify:  'intent://open.spotify.com/#Intent;scheme=https;package=com.spotify.music;S.browser_fallback_url=https%3A%2F%2Fopen.spotify.com;end',
-        youtube:  'intent://www.youtube.com/#Intent;scheme=https;package=com.google.android.youtube;S.browser_fallback_url=https%3A%2F%2Fwww.youtube.com;end',
-        ytmusic:  'intent://music.youtube.com/#Intent;scheme=https;package=com.google.android.apps.youtube.music;S.browser_fallback_url=https%3A%2F%2Fmusic.youtube.com;end',
+        spotify: 'intent://open.spotify.com/#Intent;scheme=https;package=com.spotify.music;S.browser_fallback_url=https%3A%2F%2Fopen.spotify.com;end',
+        youtube: 'intent://www.youtube.com/#Intent;scheme=https;package=com.google.android.youtube;S.browser_fallback_url=https%3A%2F%2Fwww.youtube.com;end',
+        ytmusic: 'intent://music.youtube.com/#Intent;scheme=https;package=com.google.android.apps.youtube.music;S.browser_fallback_url=https%3A%2F%2Fmusic.youtube.com;end',
         linkedin: 'intent://www.linkedin.com/in/aliakalin/#Intent;scheme=https;package=com.linkedin.android;S.browser_fallback_url=https%3A%2F%2Fwww.linkedin.com%2Fin%2Faliakalin%2F;end',
     };
 
@@ -2231,7 +2261,11 @@ async function loadTeamGallery() {
             return;
         }
 
-        if (!res.ok) throw new Error('Drive API yanıt vermedi');
+        if (!res.ok) {
+            let serverMsg = '';
+            try { serverMsg = (await res.json()).error || ''; } catch(_) {}
+            throw new Error(serverMsg || `HTTP ${res.status}`);
+        }
 
         const responseData = await res.json();
         currentGalleryImages = responseData.data || [];
@@ -2254,8 +2288,8 @@ async function loadTeamGallery() {
         });
 
     } catch (err) {
-        console.error(err);
-        grid.innerHTML = '<p style="color:red; text-align:center; width:100%;">Bağlantı Hatası! Sunucu loglarını kontrol edin.</p>';
+        console.error('[Gallery]', err);
+        grid.innerHTML = `<p style="color:red; text-align:center; width:100%;">❌ Galeri Hatası: ${err.message}</p>`;
     }
 }
 
@@ -2647,7 +2681,7 @@ async function loadTests() {
             card.className = 'session-card';
 
             const startStr = formatTR(test.start_time);
-            const endStr   = formatTR(test.end_time);
+            const endStr = formatTR(test.end_time);
 
             // İsim varsa erlenmayer simgesinin sağında göster
             const labelSpan = test.label
@@ -3052,3 +3086,197 @@ checkAuth();
 
 // Strateji notlarını yükle
 loadStrategyNotes();
+
+// ==================== SÜPERADMIN YÖNETİM PANELİ ====================
+
+function openSuperAdminPanel() {
+    const modal = document.getElementById('superadmin-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        loadPendingRequests();
+        loadRegisteredUsers();
+    }
+}
+
+function closeSuperAdminPanel() {
+    const modal = document.getElementById('superadmin-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function loadPendingRequests() {
+    const container = document.getElementById('pending-requests-list');
+    if (!container) return;
+
+    try {
+        const res = await apiFetch(`${API_BASE}/api/auth/pending`);
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error);
+
+        if (data.length === 0) {
+            container.innerHTML = '<p style="color:#64748b; font-size:0.85rem;">Bekleyen talep yok</p>';
+            return;
+        }
+
+        container.innerHTML = data.map(req => `
+            <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:14px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-weight:600; color:#f1f5f9;"><i class="fa-solid fa-user" style="color:#f59e0b;"></i> ${req.username}</span>
+                    <span style="font-size:0.75rem; color:#64748b;">${new Date(req.createdAt).toLocaleDateString('tr-TR')}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                    <span style="font-size:0.8rem; color:#94a3b8;">Talep edilen:</span>
+                    <span style="background:${req.requestedRole === 'admin' ? 'rgba(59,130,246,0.2)' : 'rgba(16,185,129,0.2)'}; color:${req.requestedRole === 'admin' ? '#60a5fa' : '#34d399'}; padding:2px 8px; border-radius:6px; font-size:0.8rem; font-weight:600;">${req.requestedRole === 'admin' ? 'Admin' : 'Üye'}</span>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <select id="role-select-${req._id}" style="background:rgba(15,23,42,0.8); color:#f1f5f9; border:1px solid rgba(255,255,255,0.15); border-radius:8px; padding:6px 10px; font-size:0.85rem; flex:1;">
+                        <option value="member" ${req.requestedRole === 'member' ? 'selected' : ''}>Üye</option>
+                        <option value="admin" ${req.requestedRole === 'admin' ? 'selected' : ''}>Admin</option>
+                    </select>
+                    <button onclick="approveRequest('${req._id}')" style="background:#10b981; color:#fff; border:none; border-radius:8px; padding:6px 14px; cursor:pointer; font-weight:600; font-size:0.85rem;">
+                        <i class="fa-solid fa-check"></i> Onayla
+                    </button>
+                    <button onclick="rejectRequest('${req._id}')" style="background:#ef4444; color:#fff; border:none; border-radius:8px; padding:6px 14px; cursor:pointer; font-weight:600; font-size:0.85rem;">
+                        <i class="fa-solid fa-xmark"></i> Reddet
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+    } catch (err) {
+        container.innerHTML = `<p style="color:#fca5a5;">${err.message}</p>`;
+    }
+}
+
+async function loadRegisteredUsers() {
+    const container = document.getElementById('users-list');
+    if (!container) return;
+
+    try {
+        const res = await apiFetch(`${API_BASE}/api/auth/users`);
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error);
+
+        container.innerHTML = data.map(u => {
+            const roleColor = u.role === 'superadmin' ? '#f59e0b' : (u.role === 'admin' ? '#3b82f6' : '#10b981');
+            const roleName = u.role === 'superadmin' ? 'Superadmin' : (u.role === 'admin' ? 'Admin' : 'Uye');
+
+            if (u.role === 'superadmin') {
+                return `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(15,23,42,0.4); border:1px solid rgba(245,158,11,0.2); border-radius:10px; padding:10px 14px; margin-bottom:6px;">
+                        <div>
+                            <span style="color:#f1f5f9; font-weight:500;">${u.username}</span>
+                            <span style="background:${roleColor}22; color:${roleColor}; padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:600; margin-left:8px;">👑 ${roleName}</span>
+                        </div>
+                        <span style="font-size:0.7rem; color:#64748b;">${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('tr-TR') : 'Hic giris yok'}</span>
+                    </div>
+                `;
+            }
+
+            return `
+                <div style="background:rgba(15,23,42,0.4); border:1px solid rgba(255,255,255,0.05); border-radius:10px; padding:10px 14px; margin-bottom:6px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <div>
+                            <span style="color:#f1f5f9; font-weight:500;">${u.username}</span>
+                            <span id="role-badge-${u._id}" style="background:${roleColor}22; color:${roleColor}; padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:600; margin-left:8px;">${roleName}</span>
+                        </div>
+                        <span style="font-size:0.7rem; color:#64748b;">${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('tr-TR') : 'Hic giris yok'}</span>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <select id="user-role-select-${u._id}" style="background:rgba(15,23,42,0.8); color:#f1f5f9; border:1px solid rgba(255,255,255,0.15); border-radius:8px; padding:5px 10px; font-size:0.82rem; flex:1;">
+                            <option value="member" ${u.role === 'member' ? 'selected' : ''}>Uye (member)</option>
+                            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        </select>
+                        <button onclick="changeUserRole('${u._id}', '${u.username}')" style="background:#3b82f6; color:#fff; border:none; border-radius:8px; padding:5px 12px; cursor:pointer; font-size:0.82rem; font-weight:600; white-space:nowrap;">
+                            <i class="fa-solid fa-floppy-disk"></i> Kaydet
+                        </button>
+                        <button onclick="deleteUser('${u._id}', '${u.username}')" style="background:rgba(239,68,68,0.2); color:#fca5a5; border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:5px 10px; cursor:pointer; font-size:0.82rem;">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        container.innerHTML = `<p style="color:#fca5a5;">${err.message}</p>`;
+    }
+}
+
+
+async function approveRequest(id) {
+    const roleSelect = document.getElementById(`role-select-${id}`);
+    const assignedRole = roleSelect ? roleSelect.value : 'member';
+
+    try {
+        const res = await apiFetch(`${API_BASE}/api/auth/approve/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ assignedRole })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        showNotification('Kayıt Onaylandı', data.message, 'success', 'fa-check-circle');
+        loadPendingRequests();
+        loadRegisteredUsers();
+    } catch (err) {
+        showNotification('Hata', err.message, 'error', 'fa-circle-exclamation');
+    }
+}
+
+async function rejectRequest(id) {
+    try {
+        const res = await apiFetch(`${API_BASE}/api/auth/reject/${id}`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        showNotification('Talep Reddedildi', data.message, 'warning', 'fa-circle-xmark');
+        loadPendingRequests();
+    } catch (err) {
+        showNotification('Hata', err.message, 'error', 'fa-circle-exclamation');
+    }
+}
+
+async function deleteUser(id, username) {
+    if (!confirm(`${username} kullanicisini silmek istediginize emin misiniz?`)) return;
+
+    try {
+        const res = await apiFetch(`${API_BASE}/api/auth/users/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        showNotification('Kullanici Silindi', data.message, 'info', 'fa-trash');
+        loadRegisteredUsers();
+    } catch (err) {
+        showNotification('Hata', err.message, 'error', 'fa-circle-exclamation');
+    }
+}
+
+async function changeUserRole(id, username) {
+    const select = document.getElementById(`user-role-select-${id}`);
+    if (!select) return;
+    const role = select.value;
+
+    try {
+        const res = await apiFetch(`${API_BASE}/api/auth/users/${id}/role`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        showNotification('Rol Guncellendi', data.message, 'success', 'fa-check-circle');
+        // Badge'i aninda guncelle
+        const badge = document.getElementById(`role-badge-${id}`);
+        if (badge) {
+            badge.textContent = role === 'admin' ? 'Admin' : 'Uye';
+            badge.style.color = role === 'admin' ? '#3b82f6' : '#10b981';
+            badge.style.background = role === 'admin' ? 'rgba(59,130,246,0.15)' : 'rgba(16,185,129,0.15)';
+        }
+    } catch (err) {
+        showNotification('Hata', err.message, 'error', 'fa-circle-exclamation');
+    }
+}
