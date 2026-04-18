@@ -38,3 +38,6 @@ android-app/local.properties
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# ==================== DOKÜMANLAR ====================
+docs/

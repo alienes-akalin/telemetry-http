@@ -219,6 +219,43 @@ app.use('/api/v1/tests', testRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/v1/gallery', galleryRoutes);
 
+// ==================== HAVA DURUMU PROXY ====================
+/**
+ * GET /api/v1/weather?lat=xx&lon=yy  veya  ?city=Adana
+ * curl üzerinden OpenWeatherMap'e bağlanır (Node.js fetch VDS'de sorunlu).
+ */
+const { execSync } = require('child_process');
+app.get('/api/v1/weather', (req, res) => {
+  const apiKey = process.env.OPENWEATHER_API_KEY;
+  if (!apiKey) {
+    return res.status(503).json({ error: 'OPENWEATHER_API_KEY tanımlı değil' });
+  }
+
+  let url;
+  if (req.query.lat && req.query.lon) {
+    const lat = parseFloat(req.query.lat).toFixed(4);
+    const lon = parseFloat(req.query.lon).toFixed(4);
+    url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=tr`;
+  } else if (req.query.city) {
+    const city = encodeURIComponent(req.query.city.trim().substring(0, 80));
+    url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=tr`;
+  } else {
+    return res.status(400).json({ error: 'lat+lon veya city parametresi gerekli' });
+  }
+
+  try {
+    const raw = execSync(`curl -s --max-time 8 "${url}"`, { timeout: 10000 }).toString();
+    const data = JSON.parse(raw);
+    if (data.cod && data.cod !== 200 && data.cod !== '200') {
+      return res.status(data.cod === 404 ? 404 : 502).json({ error: data.message || 'API hatası' });
+    }
+    res.json(data);
+  } catch (err) {
+    logger.error('Weather proxy hatası:', err.message);
+    res.status(502).json({ error: 'Hava durumu verisi alınamadı: ' + err.message });
+  }
+});
+
 // ==================== OTA GÜNCELLEMESİ ====================
 
 /**

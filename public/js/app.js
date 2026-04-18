@@ -453,7 +453,9 @@ async function apiFetch(url, options = {}) {
 
     // Token süresi dolduysa yenilemeyi dene
     if (res.status === 401) {
-        const body = await res.json().catch(() => ({}));
+        // Body stream'i tüketmemek için clone kullanıyoruz
+        const body = await res.clone().json().catch(() => ({}));
+        
         if (body.error && body.error.includes('süresi dolmuş')) {
             const refreshed = await tryRefreshToken();
             if (refreshed) {
@@ -464,6 +466,10 @@ async function apiFetch(url, options = {}) {
                 logout();
                 return res;
             }
+        } else if (body.error && body.error.includes('Geçersiz token')) {
+            // Token tamamen geçersizse (sunucuda secret değişmişse vb.) doğrudan çıkış yap
+            logout();
+            return res;
         }
     }
 
@@ -900,6 +906,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initMainMap();          // Dashboard haritasını oluştur
     initStopwatch();        // Kronometreyi başlat
     setInterval(updateClock, 1000);  // Saati her saniye güncelle
+
+    // Pist profillerini başlat (trackData.js yüklendikten sonra)
+    setTimeout(initTrackUI, 100);
 
     // ---- ARAÇ SEÇİCİ ----
     // Android WebView'da inline onchange güvenilmez olduğu için
@@ -2099,6 +2108,25 @@ function addLap() {
         currentLapEl.innerText = lapCount;
     }
 
+    // ── YADYO Dur-Kalk Uyarısı ────────────────────────────────────────
+    // YADYO'da her 2 turda bir SilesiaRing'deki gibi tam duruş yapılmalı.
+    // Çift tur numarasına ulaşıldığında sürücüyü uyar.
+    const trackId = window.ACTIVE_TRACK ? (ACTIVE_TRACK.id || 'SILESIA') : 'SILESIA';
+    if (trackId === 'YADYO' && lapCount % 2 === 0) {
+        const silesiaEquivLap = lapCount / 2;
+        showNotification(
+            `🛑 Dur-Kalk! (YADYO Tur ${lapCount})`,
+            `Bu tur sonunda TAM DURUŞ yap! SilesiaRing Tur ${silesiaEquivLap} eşdeğeri tamamlandı. Kalkışta tam gaz →`,
+            'warning',
+            'fa-hand'
+        );
+    }
+    // ────────────────────────────────────────────────────────────────
+
+    // Adaptif strateji motorunu tetikle
+    const lapTimeSec = lapTime / 100; // centiseconds → seconds
+    triggerAdaptiveLapUpdate(lapCount, lapTimeSec);
+
     // Hedef tur sayısına ulaşıldıysa testi otomatik bitir
     const targetLaps = raceStrategy.targetLaps || 10;
     console.log(`🏁 Tur kontrolü: ${lapCount}/${targetLaps}, test aktif: ${isTestRecording}`);
@@ -2848,7 +2876,890 @@ async function loadTestData(id) {
     }
 }
 
-// ==================== STRATEJİST HESAPLAMALARI (Verimlilik Yarışı) ====================
+// ══════════════════════════════════════════════════════════════════════
+// ARAÇ FİZİK MODELİ + ENERJİ SİMÜLATÖRÜ
+// Referans: Pusztai et al. (2025) — LTV-LQG Energy-Efficient EV Control
+// F_total = F_T(traction) + F_R(resistance) + F_S(slope)
+// ══════════════════════════════════════════════════════════════════════
+
+// 1.5 ADANA gerçek araç parametreleri (ön yüklenmiş)
+let vehiclePhysics = {
+    mass_kg:      143,     // Araç + sürücü kütlesi (kg)
+    cdA:          0.13,    // Aerodinamik sürükleme alanı CdA (m²)
+    crr:          0.003,   // Yuvarlanma direnci katsayısı Crr
+    eta_drive:    0.94,    // Aktarma verimi η (orta değer 0.93-0.95)
+    p_max_w:      364,     // Max sürekli motor gücü (W) — ölçülen değer
+    v_max_kph:    34.62,   // Max araç hızı (km/h) — hesaplanan değer
+    rho_air:      1.225,   // Hava yoğunluğu @ 20°C, 0m rakım (kg/m³)
+    g:            9.81     // Yerçekimi ivmesi (m/s²)
+};
+
+// Hız profili chart instance & buffer
+let speedProfileChart = null;
+const speedChartBuffer = { labels: [], target: [], real: [] };
+let speedChartTimerRef = null;
+
+/**
+ * Hava sıcaklığına göre hava yoğunluğunu hesaplar (kg/m³)
+ * Ideal gaz yasası: ρ = P / (R_specific * T)
+ */
+function airDensityFromTemp(temp_c) {
+    const T_K = temp_c + 273.15;
+    return 1.225 * (293.15 / T_K); // 20°C referans
+}
+
+/**
+ * Arayüzdeki değerleri vehiclePhysics nesnesine yükler
+ */
+function loadVehicleParams() {
+    const get = (id, def) => {
+        const el = document.getElementById(id);
+        return el ? (parseFloat(el.value) || def) : def;
+    };
+    vehiclePhysics.mass_kg    = get('sim-mass',     143);
+    vehiclePhysics.cdA        = get('sim-cdA',      0.13);
+    vehiclePhysics.crr        = get('sim-crr',      0.003);
+    vehiclePhysics.eta_drive  = get('sim-eta',      0.94);
+    vehiclePhysics.p_max_w    = get('sim-pmax',     364);
+    vehiclePhysics.v_max_kph  = get('sim-vmax',     34.62);
+
+    const temp = get('sim-temp', 20);
+    vehiclePhysics.rho_air = airDensityFromTemp(temp);
+
+    const densEl = document.getElementById('sim-air-density');
+    if (densEl) densEl.textContent = vehiclePhysics.rho_air.toFixed(3) + ' kg/m³';
+}
+
+/**
+ * Toplam direnç kuvvetini hesaplar (Newton)
+ * F_R = F_rolling + F_aero + F_slope
+ * Referans: Pusztai et al. (2025) Eq. 4-5
+ *
+ * @param {number} speed_mps     - Araç hızı (m/s)
+ * @param {number} gradient_deg  - Pist eğim açısı (°), + yokuş, - iniş
+ * @param {number} wind_mps      - Karşı rüzgar hızı (m/s), + headwind, - tailwind
+ */
+function calcResistanceForce(speed_mps, gradient_deg = 0, wind_mps = 0) {
+    const { mass_kg, cdA, crr, rho_air, g } = vehiclePhysics;
+    const theta = gradient_deg * Math.PI / 180;
+
+    // Yuvarlanma direnci: eğimli yüzeyde cos(θ) düzeltmesi
+    const F_rolling = crr * mass_kg * g * Math.cos(theta);
+
+    // Aerodinamik sürükleme: efektif hız = araç hızı + rüzgar
+    const v_eff = speed_mps + wind_mps;
+    const F_aero = 0.5 * cdA * rho_air * v_eff * Math.abs(v_eff);
+
+    // Eğim kuvveti: yokuşta pozitif (direnç), inişte negatif (yardımcı)
+    const F_slope = mass_kg * g * Math.sin(theta);
+
+    return F_rolling + F_aero + F_slope;
+}
+
+/**
+ * Bir tur için enerji tüketimini hesaplar
+ * Sabit hız varsayımı (flat-track için optimal, pist profili gelince güncellenecek)
+ *
+ * @returns {{ energy_Wh, power_W, lap_time_s, F_resistance_N, efficiency_kmkwh }}
+ */
+function calcLapEnergy(speed_kph, distance_m, gradient_deg = 0, wind_mps = 0) {
+    if (speed_kph <= 0) return null;
+    const speed_mps = speed_kph / 3.6;
+    const { eta_drive } = vehiclePhysics;
+
+    const F_R     = calcResistanceForce(speed_mps, gradient_deg, wind_mps);
+    const P_out_W = F_R * speed_mps;            // Çıkış gücü (tahrik) [W]
+    const P_in_W  = P_out_W / eta_drive;         // Giriş gücü (motor) [W]
+    const lap_time_s    = distance_m / speed_mps;
+    const energy_Wh     = (P_in_W * lap_time_s) / 3600;
+    const efficiency    = (distance_m / 1000) / (energy_Wh / 1000); // km/kWh
+
+    return {
+        energy_Wh,
+        power_W:        P_in_W,
+        lap_time_s,
+        F_resistance_N: F_R,
+        efficiency_kmkwh: efficiency
+    };
+}
+
+/**
+ * Dur-Kalk (Stop-and-Go) kinetik ivmelenme maliyetini hesaplar.
+ * SilesiaRing'de her tur sonunda tam duruş → tekrar kalkış yapılır.
+ * YADYO'da ise her 2 turda bir eşdeğer duruş simüle edilir.
+ *
+ * E_kinetic = 0.5 * M * v² / η   [Joule]
+ * Tipik değer (26 km/h, 143 kg araç, η=0.94): ~41 J → ~0.012 Wh / kalkış
+ *
+ * @param {number} speed_kph       - Hedef sürüş hızı (kalkışın ulaşacağı hız)
+ * @param {number} stopsPerLap     - Bir tur başına kaç tam duruş var (Silesia=1, YADYO=0.5)
+ * @returns {number}               - Kalkış enerji maliyeti [Wh]
+ */
+function calcStopAndGoEnergy(speed_kph, stopsPerLap = 1) {
+    const { mass_kg, eta_drive } = vehiclePhysics;
+    const v_mps    = speed_kph / 3.6;
+    // Kinetik enerji: Ek = 0.5 * m * v²
+    // Motor giriş enerjisi: E_in = Ek / η  (regen yok varsayımı)
+    const E_kinetic_J  = 0.5 * mass_kg * v_mps * v_mps;
+    const E_in_J       = E_kinetic_J / eta_drive;
+    const E_in_Wh      = (E_in_J / 3600) * stopsPerLap;
+    return E_in_Wh;
+}
+
+
+
+/**
+ * Simülatörü çalıştırır — UI'ı günceller ve stratejiyi ayarlar
+ */
+function runSimulator() {
+    loadVehicleParams();
+
+    const distance_m   = raceStrategy.lapDistanceM  || parseInt(document.getElementById('lap-distance')?.value) || 3000;
+    const max_time_s   = raceStrategy.targetLapTimeSec ||
+                         ((parseInt(document.getElementById('target-time')?.value) || 30) * 60 /
+                          (parseInt(document.getElementById('target-laps')?.value)  || 10));
+    const wind_mps     = parseFloat(document.getElementById('sim-wind')?.value)     || 0;
+    const gradient_deg = parseFloat(document.getElementById('sim-gradient')?.value) || 0;
+
+    const btn = document.getElementById('btn-run-sim');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Hesaplanıyor...'; }
+
+    // Küçük timeout ile UI'ın güncellenmesine izin ver
+    setTimeout(() => {
+        const result = findOptimalSpeed(
+            window.ACTIVE_TRACK ? ACTIVE_TRACK.totalM : distance_m,
+            max_time_s, gradient_deg, wind_mps,
+            true /* useTrackSegments */
+        );
+
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-play"></i> Simüle Et'; }
+
+        const emptyMsg = document.getElementById('sim-empty-msg');
+        const resultsDiv = document.getElementById('sim-results');
+
+        // Çözüm bulunamadı
+        if (!result) {
+            if (emptyMsg) emptyMsg.style.display = 'none';
+            if (resultsDiv) {
+                resultsDiv.style.display = 'block';
+                const recEl = document.getElementById('sim-rec-text');
+                const recDiv = document.getElementById('sim-recommendation');
+                if (recEl) recEl.textContent = '⚠️ Mevcut parametrelerle geçerli çözüm bulunamadı. Zaman sınırını artırın veya araç parametrelerini kontrol edin.';
+                if (recDiv) recDiv.className = 'sim-recommendation danger';
+            }
+            return;
+        }
+
+        // Strateji nesnesine aktar (diğer fonksiyonlar kullanır)
+        raceStrategy.targetSpeedKph    = result.speed_kph;
+        raceStrategy.targetLapTimeSec  = result.lap_time_s;
+        raceStrategy.lapDistanceM      = distance_m;
+        raceStrategy.simulatedEnergyWh = result.energy_Wh; // Adaptif strateji için
+
+        // UI metric'leri güncelle
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        set('sim-opt-speed',      result.speed_kph.toFixed(1));
+        set('sim-opt-energy',     result.energy_Wh.toFixed(2));
+        set('sim-opt-efficiency', result.efficiency_kmkwh.toFixed(0));
+        set('sim-opt-power',      result.power_W.toFixed(0));
+        set('sim-resistance',     result.F_resistance_N.toFixed(1) + ' N');
+        set('sim-pmax-label',     vehiclePhysics.p_max_w + ' W');
+        set('sim-total-energy',   (result.energy_Wh * (raceStrategy.targetLaps || 10)).toFixed(0) + ' Wh');
+
+        // Stop-and-Go maliyetini ayrı satırda göster
+        const stopGoEl = document.getElementById('sim-stopgo-energy');
+        if (stopGoEl && result.stopGoEnergy_Wh !== undefined) {
+            const trackId = window.ACTIVE_TRACK ? (ACTIVE_TRACK.id || 'SILESIA') : 'SILESIA';
+            const stopsLabel = trackId === 'YADYO' ? '(her 2 turda 1 kalkış)' : '(her tur kalkış)';
+            stopGoEl.textContent = `${result.stopGoEnergy_Wh.toFixed(3)} Wh/tur ${stopsLabel}`;
+            const stopGoRow = document.getElementById('sim-stopgo-row');
+            if (stopGoRow) stopGoRow.style.display = 'flex';
+        }
+
+        // Tur süresi
+        const lm = Math.floor(result.lap_time_s / 60);
+        const ls = Math.floor(result.lap_time_s % 60);
+        set('sim-lap-time', `${lm}:${ls.toString().padStart(2, '0')}`);
+
+        // Güç marjı bar
+        const powerPct = Math.min((result.power_W / vehiclePhysics.p_max_w) * 100, 100);
+        set('sim-power-margin-pct', powerPct.toFixed(1) + '%');
+        const fillEl = document.getElementById('sim-power-margin-fill');
+        if (fillEl) {
+            fillEl.style.width = powerPct + '%';
+            fillEl.style.background = powerPct < 65 ? '#34d399' : powerPct < 85 ? '#f59e0b' : '#ef4444';
+        }
+
+        // Strateji önerisi
+        const recEl  = document.getElementById('sim-rec-text');
+        const recDiv = document.getElementById('sim-recommendation');
+        if (recEl && recDiv) {
+            if (powerPct < 65) {
+                recDiv.className = 'sim-recommendation';
+                recEl.textContent = `✅ İdeal: ${result.speed_kph} km/h sabit hızla sürüş yeterli. Max gücün yalnızca %${powerPct.toFixed(0)}'ı kullanılıyor — motor rahat koşuyor.`;
+            } else if (powerPct < 85) {
+                recDiv.className = 'sim-recommendation warning';
+                recEl.textContent = `⚡ Dikkat: Motor max gücünün %${powerPct.toFixed(0)}'ını kullanıyor. Karşı rüzgar veya yokuş varsa güç sınırına ulaşılabilir.`;
+            } else {
+                recDiv.className = 'sim-recommendation danger';
+                recEl.textContent = `⚠️ Kritik: Motor kapasitesine çok yakın (%${powerPct.toFixed(0)})! Rüzgar veya eğim artışı başarısızlığa yol açabilir. Hızı düşürün.`;
+            }
+        }
+
+        // Mevcut dashboard hedef hız göstergesini güncelle
+        animateValue('target-speed', result.speed_kph.toFixed(1));
+        animateValue('target-lap-time', `${lm}:${ls.toString().padStart(2, '0')}`);
+
+        // Göster
+        if (emptyMsg)  emptyMsg.style.display = 'none';
+        if (resultsDiv) resultsDiv.style.display = 'block';
+
+        // Hız profili grafiğini çiz
+        updateSpeedProfileChart(result.speed_kph, result.lap_time_s);
+
+        showNotification(
+            '🔬 Simülasyon Tamamlandı',
+            `Optimum: ${result.speed_kph} km/h | ${result.energy_Wh.toFixed(1)} Wh/tur | ${result.efficiency_kmkwh.toFixed(0)} km/kWh`,
+            'success', 'fa-microchip'
+        );
+
+        // Adaptif strateji motorunu başlat
+        initAdaptiveStrategy();
+
+        // Throttle haritasını çiz
+        if (window.ACTIVE_TRACK) {
+            drawThrottleMap();
+        }
+    }, 50);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// SEGMENT TABANLI SİMÜLASYON  (SilesiaRing pist verisi kullanır)
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Gerçek pist segmentleri üzerinde enerji hesabı
+ * Her segment kendi eğimiyle hesaplanır → yüksek hassasiyet
+ *
+ * [YENİ] Stop-and-Go kinetik maliyeti eklendi:
+ *   - SilesiaRing: Her turda 1 tam duruş → stopsPerLap = 1
+ *   - YADYO: Her 2 turda 1 duruş (çünkü 2 YADYO turu = 1 Silesia turu) → stopsPerLap = 0.5
+ */
+function calcLapEnergyTracked(speed_kph, wind_mps = 0) {
+    if (!window.ACTIVE_TRACK) return null;
+    const segs      = ACTIVE_TRACK.segments;
+    const speed_mps = speed_kph / 3.6;
+    const { eta_drive } = vehiclePhysics;
+    if (speed_mps <= 0) return null;
+
+    let totalEnergy_Wh = 0;
+    let totalTime_s    = 0;
+    let totalForce_N   = 0;
+
+    segs.forEach(seg => {
+        const segLen_m  = seg.endM - seg.startM;
+        const gradDeg   = Math.asin(Math.max(-0.1, Math.min(0.1, seg.sineAlpha))) * 180 / Math.PI;
+        const F_R       = calcResistanceForce(speed_mps, gradDeg, wind_mps);
+        const P_out     = F_R * speed_mps;          // Çıkış gücü (W)
+        const P_in      = Math.max(P_out / eta_drive, 0); // Giriş ≥ 0 (regen yok)
+        const t_s       = segLen_m / speed_mps;
+        totalEnergy_Wh += (P_in * t_s) / 3600;
+        totalTime_s    += t_s;
+        totalForce_N   += F_R;
+    });
+
+    // ── Stop-and-Go maliyeti ─────────────────────────────────────────
+    // SilesiaRing: her tur start/finish'te tam duruş = 1 stop/lap
+    // YADYO: 2 tur = 1 Silesia turu → 0.5 stop/lap eşdeğeri
+    const trackId = ACTIVE_TRACK.id || 'SILESIA';
+    const stopsPerLap = (trackId === 'YADYO') ? 0.5 : 1.0;
+    const stopGoEnergy_Wh = calcStopAndGoEnergy(speed_kph, stopsPerLap);
+    totalEnergy_Wh += stopGoEnergy_Wh;
+    // ────────────────────────────────────────────────────────────────
+
+    const dist_m    = ACTIVE_TRACK.totalM;
+    const avgPow    = totalEnergy_Wh * 3600 / totalTime_s;
+    const efficiency = (dist_m / 1000) / (totalEnergy_Wh / 1000);
+
+    return {
+        energy_Wh:        parseFloat(totalEnergy_Wh.toFixed(4)),
+        stopGoEnergy_Wh:  parseFloat(stopGoEnergy_Wh.toFixed(4)),
+        power_W:          parseFloat(avgPow.toFixed(2)),
+        lap_time_s:       parseFloat(totalTime_s.toFixed(2)),
+        F_resistance_N:   parseFloat((totalForce_N / segs.length).toFixed(2)),
+        efficiency_kmkwh: parseFloat(efficiency.toFixed(1))
+    };
+}
+
+/**
+ * findOptimalSpeed — track‑aware sürüm
+ * useTrackSegments=true ise calcLapEnergyTracked kullanır
+ */
+function findOptimalSpeed(distance_m, max_time_s, gradient_deg = 0, wind_mps = 0, useTrackSegments = false) {
+    const v_max = vehiclePhysics.v_max_kph;
+    const p_max = vehiclePhysics.p_max_w;
+    let best    = null;
+
+    for (let v = 10.0; v <= v_max + 0.001; v += 0.1) {
+        const res = useTrackSegments && window.ACTIVE_TRACK
+            ? calcLapEnergyTracked(v, wind_mps)
+            : calcLapEnergy(v, distance_m, gradient_deg, wind_mps);
+        if (!res) continue;
+        if (res.lap_time_s > max_time_s) continue;
+        if (res.power_W    > p_max)      continue;
+        if (!best || res.energy_Wh < best.energy_Wh) {
+            best = { speed_kph: parseFloat(v.toFixed(1)), ...res };
+        }
+    }
+    return best;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// THROTTLE HARİTASI  (Renkli segment şeridi)
+// ══════════════════════════════════════════════════════════════════════
+
+function drawThrottleMap() {
+    const bar = document.getElementById('throttle-map-bar');
+    if (!bar || !window.ACTIVE_TRACK) return;
+
+    const totalM = ACTIVE_TRACK.totalM;
+    const colorMap = {
+        FULL:       '#ef4444',   // Kırmızı — tam gaz
+        THROTTLE:   '#f97316',   // Turuncu — gaz ver
+        MAINTAIN:   '#475569',   // Gri — siyur
+        COAST:      '#38bdf8',   // Mavi — kayıyla git
+        COAST_FREE: '#22d3ee'    // Açık mavi — serbest iniş
+    };
+
+    bar.innerHTML = '';
+    ACTIVE_TRACK.segments.forEach(seg => {
+        const widthPct = ((seg.endM - seg.startM) / totalM) * 100;
+        const div = document.createElement('div');
+        div.className  = 'throttle-seg';
+        div.style.width = widthPct + '%';
+        div.style.background = colorMap[seg.throttle] || '#475569';
+        div.title = `${seg.startM}–${seg.endM}m | ${seg.throttle} | Eğim: ${seg.slopePct.toFixed(1)}%`;
+        div.setAttribute('data-seg-id', seg.id);
+        bar.appendChild(div);
+    });
+}
+
+/**
+ * GPS pozisyonuna göre throttle haritasında aktif segmenti vurgular
+ * updateStrategyView() tarafından çağrılır
+ */
+function updateThrottlePosition(lat, lon) {
+    if (!window.ACTIVE_TRACK || !window.getNearestSegmentByGPS) return;
+    const seg = getNearestSegmentByGPS(lat, lon);
+    if (!seg) return;
+
+    // Tüm segmentleri sıfırla, aktifi vurgula
+    document.querySelectorAll('.throttle-seg').forEach((el, i) => {
+        el.classList.toggle('throttle-seg-active', i === seg.id);
+    });
+
+    // Mevcut pozisyon bilgisi
+    const posDiv  = document.getElementById('throttle-current-pos');
+    const infoEl  = document.getElementById('throttle-seg-info');
+    const segBadge = document.getElementById('current-seg-badge');
+    const hintMap = {
+        FULL:       '🔴 TAM GAZ — Güçlü yokuş, motoru çalıştır!',
+        THROTTLE:   '🟠 GAZ VER — Hafif yokuş, gaz uygula.',
+        MAINTAIN:   '⚪ SİYUR — Düz yol, sabit tut.',
+        COAST:      '🔵 KAYDIR — Hafif iniş, gazı bırak.',
+        COAST_FREE: '🩵 SERBEST — Güçlü iniş, gaz tamamen bırak!'
+    };
+    const hint = hintMap[seg.throttle] || '';
+    if (infoEl) infoEl.textContent = `Segment ${seg.id + 1}/60 | ${seg.startM}–${seg.endM}m | Eğim: ${seg.slopePct.toFixed(1)}% | ${hint}`;
+    if (posDiv) posDiv.style.display = 'flex';
+    if (segBadge) {
+        segBadge.textContent = hint;
+        segBadge.style.display = 'inline-flex';
+        segBadge.className = `current-seg-badge seg-${seg.throttle.toLowerCase().replace('_','-')}`;
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// PİST SEÇİCİ  —  Manuel geçiş + UI senkronizasyonu
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Pist değişikliğini yönetir
+ * @param {'SILESIA'|'YADYO'} trackId
+ */
+function handleTrackSwitch(trackId) {
+    if (!window.switchTrack) {
+        console.warn('[Track] switchTrack() bulunamadı — trackData.js yüklendi mi?');
+        return;
+    }
+
+    switchTrack(trackId); // trackData.js'deki ACTIVE_TRACK değiştirilir
+
+    // Buton durumlarını güncelle
+    document.querySelectorAll('.track-btn').forEach(btn => btn.classList.remove('track-btn-active'));
+    const activeBtn = document.getElementById(`track-btn-${trackId.toLowerCase()}`);
+    if (activeBtn) activeBtn.classList.add('track-btn-active');
+
+    // Pist bilgisi badge'ini güncelle
+    const badge = document.getElementById('track-info-badge');
+    if (badge && window.ACTIVE_TRACK) {
+        const t = ACTIVE_TRACK;
+        badge.innerHTML = `<i class="fa-solid fa-road"></i> ${t.totalM} m • Δ${t.altMinM.toFixed(0)}–${t.altMaxM.toFixed(0)} m • ${t.segments.length} seg`;
+    }
+
+    // Throttle haritası etiketlerini güncelle
+    updateThrottleMapLabels();
+
+    // Lap distance girişini güncelle (varsa)
+    const lapDistEl = document.getElementById('lap-distance');
+    if (lapDistEl && window.ACTIVE_TRACK) lapDistEl.value = ACTIVE_TRACK.totalM;
+
+    // Strateji nesnesi güncelle
+    if (window.raceStrategy && window.ACTIVE_TRACK) {
+        raceStrategy.lapDistanceM = ACTIVE_TRACK.totalM;
+    }
+
+    // Grafikleri yeniden çiz
+    if (window.ACTIVE_TRACK) {
+        drawThrottleMap();
+    }
+
+    // Pist değiştiğinde hava durumunu da bu pistin konumuna göre güncelle
+    localStorage.removeItem(WEATHER_CACHE_KEY); // Cache'i iptal et
+    fetchWeather(); // YENİ: Pistin yeni GPS noktasıyla hava durumunu çeker
+
+    // Bildirim
+    const name = trackId === 'SILESIA' ? 'SilesiaRing — Yarış Pisti' : 'YADYO — Test Pisti';
+    showNotification(
+        `🏁 Pist Değiştirildi`,
+        `${name} (${window.ACTIVE_TRACK ? ACTIVE_TRACK.totalM + 'm' : ''})\nHava durumu yeni piste göre güncelleniyor...`,
+        'info', 'fa-cloud-sun'
+    );
+}
+
+/**
+ * Throttle haritası mesafe etiketlerini aktif piste göre günceller
+ */
+function updateThrottleMapLabels() {
+    if (!window.ACTIVE_TRACK) return;
+    const total = ACTIVE_TRACK.totalM;
+    const labels = document.querySelectorAll('.throttle-map-labels span');
+    if (labels.length === 5) {
+        labels[0].textContent = '0 m';
+        labels[1].textContent = Math.round(total * 0.25) + ' m';
+        labels[2].textContent = Math.round(total * 0.5)  + ' m';
+        labels[3].textContent = Math.round(total * 0.75) + ' m';
+        labels[4].textContent = total + ' m';
+    }
+}
+
+/**
+ * Sayfa yüklendiğinde pist UI'ını başlatır
+ */
+function initTrackUI() {
+    if (!window.ACTIVE_TRACK) return;
+
+    // Badge güncelle
+    const badge = document.getElementById('track-info-badge');
+    if (badge) {
+        const t = ACTIVE_TRACK;
+        badge.innerHTML = `<i class="fa-solid fa-road"></i> ${t.totalM} m • Δ${t.altMinM.toFixed(0)}–${t.altMaxM.toFixed(0)} m • ${t.name.split('—')[0].trim()}`;
+    }
+
+    // Lap distance varsayılan değer
+    const lapDistEl = document.getElementById('lap-distance');
+    if (lapDistEl && !lapDistEl.value) lapDistEl.value = ACTIVE_TRACK.totalM;
+
+    // Grafikleri çiz
+    drawThrottleMap();
+    updateThrottleMapLabels();
+}
+
+/**
+ * Parametre Ayarları modalını açar/kapatır
+ */
+function toggleParamsModal(open) {
+    const overlay = document.getElementById('params-modal-overlay');
+    if (!overlay) return;
+    if (open) {
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    } else {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+/**
+ * Modal'daki parametreleri uygular, stratejiyi hesaplar ve simülatörü çalıştırır
+ */
+function applyParamsAndSimulate() {
+    // Yarış ayarlarını oku
+    calculateRaceStrategy();
+    // Araç fizik parametrelerini güncelle (modal'dan oku)
+    const mass = parseFloat(document.getElementById('sim-mass')?.value) || 143;
+    const cdA  = parseFloat(document.getElementById('sim-cda')?.value)  || 0.13;
+    const crr  = parseFloat(document.getElementById('sim-crr')?.value)  || 0.003;
+    const eta  = parseFloat(document.getElementById('sim-eta')?.value)  || 0.94;
+    const pmax = parseFloat(document.getElementById('sim-pmax')?.value) || 364;
+    const vmax = parseFloat(document.getElementById('sim-vmax')?.value) || 34.62;
+
+    vehiclePhysics.mass_kg    = mass;
+    vehiclePhysics.cdA        = cdA;
+    vehiclePhysics.crr        = crr;
+    vehiclePhysics.eta_drive  = eta;
+    vehiclePhysics.p_max_w    = pmax;
+    vehiclePhysics.v_max_kph  = vmax;
+
+    toggleParamsModal(false);
+    // Simülatörü çalıştır
+    setTimeout(runSimulator, 100);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// HIZ PROFİLİ GRAFİĞİ (Chart.js)
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * Hız profili grafiğini başlatır (Chart.js)
+ */
+function initSpeedProfileChart() {
+    const canvas = document.getElementById('speed-profile-chart');
+    if (!canvas || !window.Chart) return;
+    if (speedProfileChart) { speedProfileChart.destroy(); speedProfileChart = null; }
+
+    speedProfileChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Hedef Hız (km/h)',
+                    data: [],
+                    borderColor: '#60a5fa',
+                    backgroundColor: 'rgba(96,165,250,0.06)',
+                    borderWidth: 2,
+                    borderDash: [6, 4],
+                    pointRadius: 0,
+                    tension: 0.1,
+                    fill: false,
+                    order: 1
+                },
+                {
+                    label: 'Gerçek Hız (km/h)',
+                    data: [],
+                    borderColor: '#34d399',
+                    backgroundColor: 'rgba(52,211,153,0.08)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.3,
+                    fill: true,
+                    order: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            animation: { duration: 400 },
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Zaman (s)', color: '#64748b', font: { size: 11 } },
+                    ticks: { color: '#64748b', maxTicksLimit: 12, font: { size: 10 } },
+                    grid: { color: 'rgba(148,163,184,0.08)' }
+                },
+                y: {
+                    title: { display: true, text: 'Hız (km/h)', color: '#64748b', font: { size: 11 } },
+                    ticks: { color: '#64748b', font: { size: 10 } },
+                    grid: { color: 'rgba(148,163,184,0.08)' },
+                    min: 0,
+                    suggestedMax: 40
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15,23,42,0.95)',
+                    titleColor: '#94a3b8',
+                    bodyColor: '#e2e8f0',
+                    borderColor: 'rgba(96,165,250,0.3)',
+                    borderWidth: 1
+                }
+            }
+        }
+    });
+}
+
+/**
+ * Simülatör sonucuna göre hedef hız çizgisini çizer
+ */
+function updateSpeedProfileChart(targetSpeed_kph, lapTime_s) {
+    const chartCard = document.getElementById('speed-chart-card');
+    if (chartCard) chartCard.style.display = 'block';
+
+    if (!speedProfileChart) initSpeedProfileChart();
+    if (!speedProfileChart) return;
+
+    const totalSec = Math.ceil(lapTime_s);
+    const labels   = Array.from({ length: totalSec + 1 }, (_, i) => i);
+    const targetLine = labels.map(() => targetSpeed_kph);
+
+    speedProfileChart.data.labels                  = labels;
+    speedProfileChart.data.datasets[0].data        = targetLine;
+    speedProfileChart.data.datasets[1].data        = speedChartBuffer.real.slice(-labels.length);
+    speedProfileChart.update();
+}
+
+/**
+ * Canlı telemetriden gerçek hız verisini grafiğe ekler
+ */
+function addRealSpeedToChart(speed_kph, elapsed_s) {
+    if (!speedProfileChart) return;
+    speedChartBuffer.real.push(speed_kph);
+    if (speedChartBuffer.real.length > 500) speedChartBuffer.real.shift();
+    speedProfileChart.data.datasets[1].data = speedChartBuffer.real.slice(-speedProfileChart.data.labels.length);
+    speedProfileChart.update('none');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// HAVA DURUMU ENTEGRASYONu
+// OpenWeatherMap Free API → Sunucu proxy → Frontend
+// Cache: 10 dakika localStorage'de tutulur → API kotası korunur
+// ══════════════════════════════════════════════════════════════════════
+
+let weatherData = null;
+let weatherAutoRefreshTimer = null;
+const WEATHER_CACHE_KEY = 'telemetry_weather_cache';
+const WEATHER_CACHE_TTL = 10 * 60 * 1000; // 10 dakika
+
+function windDegToArrow(deg) {
+    const dirs = ['↓N','↙NE','←E','↖SE','↑S','↗SW','→W','↘NW'];
+    return dirs[Math.round(deg / 45) % 8] || '?';
+}
+function windDegToLabel(deg) {
+    const dirs = ['Kuzey','Kuzey-Doğu','Doğu','Güney-Doğu','Güney','Güney-Batı','Batı','Kuzey-Batı'];
+    return dirs[Math.round(deg / 45) % 8] || '--';
+}
+
+/** Cache'e yazar */
+function saveWeatherCache(data) {
+    try {
+        localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
+    } catch(e) {}
+}
+
+/** Cache'den okur — geçerli değilse null döner */
+function loadWeatherCache() {
+    try {
+        const raw = localStorage.getItem(WEATHER_CACHE_KEY);
+        if (!raw) return null;
+        const { ts, data } = JSON.parse(raw);
+        if (Date.now() - ts < WEATHER_CACHE_TTL) return data;
+    } catch(e) {}
+    return null;
+}
+
+/**
+ * GPS ile hava durumu çeker.
+ * Önce cache'e bakar (10 dk içindeyse API'ye gitmez).
+ */
+function fetchWeather() {
+    const cached = loadWeatherCache();
+    if (cached) { processWeatherData(cached); return; }
+
+    const btn = document.getElementById('btn-weather-refresh');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+
+    // ÖNCELİK: Seçili pistin (YADYO veya SilesiaRing) başlangıç koordinatlarını al
+    if (window.ACTIVE_TRACK && window.ACTIVE_TRACK.startLat && window.ACTIVE_TRACK.startLon) {
+        console.log(`[Weather] Hava durumu aktif pist üzerinden çekiliyor: ${ACTIVE_TRACK.name}`);
+        fetchWeatherByCoords(ACTIVE_TRACK.startLat, ACTIVE_TRACK.startLon);
+        return;
+    }
+
+    // Aktif pist yoksa tarayıcı konumuna (GPS) düş
+    if (!navigator.geolocation) {
+        fetchWeatherByCity('Adana,TR');
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        (pos) => fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude),
+        ()    => fetchWeatherByCity('Adana,TR'),
+        { timeout: 6000 }
+    );
+}
+
+/**
+ * Manuel şehir arama kutusuyla hava durumu çeker
+ */
+function fetchWeatherManual() {
+    const input = document.getElementById('weather-city-input');
+    const city  = input?.value?.trim();
+    if (!city) return;
+
+    // Cache'i iptal et — farklı şehir sorgulanıyor
+    localStorage.removeItem(WEATHER_CACHE_KEY);
+
+    const btn = document.getElementById('btn-weather-refresh');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; }
+    fetchWeatherByCity(city);
+}
+
+function fetchWeatherByCoords(lat, lon) {
+    fetch(`/api/v1/weather?lat=${lat}&lon=${lon}`)
+        .then(r => r.json())
+        .then(d => { saveWeatherCache(d); processWeatherData(d); })
+        .catch(e => weatherError(e.message));
+}
+
+function fetchWeatherByCity(city) {
+    fetch(`/api/v1/weather?city=${encodeURIComponent(city)}`)
+        .then(r => r.json())
+        .then(d => { saveWeatherCache(d); processWeatherData(d); })
+        .catch(e => weatherError(e.message));
+}
+
+/**
+ * API'den gelen hava verisini işler ve UI'ı günceller
+ */
+function processWeatherData(data) {
+    const btn = document.getElementById('btn-weather-refresh');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rotate"></i>'; }
+    if (data.error) { weatherError(data.error); return; }
+
+    weatherData = data;
+
+    const temp      = data.main?.temp       ?? '--';
+    const feelsLike = data.main?.feels_like ?? '--';
+    const humidity  = data.main?.humidity   ?? '--';
+    const pressure  = data.main?.pressure   ?? '--';
+    const windSpd   = data.wind?.speed      ?? 0;
+    const windDeg   = data.wind?.deg        ?? 0;
+    const desc      = data.weather?.[0]?.description ?? '--';
+    const clouds    = data.clouds?.all      ?? '--';
+    const vis       = data.visibility ? (data.visibility / 1000).toFixed(1) + ' km' : '--';
+    const cityName  = data.name ?? '';
+    const country   = data.sys?.country ?? '';
+
+    let finalLocName = `${cityName}${country ? ', ' + country : ''}`;
+    
+    // Eğer çekilen hava durumu koorinatları, aktif pistimizin koordinatlarıyla eşleşiyorsa (küçük bir sapma toleransıyla) özel isim yaz:
+    if (window.ACTIVE_TRACK && data.coord) {
+        const dLat = Math.abs(data.coord.lat - ACTIVE_TRACK.startLat);
+        const dLon = Math.abs(data.coord.lon - ACTIVE_TRACK.startLon);
+        if (dLat < 0.05 && dLon < 0.05) {
+            finalLocName = ACTIVE_TRACK.id === 'SILESIA' ? "SilesiaRing, Kamień Śląski (PL)" : "Çukurova Üni. / YADYO (TR)";
+        }
+    }
+
+    const locBadge = document.getElementById('weather-location-badge');
+    if (locBadge) locBadge.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${finalLocName}`;
+
+    // Şehir inputunu güncelle
+    const cityInput = document.getElementById('weather-city-input');
+    if (cityInput && !cityInput.value) cityInput.placeholder = `${cityName}, ${country}`;
+
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('w-wind-speed',  windSpd.toFixed(1));
+    set('w-wind-dir',    windDegToLabel(windDeg) + ' ' + windDegToArrow(windDeg));
+    set('w-temp',        typeof temp === 'number' ? temp.toFixed(1) : temp);
+    set('w-feels-like',  typeof feelsLike === 'number' ? 'Hissedilen: ' + feelsLike.toFixed(1) + '°C' : '--');
+    set('w-humidity',    humidity);
+    set('w-pressure',    pressure + ' hPa');
+    set('w-description', desc.charAt(0).toUpperCase() + desc.slice(1));
+    set('w-clouds',      clouds + '% bulutluluk');
+    set('w-visibility',  'Görüş: ' + vis);
+
+    const iconCode = data.weather?.[0]?.icon;
+    const iconWrap = document.getElementById('w-icon-wrap');
+    if (iconWrap && iconCode) {
+        iconWrap.innerHTML = `<img src="https://openweathermap.org/img/wn/${iconCode}@2x.png" alt="${desc}" class="weather-owm-icon">`;
+    }
+
+    const wmWind = document.getElementById('wm-wind');
+    if (wmWind) wmWind.classList.toggle('weather-metric-warn', windSpd > 5);
+
+    // Fizik etkisi
+    const rho    = airDensityFromTemp(typeof temp === 'number' ? temp : 20);
+    const rhoRef = 1.225;
+    const v_mps  = (raceStrategy.targetSpeedKph || 26) / 3.6;
+    const extraAeroPow = 0.5 * vehiclePhysics.cdA * (rho - rhoRef) * v_mps ** 2 * v_mps / vehiclePhysics.eta_drive;
+    const windEffect   = 0.5 * vehiclePhysics.cdA * rho * (windSpd ** 2) / vehiclePhysics.eta_drive;
+
+    set('wi-density',     rho.toFixed(4));
+    set('wi-extra-power', (extraAeroPow > 0 ? '+' : '') + extraAeroPow.toFixed(1));
+    set('wi-wind-effect', windSpd > 0 ? `+${windEffect.toFixed(1)} W (karşı)` : `-${windEffect.toFixed(1)} W (arkadan)`);
+
+    const bottomRow = document.getElementById('weather-bottom-row');
+    if (bottomRow) bottomRow.style.display = 'flex';
+
+    // Strateji uyarısı
+    let alertMsg = '';
+    if (windSpd > 7)  alertMsg = `⚠️ Güçlü rüzgar (${windSpd.toFixed(1)} m/s) — simülatöre uygulayın!`;
+    else if (windSpd > 4) alertMsg = `💨 Orta rüzgar (${windSpd.toFixed(1)} m/s) — strateji güncellemesi önerilir.`;
+    else if (typeof temp === 'number' && temp > 32) alertMsg = `🌡️ Yüksek sıcaklık (${temp.toFixed(1)}°C) — batarya performansını izleyin.`;
+    else if (typeof temp === 'number' && temp < 10) alertMsg = `❄️ Düşük sıcaklık (${temp.toFixed(1)}°C) — batarya kapasitesi azalmış olabilir.`;
+
+    const alertDiv  = document.getElementById('weather-alert');
+    const alertText = document.getElementById('weather-alert-text');
+    if (alertDiv && alertText) {
+        if (alertMsg) { alertText.textContent = alertMsg; alertDiv.style.display = 'flex'; }
+        else alertDiv.style.display = 'none';
+    }
+
+    // Simülatöre sıcaklık otomatik aktar
+    const tempInput = document.getElementById('sim-temp');
+    if (tempInput && typeof temp === 'number') tempInput.value = temp.toFixed(0);
+
+    showNotification(
+        '🌤️ Hava Durumu Güncellendi',
+        `${cityName}: ${typeof temp === 'number' ? temp.toFixed(1) : temp}°C, ${desc}, Rüzgar: ${windSpd.toFixed(1)} m/s`,
+        'info', 'fa-cloud-sun'
+    );
+}
+
+/**
+ * Hava verilerini simülatör girişlerine uygular
+ */
+function applyWeatherToSimulator() {
+    if (!weatherData) return;
+    const windSpd = weatherData.wind?.speed ?? 0;
+    const temp    = weatherData.main?.temp  ?? 20;
+    const windInput = document.getElementById('sim-wind');
+    const tempInput = document.getElementById('sim-temp');
+    if (windInput) windInput.value = windSpd.toFixed(1);
+    if (tempInput) tempInput.value = typeof temp === 'number' ? temp.toFixed(0) : 20;
+    showNotification('✅ Hava Verisi Uygulandı', 'Simülatörü yeniden çalıştırın.', 'success', 'fa-arrow-right-to-bracket');
+    // Modal'ı aç
+    toggleParamsModal(true);
+}
+
+function weatherError(msg) {
+    const btn = document.getElementById('btn-weather-refresh');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-rotate"></i>'; }
+    const locBadge = document.getElementById('weather-location-badge');
+    if (locBadge) locBadge.innerHTML = `<i class="fa-solid fa-location-dot"></i> Adana girin veya GPS iznini verin`;
+    showNotification('❌ Hava Durumu Hatası', msg, 'error', 'fa-cloud');
+}
+
+/**
+ * Sayfa yüklendiğinde otomatik hava durumu çek + 10 dk yenile
+ */
+function startWeatherAutoRefresh() {
+    fetchWeather();
+    if (weatherAutoRefreshTimer) clearInterval(weatherAutoRefreshTimer);
+    // Her 10 dk'da bir cache süresi dolduğunda yeniden çek
+    weatherAutoRefreshTimer = setInterval(() => {
+        localStorage.removeItem(WEATHER_CACHE_KEY);
+        fetchWeather();
+    }, WEATHER_CACHE_TTL);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// STRATEJİST HESAPLAMALARI (Verimlilik Yarışı)
+// ══════════════════════════════════════════════════════════════════════
+
 
 // Yarış ayarları ve strateji verilerini saklamak için
 let raceStrategy = {
@@ -2870,38 +3781,38 @@ function calculateRaceStrategy() {
     const targetTimeMin = parseInt(document.getElementById('target-time').value) || 30;
     const lapDistanceM = parseInt(document.getElementById('lap-distance').value) || 3000;
 
-    // Değerleri kaydet
     raceStrategy.targetLaps = targetLaps;
     raceStrategy.targetTimeMin = targetTimeMin;
     raceStrategy.lapDistanceM = lapDistanceM;
 
-    // Toplam mesafe (km)
     const totalDistanceKm = (targetLaps * lapDistanceM) / 1000;
-
-    // Hedef hız hesapla: Mesafe / Süre
     const targetSpeedKph = totalDistanceKm / (targetTimeMin / 60);
     raceStrategy.targetSpeedKph = targetSpeedKph;
 
-    // Hedef tur süresi (saniye)
     const targetLapTimeSec = (targetTimeMin * 60) / targetLaps;
     raceStrategy.targetLapTimeSec = targetLapTimeSec;
 
-    // UI'ı güncelle
-    animateValue('target-speed', targetSpeedKph.toFixed(1));
-
     const lapMins = Math.floor(targetLapTimeSec / 60);
     const lapSecs = Math.floor(targetLapTimeSec % 60);
-    animateValue('target-lap-time', `${lapMins}:${lapSecs.toString().padStart(2, '0')}`);
+    const lapTimeStr = `${lapMins}:${lapSecs.toString().padStart(2, '0')}`;
+    const totalTimeStr = `${Math.floor(targetTimeMin / 60)}:${(targetTimeMin % 60).toString().padStart(2, '0')}`;
 
-    // Hedef tur sayısını güncelle
-    document.getElementById('total-laps').innerText = targetLaps;
+    // Topbar ve tüm twin elementleri güncelle
+    animateValue('target-speed', targetSpeedKph.toFixed(1));
+    ['total-laps', 'total-laps-sw'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.textContent = targetLaps;
+    });
+    ['remaining-time', 'remaining-time-sw'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.textContent = totalTimeStr;
+    });
 
-    // Bildirim göster
+    // target-lap-time sadece varsa güncelle
+    const lapTimeEl = document.getElementById('target-lap-time');
+    if (lapTimeEl) lapTimeEl.textContent = lapTimeStr;
+
     showNotification('🏎️ Strateji Hesaplandı',
-        `Hedef hız: ${targetSpeedKph.toFixed(1)} km/h | Tur süresi: ${lapMins}:${lapSecs.toString().padStart(2, '0')}`,
+        `Hedef hız: ${targetSpeedKph.toFixed(1)} km/h | Tur süresi: ${lapTimeStr}`,
         'success', 'fa-check');
-
-    // Pace durumunu güncelle
     updatePaceStatus();
 }
 
@@ -2953,16 +3864,10 @@ function updateStrategyView(data) {
         }
     }
 
-    // Enerji/Tur hesapla (ortalama)
+    // Enerji bütçesi bar güncelleme (Tur başına ortalama hesabı)
     if (raceStrategy.currentLap > 0) {
         const energyPerLap = totalConsumedWh / raceStrategy.currentLap;
-        animateValue('energy-per-lap', energyPerLap.toFixed(1) + ' Wh');
-
-        // Tahmini toplam enerji
         const projectedTotal = energyPerLap * raceStrategy.targetLaps;
-        animateValue('projected-total', projectedTotal.toFixed(0) + ' Wh');
-
-        // Enerji bütçesi bar güncelleme
         updateEnergyBudget(totalConsumedWh, projectedTotal);
     }
 
@@ -2982,6 +3887,12 @@ function updateStrategyView(data) {
 
     // Pace durumunu güncelle
     updatePaceStatus(speed);
+
+    // Gerçek hız → Hız profili grafiğine aktar (test aktifken)
+    if (raceStrategy.isRaceActive && raceStrategy.raceStartTime) {
+        const elapsedSec = (Date.now() - raceStrategy.raceStartTime) / 1000;
+        addRealSpeedToChart(speed, elapsedSec);
+    }
 }
 
 // Pace durumunu günceller (hedefe göre hız karşılaştırması)
@@ -3080,12 +3991,241 @@ function loadStrategyNotes() {
     }
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// TUR-TUR ADAPTİF STRATEJİ MOTORu
+// Referans: Imperial Eco-Marathon "Cascading Lap Effects" + Pusztai tur analizi
+// Her tur tamamlandığında:
+//   1) Gerçek enerji tüketimi bütçeyle karşılaştırılır
+//   2) Kalan enerji kalan turlara yeniden dağıtılır
+//   3) Yeni hedef hız simülatörle hesaplanır
+//   4) Sürücüye bildirim gönderilir
+// ══════════════════════════════════════════════════════════════════════
+
+// Adaptif strateji veri yapısı
+let adaptiveStrategy = {
+    totalBudgetWh:  0,          // Simülatörün verdiği toplam enerji tahmini
+    perLapBudgetWh: 0,          // Tur başına bütçe
+    lapHistory:     [],          // [{lapNum, lapTimeSec, energyWh, whKm, deltaWh}]
+    isInitialized:  false        // Simülatör çalıştırıldıktan sonra true
+};
+
+/**
+ * Adaptif strateji motorunu başlatır (simülatör çalıştırıldıktan sonra çağrılır)
+ */
+function initAdaptiveStrategy() {
+    if (!raceStrategy.simulatedEnergyWh || raceStrategy.simulatedEnergyWh <= 0) return;
+
+    const totalLaps = raceStrategy.targetLaps || 10;
+    adaptiveStrategy.totalBudgetWh  = raceStrategy.simulatedEnergyWh * totalLaps;
+    adaptiveStrategy.perLapBudgetWh = raceStrategy.simulatedEnergyWh;
+    adaptiveStrategy.lapHistory     = [];
+    adaptiveStrategy.isInitialized  = true;
+
+    updateAdaptiveUI();
+}
+
+/**
+ * Tur tamamlandığında çağrılır — stratejiyi yeniden hesaplar
+ * lapTimeMs: tur süresi (milisaniye), actualEnergyWh: gerçek enerji tüketimi
+ */
+function adaptStrategyAfterLap(lapNum, lapTimeSec, actualEnergyWh) {
+    if (!adaptiveStrategy.isInitialized) {
+        // Simülatör çalıştırılmadıysa temel başlatma yap
+        const simEnergy = raceStrategy.simulatedEnergyWh || 5;
+        adaptiveStrategy.totalBudgetWh  = simEnergy * (raceStrategy.targetLaps || 10);
+        adaptiveStrategy.perLapBudgetWh = simEnergy;
+        adaptiveStrategy.isInitialized  = true;
+    }
+
+    const distance_m    = raceStrategy.lapDistanceM || 3000;
+    const deviation_Wh  = actualEnergyWh - adaptiveStrategy.perLapBudgetWh;
+
+    // Tur verisini kaydet
+    const whKm = (actualEnergyWh / (distance_m / 1000));
+    adaptiveStrategy.lapHistory.push({
+        lapNum, lapTimeSec, energyWh: actualEnergyWh, whKm, deltaWh: deviation_Wh
+    });
+
+    // Kalan enerji bütçesi
+    const totalConsumed = adaptiveStrategy.lapHistory.reduce((s, l) => s + l.energyWh, 0);
+    const remaining_Wh  = adaptiveStrategy.totalBudgetWh - totalConsumed;
+    const lapsLeft      = (raceStrategy.targetLaps || 10) - lapNum;
+
+    let newTargetSpeed = raceStrategy.targetSpeedKph;
+
+    if (lapsLeft > 0) {
+        // Kalan enerjiyi kalan turlara dağıt → yeni tur bütçesi
+        const newLapBudget_Wh = remaining_Wh / lapsLeft;
+        adaptiveStrategy.perLapBudgetWh = newLapBudget_Wh;
+
+        // Yeni bütçeye uygun hızı bul (fizik modeli ile):
+        // E = F_R * d / η → v = ???
+        // Çözüm: E = [Crr*m*g + 0.5*CdA*rho*v²] * d / η
+        // Karesel denklem: 0.5*CdA*rho*d/η * v² + Crr*m*g*d/η = E_budget (Wh*3600 J)
+        const { mass_kg, cdA, crr, rho_air, g, eta_drive, v_max_kph } = vehiclePhysics;
+        const E_J      = newLapBudget_Wh * 3600;   // Joule
+        const a_coeff  = 0.5 * cdA * rho_air * distance_m / eta_drive;
+        const b_const  = crr * mass_kg * g * distance_m / eta_drive;
+        // a_coeff * v² + b_const = E_J  →  v² = (E_J - b_const) / a_coeff
+        const v2 = (E_J - b_const) / a_coeff;
+        if (v2 > 0) {
+            const v_mps = Math.sqrt(v2);
+            const v_kph = v_mps * 3.6;
+            newTargetSpeed = Math.min(parseFloat(v_kph.toFixed(1)), v_max_kph);
+        }
+
+        raceStrategy.targetSpeedKph = newTargetSpeed;
+    }
+
+    // Tutarlılık skoru hesapla (standart sapma — Pusztai: σ = 3.41s referans)
+    let sigma = 0;
+    if (adaptiveStrategy.lapHistory.length >= 2) {
+        const times = adaptiveStrategy.lapHistory.map(l => l.lapTimeSec);
+        const mean  = times.reduce((s, t) => s + t, 0) / times.length;
+        const variance = times.reduce((s, t) => s + (t - mean) ** 2, 0) / times.length;
+        sigma = Math.sqrt(variance);
+    }
+
+    // UI güncelle
+    updateAdaptiveUI(remaining_Wh, lapsLeft, newTargetSpeed, sigma);
+    updateAdaptiveLapTable(sigma);
+
+    // Pace badge'ini güncelle
+    animateValue('target-speed', newTargetSpeed.toFixed(1));
+
+    // Strateji öneri bildirimi
+    const speedDelta = newTargetSpeed - (raceStrategy.targetSpeedKph || newTargetSpeed);
+    const overBudget = deviation_Wh > adaptiveStrategy.perLapBudgetWh * 0.1;
+    const underBudget = deviation_Wh < -adaptiveStrategy.perLapBudgetWh * 0.1;
+
+    let recTitle, recText, notifType;
+    if (overBudget) {
+        recTitle = `⚠️ Tur ${lapNum}: Bütçe Aşıldı`;
+        recText  = `${deviation_Wh.toFixed(1)} Wh fazla harcandı. Sonraki tur hedefi: ${newTargetSpeed.toFixed(1)} km/h (↓ hız)`;
+        notifType = 'warning';
+    } else if (underBudget) {
+        recTitle = `✅ Tur ${lapNum}: Verimli`;
+        recText  = `${Math.abs(deviation_Wh).toFixed(1)} Wh tasarruf edildi. Sonraki tur: ${newTargetSpeed.toFixed(1)} km/h (↑ hafif hızlanabilir)`;
+        notifType = 'success';
+    } else {
+        recTitle = `📊 Tur ${lapNum}: Hedefe Yakın`;
+        recText  = `Sapma: ${deviation_Wh > 0 ? '+' : ''}${deviation_Wh.toFixed(1)} Wh. Strateji korunuyor: ${newTargetSpeed.toFixed(1)} km/h`;
+        notifType = 'info';
+    }
+
+    // Öneri panelini güncelle
+    const recDiv   = document.getElementById('adapt-recommendation');
+    const recTitleEl = document.getElementById('adapt-rec-title');
+    const recTextEl  = document.getElementById('adapt-rec-text');
+    if (recDiv && recTitleEl && recTextEl) {
+        recDiv.style.display = 'flex';
+        recDiv.className = `adapt-recommendation ${notifType}`;
+        recTitleEl.textContent = recTitle;
+        recTextEl.textContent  = recText;
+    }
+
+    // Bildirim
+    showNotification(recTitle, recText, notifType, 'fa-arrows-spin');
+}
+
+/**
+ * Adaptif strateji özet metriklerini günceller
+ */
+function updateAdaptiveUI(remaining_Wh, lapsLeft, newSpeed, sigma) {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+    const completedLaps = adaptiveStrategy.lapHistory.length;
+    const totalLaps     = raceStrategy.targetLaps || 10;
+
+    set('adapt-completed-laps',   completedLaps);
+    set('adapt-remaining-laps',   lapsLeft !== undefined ? lapsLeft : (totalLaps - completedLaps));
+    set('adapt-remaining-budget', remaining_Wh !== undefined ? remaining_Wh.toFixed(1) + ' Wh' : (adaptiveStrategy.totalBudgetWh > 0 ? adaptiveStrategy.totalBudgetWh.toFixed(1) + ' Wh' : '-- Wh'));
+    set('adapt-per-lap-budget',   adaptiveStrategy.perLapBudgetWh > 0 ? adaptiveStrategy.perLapBudgetWh.toFixed(1) + ' Wh' : '-- Wh');
+    set('adapt-new-speed',        newSpeed !== undefined ? newSpeed.toFixed(1) + ' km/h' : (raceStrategy.targetSpeedKph > 0 ? raceStrategy.targetSpeedKph.toFixed(1) + ' km/h' : '-- km/h'));
+
+    // Tutarlılık skoru
+    if (sigma !== undefined && completedLaps >= 2) {
+        const conEl    = document.getElementById('adapt-consistency-row');
+        const sigmaEl  = document.getElementById('adapt-sigma');
+        const gradeEl  = document.getElementById('adapt-sigma-grade');
+        if (conEl)   conEl.style.display = 'flex';
+        if (sigmaEl) sigmaEl.textContent = `σ = ${sigma.toFixed(2)} sn`;
+        if (gradeEl) {
+            // Pusztai referansı: iyi sürücü σ = 3.41s
+            if (sigma < 2)       { gradeEl.textContent = '🏆 Mükemmel'; gradeEl.className = 'adapt-sigma-grade grade-perfect'; }
+            else if (sigma < 4)  { gradeEl.textContent = '✅ İyi'; gradeEl.className = 'adapt-sigma-grade grade-good'; }
+            else if (sigma < 7)  { gradeEl.textContent = '⚡ Orta'; gradeEl.className = 'adapt-sigma-grade grade-mid'; }
+            else                  { gradeEl.textContent = '⚠️ Tutarsız'; gradeEl.className = 'adapt-sigma-grade grade-bad'; }
+        }
+    }
+}
+
+/**
+ * Tur geçmişi tablosunu günceller
+ */
+function updateAdaptiveLapTable(sigma) {
+    const tbody = document.getElementById('adapt-lap-tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    const budget = adaptiveStrategy.perLapBudgetWh || 1;
+
+    adaptiveStrategy.lapHistory.slice().reverse().forEach((lap, idx) => {
+        const isFirst = idx === adaptiveStrategy.lapHistory.length - 1;
+        const lm = Math.floor(lap.lapTimeSec / 60);
+        const ls = Math.floor(lap.lapTimeSec % 60).toString().padStart(2, '0');
+        const deltaSign  = lap.deltaWh > 0 ? '+' : '';
+        const deltaClass = lap.deltaWh > budget * 0.1 ? 'delta-over' :
+                           lap.deltaWh < -budget * 0.1 ? 'delta-under' : 'delta-ok';
+
+        // En verimli tur vurgula
+        const isEfficient = adaptiveStrategy.lapHistory.length > 1 &&
+            lap.energyWh === Math.min(...adaptiveStrategy.lapHistory.map(l => l.energyWh));
+
+        const sigmaCell = idx === 0 && sigma > 0 ?
+            `<span class="${sigma < 4 ? 'sigma-good' : 'sigma-bad'}">σ${sigma.toFixed(1)}</span>` : '--';
+
+        const tr = document.createElement('tr');
+        tr.className = isEfficient ? 'lap-row-best' : '';
+        tr.innerHTML = `
+            <td><span class="lap-num-badge">${lap.lapNum}</span>${isEfficient ? ' 🏆' : ''}</td>
+            <td class="mono">${lm}:${ls}</td>
+            <td class="mono">${lap.energyWh.toFixed(2)} Wh</td>
+            <td class="mono">${lap.whKm.toFixed(1)}</td>
+            <td class="mono ${deltaClass}">${deltaSign}${lap.deltaWh.toFixed(1)} Wh</td>
+            <td>${sigmaCell}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+/**
+ * Mevcut tur verisinden adaptif analizi tetikler (tur LAP butonuna basınca)
+ * Bu fonksiyon mevcut lap recording sistemine bağlanır
+ */
+function triggerAdaptiveLapUpdate(lapNum, lapTimeSec) {
+    // Toplam harcanan enerjiden bu tur için harcanan miktarı tahmin et
+    const totalConsumedSoFar = raceStrategy.totalConsumedWh || 0;
+    const previousTotal = adaptiveStrategy.lapHistory.reduce((s, l) => s + l.energyWh, 0);
+    const thisLapEnergy = Math.max(totalConsumedSoFar - previousTotal, 0.01);
+
+    adaptStrategyAfterLap(lapNum, lapTimeSec, thisLapEnergy);
+}
+
 // ==================== SAYFA BAŞLANGIÇ ====================
+
 // Sayfa yüklendiğinde kimlik doğrulama kontrolü yap
 checkAuth();
 
 // Strateji notlarını yükle
 loadStrategyNotes();
+
+// Hava durumu otomatik yükleme (Stratejist ekranı için)
+// Auth kontrol tamamlanınca 2 saniye sonra çalıştır
+setTimeout(() => {
+    const stratBtn = document.getElementById('btn-weather-refresh');
+    if (stratBtn) startWeatherAutoRefresh();
+}, 2000);
 
 // ==================== SÜPERADMIN YÖNETİM PANELİ ====================
 
@@ -3280,3 +4420,4 @@ async function changeUserRole(id, username) {
         showNotification('Hata', err.message, 'error', 'fa-circle-exclamation');
     }
 }
+

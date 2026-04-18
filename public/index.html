@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 
 <head>
@@ -684,153 +684,300 @@
 
             <!-- Strategy View (Stratejist Ekranı - Verimlilik Yarışı) -->
             <div id="view-strategy" class="view">
+
                 <div class="strategy-grid">
-                    <!-- Yarış Ayarları (Tam Genişlik) -->
-                    <div class="card strategy-card race-setup-card">
-                        <div class="card-header">
-                            <h3><i class="fa-solid fa-flag-checkered"></i> Yarış Ayarları</h3>
+
+                    <!-- ═══ ÜST KONTROL ÇUBUĞU ═══ -->
+                    <div class="strategy-topbar">
+                        <div class="strategy-topbar-left">
+                            <div class="race-quick-stats">
+                                <div class="rqs-item">
+                                    <span class="rqs-label">Tur</span>
+                                    <span class="rqs-value" id="current-lap">0</span>
+                                    <span class="rqs-sep">/ <span id="total-laps">10</span></span>
+                                </div>
+                                <div class="rqs-divider"></div>
+                                <div class="rqs-item">
+                                    <span class="rqs-label">Hedef Hız</span>
+                                    <span class="rqs-value accent" id="target-speed">--</span>
+                                    <span class="rqs-sep">km/h</span>
+                                </div>
+                                <div class="rqs-divider"></div>
+                                <div class="rqs-item">
+                                    <span class="rqs-label">Anlık</span>
+                                    <span class="rqs-value" id="current-speed">--</span>
+                                    <span class="rqs-sep">km/h</span>
+                                </div>
+                                <div class="rqs-divider"></div>
+                                <div class="rqs-item">
+                                    <span class="rqs-label">Kalan Süre</span>
+                                    <span class="rqs-value" id="remaining-time">--:--</span>
+                                </div>
+                                <div class="rqs-divider"></div>
+                                <div class="rqs-item">
+                                    <span class="rqs-label">Güç</span>
+                                    <span class="rqs-value" id="instant-power">--</span>
+                                    <span class="rqs-sep">W</span>
+                                </div>
+                                <div class="rqs-divider"></div>
+                                <div class="rqs-item">
+                                    <span class="rqs-label">Verimlilik</span>
+                                    <span class="rqs-value" id="current-wh-km">--</span>
+                                    <span class="rqs-sep">Wh/km</span>
+                                </div>
+                                <div class="rqs-divider"></div>
+                                <div class="rqs-item">
+                                    <span class="rqs-label">Tüketim</span>
+                                    <span class="rqs-value" id="total-consumed">--</span>
+                                    <span class="rqs-sep">Wh</span>
+                                </div>
+                                <div class="rqs-divider"></div>
+                                <div class="rqs-item">
+                                    <span class="rqs-label">Menzil</span>
+                                    <span class="rqs-value" id="remaining-range">--</span>
+                                    <span class="rqs-sep">km</span>
+                                </div>
+                                <div class="rqs-divider"></div>
+                                <div class="rqs-pace-status" id="pace-status">
+                                    <i class="fa-solid fa-circle-dot"></i>
+                                    <span>Ayarlanmadı</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body">
-                            <div class="race-setup-grid">
-                                <div class="setup-input-group">
-                                    <label>Hedef Tur Sayısı</label>
-                                    <input type="number" id="target-laps" value="10" min="1" max="50"
-                                        class="setup-input">
-                                </div>
-                                <div class="setup-input-group">
-                                    <label>Hedef Süre (dakika)</label>
-                                    <input type="number" id="target-time" value="30" min="5" max="120"
-                                        class="setup-input">
-                                </div>
-                                <div class="setup-input-group">
-                                    <label>Tur Uzunluğu (metre)</label>
-                                    <input type="number" id="lap-distance" value="3000" min="500" max="10000"
-                                        class="setup-input">
-                                </div>
-                                <button class="sw-btn btn-calculate" onclick="calculateRaceStrategy()"
-                                    data-admin-only="disable">
-                                    <i class="fa-solid fa-calculator"></i> Hesapla
+                        <div class="strategy-topbar-right">
+                            <!-- Pist Seçici (Segmented Control) -->
+                            <div class="track-selector" id="track-selector">
+                                <button class="track-btn track-btn-active" id="track-btn-silesia"
+                                        onclick="handleTrackSwitch('SILESIA')" title="SilesiaRing — SEM 2025 Yarış Pisti">
+                                    <i class="fa-solid fa-flag-checkered"></i> SilesiaRing
+                                </button>
+                                <button class="track-btn" id="track-btn-yadyo"
+                                        onclick="handleTrackSwitch('YADYO')" title="YADYO — Adana Test Pisti">
+                                    <i class="fa-solid fa-flask"></i> YADYO
+                                </button>
+                            </div>
+                            <button class="params-open-btn" onclick="toggleParamsModal(true)">
+                                <i class="fa-solid fa-sliders"></i>
+                                <span>Parametre Ayarları</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ═══ HAVA DURUMU ═══ -->
+                    <div class="card strategy-card weather-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-cloud-sun"></i> Hava Durumu</h3>
+                            <div class="weather-header-right">
+                                <span class="weather-location-badge" id="weather-location-badge">
+                                    <i class="fa-solid fa-location-dot"></i> Konum bekleniyor…
+                                </span>
+                                <button class="sw-btn btn-weather-refresh" onclick="fetchWeather()" id="btn-weather-refresh" title="Hava durumunu güncelle">
+                                    <i class="fa-solid fa-rotate"></i>
                                 </button>
                             </div>
                         </div>
+                        <div class="card-body">
+                            <!-- Manuel şehir / konum girişi -->
+                            <div class="weather-manual-row">
+                                <div class="weather-manual-input-wrap">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <input type="text" id="weather-city-input" class="weather-city-input" placeholder="Şehir adı girin (örn: Adana, Mersin)" onkeydown="if(event.key==='Enter') fetchWeatherManual()">
+                                </div>
+                                <button class="weather-search-btn" onclick="fetchWeatherManual()">
+                                    <i class="fa-solid fa-search"></i> Ara
+                                </button>
+                                <button class="weather-gps-btn" onclick="fetchWeather()" title="GPS konumumu kullan">
+                                    <i class="fa-solid fa-crosshairs"></i>
+                                </button>
+                            </div>
+                            <!-- Ana Hava Göstergeleri -->
+                            <div class="weather-grid" id="weather-grid">
+                                <div class="weather-metric" id="wm-wind">
+                                    <div class="wm-icon"><i class="fa-solid fa-wind"></i></div>
+                                    <div class="wm-value" id="w-wind-speed">--</div>
+                                    <div class="wm-unit">m/s</div>
+                                    <div class="wm-label">Rüzgar Hızı</div>
+                                    <div class="wm-sub" id="w-wind-dir">--</div>
+                                </div>
+                                <div class="weather-metric" id="wm-temp">
+                                    <div class="wm-icon"><i class="fa-solid fa-temperature-half"></i></div>
+                                    <div class="wm-value" id="w-temp">--</div>
+                                    <div class="wm-unit">°C</div>
+                                    <div class="wm-label">Sıcaklık</div>
+                                    <div class="wm-sub" id="w-feels-like">--</div>
+                                </div>
+                                <div class="weather-metric" id="wm-humidity">
+                                    <div class="wm-icon"><i class="fa-solid fa-droplet"></i></div>
+                                    <div class="wm-value" id="w-humidity">--</div>
+                                    <div class="wm-unit">%</div>
+                                    <div class="wm-label">Nem</div>
+                                    <div class="wm-sub" id="w-pressure">-- hPa</div>
+                                </div>
+                                <div class="weather-metric" id="wm-desc">
+                                    <div class="wm-icon weather-icon-img" id="w-icon-wrap">
+                                        <i class="fa-solid fa-cloud"></i>
+                                    </div>
+                                    <div class="wm-value wm-desc-val" id="w-description">--</div>
+                                    <div class="wm-unit" id="w-clouds">-- bulut</div>
+                                    <div class="wm-label">Durum</div>
+                                    <div class="wm-sub" id="w-visibility">--</div>
+                                </div>
+                            </div>
+                            <!-- Fizik Etki + Uyarı + Uygula (tek satır) -->
+                            <div class="weather-bottom-row" id="weather-bottom-row" style="display:none;">
+                                <div class="weather-impact-inline">
+                                    <span class="wi-chip"><i class="fa-solid fa-gauge-high"></i> <b id="wi-density">--</b> kg/m³</span>
+                                    <span class="wi-chip"><i class="fa-solid fa-bolt"></i> <b id="wi-extra-power">--</b> W ek aero</span>
+                                    <span class="wi-chip"><i class="fa-solid fa-wind"></i> Rüzgar: <b id="wi-wind-effect">--</b></span>
+                                </div>
+                                <button class="weather-apply-btn-sm" id="btn-apply-weather" onclick="applyWeatherToSimulator()">
+                                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Simülatöre Uygula
+                                </button>
+                            </div>
+                            <div class="weather-alert" id="weather-alert" style="display:none;">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <span id="weather-alert-text">--</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Anlık Verimlilik -->
-                    <div class="card strategy-card">
+                    <!-- ═══ ENERJİ SİMÜLATÖRÜ ═══ -->
+                    <div class="card strategy-card simulator-card">
                         <div class="card-header">
-                            <h3><i class="fa-solid fa-bolt"></i> Anlık Verimlilik</h3>
+                            <h3><i class="fa-solid fa-microchip"></i> Enerji Simülatörü</h3>
+
                         </div>
-                        <div class="card-body strategy-body">
-                            <div class="efficiency-main">
-                                <div class="efficiency-value" id="current-wh-km">--</div>
-                                <div class="efficiency-unit">Wh/km</div>
+                        <div class="card-body">
+                            <div class="sim-run-bar">
+                                <div class="sim-run-info">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    <span>Parametreler için <b>Parametre Ayarları</b> butonunu kullanın</span>
+                                </div>
+                                <button class="sw-btn btn-simulate" onclick="runSimulator()" id="btn-run-sim">
+                                    <i class="fa-solid fa-play"></i> Simüle Et
+                                </button>
                             </div>
-                            <div class="efficiency-details">
-                                <div class="eff-detail">
-                                    <span class="eff-label">Anlık Güç</span>
-                                    <span class="eff-value" id="instant-power">-- W</span>
+
+                            <!-- Simülatör Sonuçları -->
+                            <div class="sim-results" id="sim-results" style="display:none;">
+                                <div class="sim-result-grid">
+                                    <div class="sim-result-card sim-optimal">
+                                        <div class="sim-result-icon"><i class="fa-solid fa-gauge-high"></i></div>
+                                        <div class="sim-result-value" id="sim-opt-speed">--</div>
+                                        <div class="sim-result-unit">km/h</div>
+                                        <div class="sim-result-label">Optimum Hız</div>
+                                    </div>
+                                    <div class="sim-result-card sim-energy">
+                                        <div class="sim-result-icon"><i class="fa-solid fa-bolt"></i></div>
+                                        <div class="sim-result-value" id="sim-opt-energy">--</div>
+                                        <div class="sim-result-unit">Wh/tur</div>
+                                        <div class="sim-result-label">Tahmini Enerji</div>
+                                    </div>
+                                    <div class="sim-result-card sim-efficiency">
+                                        <div class="sim-result-icon"><i class="fa-solid fa-leaf"></i></div>
+                                        <div class="sim-result-value" id="sim-opt-efficiency">--</div>
+                                        <div class="sim-result-unit">km/kWh</div>
+                                        <div class="sim-result-label">Verimlilik</div>
+                                    </div>
+                                    <div class="sim-result-card sim-power">
+                                        <div class="sim-result-icon"><i class="fa-solid fa-plug-circle-bolt"></i></div>
+                                        <div class="sim-result-value" id="sim-opt-power">--</div>
+                                        <div class="sim-result-unit">W</div>
+                                        <div class="sim-result-label">Güç Talebi</div>
+                                    </div>
                                 </div>
-                                <div class="eff-detail">
-                                    <span class="eff-label">Ortalama Tüketim</span>
-                                    <span class="eff-value" id="avg-wh-km">-- Wh/km</span>
+                                <!-- Güç Marjı -->
+                                <div class="power-margin-container">
+                                    <div class="power-margin-label">
+                                        <span><i class="fa-solid fa-bolt"></i> Güç Kullanım Oranı</span>
+                                        <span id="sim-power-margin-pct" class="power-pct-value">--%</span>
+                                    </div>
+                                    <div class="power-margin-bar">
+                                        <div class="power-margin-fill" id="sim-power-margin-fill" style="width:0%"></div>
+                                    </div>
+                                    <div class="power-margin-limits">
+                                        <span>0 W</span>
+                                        <span>Max: <span id="sim-pmax-label">364 W</span></span>
+                                    </div>
                                 </div>
-                                <div class="eff-detail">
-                                    <span class="eff-label">Toplam Harcanan</span>
-                                    <span class="eff-value" id="total-consumed">-- Wh</span>
+                                <!-- Detay satırı -->
+                                <div class="sim-lap-info">
+                                    <div class="sim-lap-detail"><i class="fa-solid fa-stopwatch"></i><span>Tur süresi: <b id="sim-lap-time">--:--</b></span></div>
+                                    <div class="sim-lap-detail"><i class="fa-solid fa-arrow-right-to-bracket"></i><span>Direnç: <b id="sim-resistance">-- N</b></span></div>
+                                    <div class="sim-lap-detail"><i class="fa-solid fa-battery-half"></i><span>Yarış enerjisi: <b id="sim-total-energy">-- Wh</b></span></div>
+                                    <div class="sim-lap-detail"><i class="fa-solid fa-wind"></i><span>Hava yoğunluğu: <b id="sim-air-density">1.225 kg/m³</b></span></div>
+                                    <div class="sim-lap-detail"><i class="fa-solid fa-piggy-bank"></i><span>Tur bütçesi: <b id="avg-wh-km">-- Wh/km</b></span></div>
+                                    <div class="sim-lap-detail" id="sim-stopgo-row" style="display:none; border-left: 2px solid #f59e0b; padding-left: 8px;">
+                                        <i class="fa-solid fa-hand" style="color:#f59e0b;"></i>
+                                        <span>Kalkış maliyeti: <b id="sim-stopgo-energy" style="color:#f59e0b;">-- Wh/tur</b></span>
+                                    </div>
+                                </div>
+                                <div class="sim-recommendation" id="sim-recommendation">
+                                    <i class="fa-solid fa-lightbulb"></i>
+                                    <span id="sim-rec-text">Simülatör sonucu burada görünecek...</span>
                                 </div>
                             </div>
+                            <p class="sim-empty-msg" id="sim-empty-msg">
+                                <i class="fa-solid fa-circle-play"></i>
+                                Önce <b>Parametre Ayarları</b>'nı doldurun, ardından <b>Simüle Et</b> butonuna basın.
+                            </p>
                         </div>
                     </div>
 
-                    <!-- Hedef Pace -->
-                    <div class="card strategy-card">
+                    <!-- ═══ HIZ PROFİLİ GRAFİĞİ ═══ -->
+                    <div class="card strategy-card speed-chart-card" id="speed-chart-card" style="display:none;">
                         <div class="card-header">
-                            <h3><i class="fa-solid fa-crosshairs"></i> Hedef Pace</h3>
-                        </div>
-                        <div class="card-body strategy-body">
-                            <div class="pace-main">
-                                <div class="pace-value" id="target-speed">--</div>
-                                <div class="pace-unit">km/h</div>
+                            <h3><i class="fa-solid fa-chart-line"></i> Hız Profili — Hedef vs Gerçek</h3>
+                            <div class="chart-legend">
+                                <span class="legend-item"><span class="legend-dot" style="background:#60a5fa"></span>Hedef</span>
+                                <span class="legend-item"><span class="legend-dot" style="background:#34d399"></span>Gerçek</span>
                             </div>
-                            <div class="pace-details">
-                                <div class="pace-detail">
-                                    <span class="pace-label">Tur Başına Süre</span>
-                                    <span class="pace-val" id="target-lap-time">--:--</span>
-                                </div>
-                                <div class="pace-detail">
-                                    <span class="pace-label">Anlık Hız</span>
-                                    <span class="pace-val" id="current-speed">-- km/h</span>
-                                </div>
-                                <div class="pace-detail status-indicator-pace" id="pace-status">
-                                    <span class="pace-label">Durum</span>
-                                    <span class="pace-val">Ayarlanmadı</span>
-                                </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="speed-profile-chart" height="100"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- ═══ THROTTLE HARITASI ═══ -->
+                    <div class="card strategy-card" id="throttle-map-card" style="grid-column:1/-1;">
+                        <div class="card-header" style="justify-content: space-between; flex-wrap: wrap;">
+                            <div style="display:flex; align-items:center; gap: 12px; margin-bottom: 5px;">
+                                <h3><i class="fa-solid fa-route"></i> Pist & Throttle Haritası</h3>
+                                <span id="track-info-badge" class="track-info-badge"><i class="fa-solid fa-road"></i> --</span>
+                                <span id="current-seg-badge" class="current-seg-badge" style="display:none;"></span>
+                            </div>
+                            <div class="throttle-legend" style="margin-bottom: 5px;">
+                                <span class="tl-item tl-full">◼ TAM GAZ</span>
+                                <span class="tl-item tl-throttle">◼ GAZ VER</span>
+                                <span class="tl-item tl-maintain">◼ SİYUR</span>
+                                <span class="tl-item tl-coast">◼ KAYDIR</span>
+                                <span class="tl-item tl-coast-free">◼ SERBEST</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="throttle-map-bar" class="throttle-map-bar"></div>
+                            <div class="throttle-map-labels">
+                                <span>0 m</span>
+                                <span>25%</span>
+                                <span>50%</span>
+                                <span>75%</span>
+                                <span>100%</span>
+                            </div>
+                            <div id="throttle-current-pos" class="throttle-current-pos" style="display:none;">
+                                <i class="fa-solid fa-location-dot"></i>
+                                <span id="throttle-seg-info"></span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Yarış İlerlemesi -->
-                    <div class="card strategy-card">
-                        <div class="card-header">
-                            <h3><i class="fa-solid fa-route"></i> Yarış İlerlemesi</h3>
-                        </div>
-                        <div class="card-body strategy-body">
-                            <div class="progress-main">
-                                <div class="progress-circle" id="lap-progress">
-                                    <span class="progress-num" id="current-lap">0</span>
-                                    <span class="progress-total">/ <span id="total-laps">10</span></span>
-                                </div>
-                                <div class="progress-label">Tamamlanan Tur</div>
-                            </div>
-                            <div class="progress-details">
-                                <div class="prog-detail">
-                                    <span class="prog-label">Kalan Süre</span>
-                                    <span class="prog-value" id="remaining-time">--:--</span>
-                                </div>
-                                <div class="prog-detail">
-                                    <span class="prog-label">Kalan Menzil</span>
-                                    <span class="prog-value" id="remaining-range">--</span>
-                                </div>
-                                <div class="prog-detail">
-                                    <span class="prog-label">Enerji/Tur</span>
-                                    <span class="prog-value" id="energy-per-lap">-- Wh</span>
-                                </div>
-                                <div class="prog-detail">
-                                    <span class="prog-label">Tahmini Toplam</span>
-                                    <span class="prog-value" id="projected-total">-- Wh</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Enerji Bütçesi -->
-                    <div class="card strategy-card">
-                        <div class="card-header">
-                            <h3><i class="fa-solid fa-piggy-bank"></i> Enerji Bütçesi</h3>
-                        </div>
-                        <div class="card-body strategy-body">
-                            <div class="budget-bar-container">
-                                <div class="budget-bar" id="energy-budget-bar">
-                                    <div class="budget-fill" id="budget-fill" style="width: 50%;"></div>
-                                    <div class="budget-marker" id="budget-marker" style="left: 50%;"></div>
-                                </div>
-                                <div class="budget-labels">
-                                    <span>0 Wh</span>
-                                    <span id="budget-target">Hedef: -- Wh</span>
-                                    <span id="budget-max">-- Wh</span>
-                                </div>
-                            </div>
-                            <div class="budget-status" id="budget-status">
-                                <i class="fa-solid fa-circle-check"></i>
-                                <span>Yarış ayarlarını girin</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Kronometre (Stratejist - Tam Kontrol) -->
+                    <!-- ═══ KRONOMETRE + YARŞ İLERLEMESİ (BİRLEŞTİRİLDİ) ═══ -->
                     <div class="card strategy-card stopwatch-strategy-card">
                         <div class="card-header">
                             <h3><i class="fa-solid fa-stopwatch"></i> Kronometre</h3>
+                            <div class="sw-progress-inline">
+                                <span class="sw-prog-lap">Tur <b id="current-lap-sw">0</b> / <b id="total-laps-sw">10</b></span>
+                                <span class="sw-prog-time">Kalan: <b id="remaining-time-sw">--:--</b></span>
+                            </div>
                         </div>
                         <div class="card-body strategy-body">
                             <div class="stopwatch-display strategy-stopwatch-display" id="strategy-stopwatch-display">
@@ -842,23 +989,92 @@
                                 <span class="sw-sep">:</span>
                                 <span class="sw-digit" id="strat-sw-s1">0</span>
                                 <span class="sw-digit" id="strat-sw-s2">0</span>
-                                <span class="ms">.<span class="sw-digit sw-ms-digit" id="strat-sw-c1">0</span><span
-                                        class="sw-digit sw-ms-digit" id="strat-sw-c2">0</span></span>
+                                <span class="ms">.<span class="sw-digit sw-ms-digit" id="strat-sw-c1">0</span><span class="sw-digit sw-ms-digit" id="strat-sw-c2">0</span></span>
                             </div>
                             <div class="stopwatch-controls">
                                 <button id="strat-sw-lap" class="sw-btn lap" data-admin-only="disable" title="Tur">
                                     <i class="fa-solid fa-flag"></i>
                                 </button>
-                                <button id="strat-sw-reset" class="sw-btn reset" data-admin-only="disable"
-                                    title="Sıfırla">
+                                <button id="strat-sw-reset" class="sw-btn reset" data-admin-only="disable" title="Sıfırla">
                                     <i class="fa-solid fa-rotate-left"></i>
                                 </button>
                             </div>
                             <div class="lap-list" id="strategy-lap-list"></div>
                         </div>
                     </div>
+
+                    <!-- ═══ TUR-TUR ADAPTİF STRATEJİ ═══ -->
+                    <div class="card strategy-card adaptive-strategy-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-arrows-spin"></i> Adaptif Tur Analizi</h3>
+                            <span class="sim-badge"><i class="fa-solid fa-brain"></i> Canlı Optimizasyon</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Özet Metrikler -->
+                            <div class="adaptive-summary">
+                                <div class="adapt-stat">
+                                    <span class="adapt-stat-label">Tamam. Tur</span>
+                                    <span class="adapt-stat-value" id="adapt-completed-laps">0</span>
+                                </div>
+                                <div class="adapt-stat">
+                                    <span class="adapt-stat-label">Kalan Tur</span>
+                                    <span class="adapt-stat-value" id="adapt-remaining-laps">--</span>
+                                </div>
+                                <div class="adapt-stat">
+                                    <span class="adapt-stat-label">Kalan Bütçe</span>
+                                    <span class="adapt-stat-value" id="adapt-remaining-budget">-- Wh</span>
+                                </div>
+                                <div class="adapt-stat">
+                                    <span class="adapt-stat-label">Tur Bütçesi</span>
+                                    <span class="adapt-stat-value" id="adapt-per-lap-budget">-- Wh</span>
+                                </div>
+                                <div class="adapt-stat highlight">
+                                    <span class="adapt-stat-label">⚡ Önerilen Hız</span>
+                                    <span class="adapt-stat-value" id="adapt-new-speed">-- km/h</span>
+                                </div>
+                            </div>
+                            <!-- Tur Geçmişi Tablosu -->
+                            <div class="adapt-table-wrap">
+                                <table class="adapt-lap-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Tur</th>
+                                            <th>Süre</th>
+                                            <th>Enerji</th>
+                                            <th>Wh/km</th>
+                                            <th>Δ Bütçe</th>
+                                            <th>σ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="adapt-lap-tbody">
+                                        <tr class="adapt-empty-row">
+                                            <td colspan="6"><i class="fa-solid fa-flag"></i> Tur tamamlandığında otomatik doldurulur</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- Öneri Paneli -->
+                            <div class="adapt-recommendation" id="adapt-recommendation" style="display:none;">
+                                <i class="fa-solid fa-circle-arrow-right"></i>
+                                <div>
+                                    <div class="adapt-rec-title" id="adapt-rec-title">Strateji Güncellendi</div>
+                                    <div class="adapt-rec-text" id="adapt-rec-text">--</div>
+                                </div>
+                            </div>
+                            <!-- Tutarlılık Skoru -->
+                            <div class="adapt-consistency-row" id="adapt-consistency-row" style="display:none;">
+                                <span><i class="fa-solid fa-chart-bar"></i> Sürücü Tutarlılığı (σ)</span>
+                                <div>
+                                    <span id="adapt-sigma" class="adapt-sigma-val">-- sn</span>
+                                    <span class="adapt-sigma-grade" id="adapt-sigma-grade"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
+
 
             <!-- Media View (Müzik & Video) -->
             <div id="view-media" class="view">
@@ -1231,7 +1447,9 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <!-- Custom Scripts (Minified for Production) -->
-    <script src="js/app.min.js?v=122"></script>
+    <!-- Pist Profili (trackData.js) -->
+    <script src="js/trackData.js?v=1"></script>
+    <script src="js/app.js?v=123"></script>
 
     <!-- Service Worker & Pull-to-Refresh -->
     <script>
@@ -1299,6 +1517,116 @@
                 <div id="users-list" style="min-height: 40px;">
                     <p style="color:#aaa;">Yükleniyor...</p>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ PARAMETRE AYARLARI MODAL (body seviyesi — stacking context sorunu yok) ═══ -->
+    <div id="params-modal-overlay" class="params-modal-overlay" onclick="toggleParamsModal(false)">
+        <div class="params-modal" onclick="event.stopPropagation()">
+            <div class="params-modal-header">
+                <div class="params-modal-title">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Parametre Ayarları</span>
+                </div>
+                <button class="params-modal-close" onclick="toggleParamsModal(false)">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="params-modal-body">
+
+                <!-- BÖLÜM 1: Yarış Ayarları -->
+                <div class="params-section">
+                    <div class="params-section-title">
+                        <i class="fa-solid fa-flag-checkered"></i> Yarış Ayarları
+                    </div>
+                    <div class="params-grid-3">
+                        <div class="params-group">
+                            <label>Hedef Tur Sayısı</label>
+                            <input type="number" id="target-laps" value="10" min="1" max="100" class="setup-input">
+                        </div>
+                        <div class="params-group">
+                            <label>Hedef Süre (dakika)</label>
+                            <input type="number" id="target-time" value="30" min="1" max="480" class="setup-input">
+                        </div>
+                        <div class="params-group">
+                            <label>Tur Uzunluğu (metre)</label>
+                            <input type="number" id="lap-distance" value="3000" min="100" max="50000" class="setup-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BÖLÜM 2: Araç Parametreleri -->
+                <div class="params-section">
+                    <div class="params-section-title">
+                        <i class="fa-solid fa-car-side"></i> Araç Parametreleri (Fizik Modeli)
+                    </div>
+                    <div class="params-grid-3">
+                        <div class="params-group">
+                            <label>Kütle (kg)</label>
+                            <input type="number" id="sim-mass" value="143" min="50" max="500" step="1" class="setup-input">
+                            <span class="params-hint">Araç + sürücü toplam</span>
+                        </div>
+                        <div class="params-group">
+                            <label>CdA (m²)</label>
+                            <input type="number" id="sim-cda" value="0.13" min="0.01" max="2" step="0.001" class="setup-input">
+                            <span class="params-hint">Aero direnç katsayısı</span>
+                        </div>
+                        <div class="params-group">
+                            <label>Crr (yuvarlama direnci)</label>
+                            <input type="number" id="sim-crr" value="0.003" min="0.001" max="0.05" step="0.0001" class="setup-input">
+                            <span class="params-hint">Lastik/zemin katsayısı</span>
+                        </div>
+                        <div class="params-group">
+                            <label>Aktarma Verimi (η)</label>
+                            <input type="number" id="sim-eta" value="0.94" min="0.5" max="1" step="0.01" class="setup-input">
+                            <span class="params-hint">0.93–0.95 arası tipik</span>
+                        </div>
+                        <div class="params-group">
+                            <label>Motor Max Güç (W)</label>
+                            <input type="number" id="sim-pmax" value="364" min="10" max="5000" step="1" class="setup-input">
+                            <span class="params-hint">Sürekli maksimum güç</span>
+                        </div>
+                        <div class="params-group">
+                            <label>Max Hız (km/h)</label>
+                            <input type="number" id="sim-vmax" value="34.62" min="5" max="200" step="0.01" class="setup-input">
+                            <span class="params-hint">Teorik maksimum hız</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BÖLÜM 3: Simülasyon Koşulları -->
+                <div class="params-section">
+                    <div class="params-section-title">
+                        <i class="fa-solid fa-microchip"></i> Simülasyon Koşulları
+                    </div>
+                    <div class="params-grid-3">
+                        <div class="params-group">
+                            <label>Rüzgar Hızı (m/s)</label>
+                            <input type="number" id="sim-wind" value="0" min="-15" max="15" step="0.5" class="setup-input">
+                            <span class="params-hint">+karşı / −arkadan</span>
+                        </div>
+                        <div class="params-group">
+                            <label>Ort. Eğim (°)</label>
+                            <input type="number" id="sim-gradient" value="0" min="-8" max="8" step="0.1" class="setup-input">
+                            <span class="params-hint">+yokuş / −iniş</span>
+                        </div>
+                        <div class="params-group">
+                            <label>Hava Sıcaklığı (°C)</label>
+                            <input type="number" id="sim-temp" value="20" min="-10" max="50" step="1" class="setup-input">
+                            <span class="params-hint">Hava yoğunl. etkiler</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="params-modal-footer">
+                <button class="params-btn-cancel" onclick="toggleParamsModal(false)">
+                    <i class="fa-solid fa-xmark"></i> Kapat
+                </button>
+                <button class="params-btn-apply" onclick="applyParamsAndSimulate()">
+                    <i class="fa-solid fa-play"></i> Kaydet &amp; Simüle Et
+                </button>
             </div>
         </div>
     </div>
