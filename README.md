@@ -59,12 +59,23 @@ Araç üzerindeki STM32F407, CAN bus verilerini toplar ve SIM800L ile düzenli H
 
 | Alan | Detay |
 |:-----|:------|
-| Gerçek zamanlı izleme | Socket.io yayın modeli ile anlık dashboard güncellemesi |
-| Çoklu veri kaynağı | BMS, motor, GPS, izolasyon ve hidrojen verilerinin tek akışta toplanması |
-| Alarmlar | Sıcaklık seviyesine göre fan / buzzer / kontaktör durum yönetimi |
-| Veri analizi | Geçmiş telemetri sorgulama, test oturumları, CSV/JSON dışa aktarım |
-| Harita entegrasyonu | Leaflet ile canlı konum ve rota takibi |
-| Mobil deneyim | PWA + Android hibrit uygulama ile sahada izleme |
+| **Fizik Tabanlı Simülatör** | LTV-LQG yaklaşımlı, sürtünme/eğim modeliyle (Track-Aware) çalışan enerji optimizasyon simülatörü |
+| **Dinamik Hava-GPS Entegrasyonu** | Seçilen pistin (örn. Polonya/SilesiaRing) anlık hava durumunu çekip aerodinamik sürtünme yoğunluğu hesabı yapabilme |
+| **Gerçek Zamanlı İzleme** | Socket.io yayın modeli ile anlık dashboard güncellemesi, sub-100ms gecikme |
+| **Çoklu Veri Kaynağı** | BMS, motor, GPS, izolasyon ve hidrojen verilerinin tek akışta toplanması |
+| **Canlı Pilot Koçluğu (HUD)** | Tur süreleri, adaptif hız tavsiyeleri ve "Dur-Kalk" (Stop-and-go) kinetik enerji uyarıları |
+| **Veri Analizi & Offline Destek** | Geçmiş telemetri sorgulama (MongoDB), test oturumları ve CSV/JSON dışa aktarım. |
+| **Mobil & PWA Deneyimi** | Android hibrit uygulama (WebView) ve PWA altyapısı ile yarış sahasında operasyonel kullanım |
+
+---
+
+## 🏎️ Track-Aware "Stratejist" (Yapay Zeka Destekli Modül)
+
+Geleneksel "düz yol" telemetrilerinin bir adım ötesine geçerek, projeye **Pusztai ve ark. LTV-LQG (Linear Time-Varying)** algoritmasını temel alan özel bir fizik motoru entegre edilmiştir. Yüksek çözünürlüklü GPS noktalarına bölünmüş pist dataları üzerinden şu hesaplamalar istemci (client) tarafında gerçek zamanlı çalışır:
+
+- **Dinamik Formülasyon:** `F_total = F_Rolling + F_Aero(Hava_Yoğunluğu) + F_Slope(Eğim) + E_k(Dur-Kalk)`
+- **Sürücü Asistanı:** Yokuşlarda erken gaz kesme (coast) ve tırmanış noktalarını haritada mavi/turuncu dilimler (Throttle Map) ile renk kodlu olarak pilota iletir.
+- **Simülasyon Adaptasyonu:** Shell Eco-Marathon (SilesiaRing) yarış kuralları ile Adana yerel test pistinin (YADYO) "Tur sayısına bağlı kinetik dur-kalk maliyetlerini" bütçeleyerek mükemmele yakın batarya ömrü tahmini yapar.
 
 ---
 
@@ -119,10 +130,13 @@ Araç üzerindeki STM32F407, CAN bus verilerini toplar ve SIM800L ile düzenli H
 
 ## 👨‍💻 Bu Projede Gösterilen Yetkinlikler
 
-- Gömülü sistemden bulut/backend katmanına veri boru hattı tasarımı
-- Gerçek zamanlı web/mobil arayüz mimarisi
-- Telemetri odaklı veri modelleme ve performanslı sorgu tasarımı
-- Üretim odaklı güvenlik ve izlenebilirlik pratikleri
+Düz bir dashboard arayüzünün ötesine geçmek amacıyla odaklanılan mühendislik pratikleri:
+
+- **IoT Veri Mimarisini Tasarlama:** Gömülü sistem (STM32/CAN) ile Cloud/Backend (Node.js/Socket.io) katmanı arasında dayanıklı ve düşük gecikmeli veri boru hattı (pipeline) tesisi.
+- **Algoritme Geliştirme ve Fizik Modelleme:** Araç kinematiği ve çevresel değişkenleri hesaba katarak *JavaScript* üzerinde zero-latency çalışan otonom veri-temelli hız önerme motoru kurgusu.
+- **RESTful API ve 3. Parti Entegrasyon:** Konum ve koordinat bilgisini dinleyerek çalışan *Track-Aware* OpenWeatherMap backend proxy katmanı ve lokal önbellekleme (Caching).
+- **Üretime Hazır (Production-Ready) Güvenlik:** PM2 deployment ortamında `express-rate-limit` (DDoS koruması), özel NoSQL Injection middleware'i ve JWT Role Tabanlı (Superadmin/Viewer) erişim denetimi.
+- **Full-Stack Performans Optimizasyonu:** Yoğun DOM manipülasyonlarını vanilla JS ile optimize etme ve MongoDB zaman serisi verilerinde performanslı okuma/yazma.
 
 ---
 
