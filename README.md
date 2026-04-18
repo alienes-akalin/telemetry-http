@@ -71,7 +71,7 @@ Araç üzerindeki STM32F407, CAN bus verilerini toplar ve SIM800L ile düzenli H
 
 ## 🏎️ Track-Aware "Stratejist" (Yapay Zeka Destekli Modül)
 
-Geleneksel "düz yol" telemetrilerinin bir adım ötesine geçerek, projeye **Pusztai ve ark. LTV-LQG (Linear Time-Varying)** algoritmasını temel alan özel bir fizik motoru entegre edilmiştir. Yüksek çözünürlüklü GPS noktalarına bölünmüş pist dataları üzerinden şu hesaplamalar istemci (client) tarafında gerçek zamanlı çalışır:
+Geleneksel "düz yol" telemetrilerinin bir adım ötesine geçerek, projeye özel olarak **LTV (Linear Time-Varying)** enerji korunum matematiğini temel alan otonom bir fizik motoru entegre edilmiştir. Yüksek çözünürlüklü GPS noktalarına bölünmüş pist dataları üzerinden şu hesaplamalar istemci (client) tarafında sıfır gecikmeyle gerçek zamanlı çalışır:
 
 - **Dinamik Formülasyon:** `F_total = F_Rolling + F_Aero(Hava_Yoğunluğu) + F_Slope(Eğim) + E_k(Dur-Kalk)`
 - **Sürücü Asistanı:** Yokuşlarda erken gaz kesme (coast) ve tırmanış noktalarını haritada mavi/turuncu dilimler (Throttle Map) ile renk kodlu olarak pilota iletir.
