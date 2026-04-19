@@ -113,6 +113,9 @@ function resolveSocketIds(deviceId) {
 function switchVehicle(newDeviceId) {
     if (newDeviceId === currentDeviceId) return;
 
+    // Cihaz değişmeden önce aktif stratejist durumunu sakla
+    saveActiveStrategyProfile();
+
     // Dropdown animasyonu
     const select = document.getElementById('device-select');
     if (select) {
@@ -215,12 +218,11 @@ function switchVehicle(newDeviceId) {
     const swWasRunning = loadStopwatchState(true);
     updateAllStopwatchDisplays();
     updateAllLapLists();
+    updateLapIndicators();
     if (swWasRunning) startStopwatchTimer();
 
-    // ==================== STRATEJİ SIFIRLA ====================
-    // Dinamik hesaplar sıfırlanır, kullanıcının girdiği ayarlar (tur sayısı vb.) korunur
-    raceStrategy.totalConsumedWh = 0;
-    raceStrategy.avgConsumptionWhKm = 0;
+    // ==================== STRATEJİ: CİHAZA ÖZEL DURUMU YÜKLE ====================
+    restoreStrategyProfileForDevice(newDeviceId);
 
     // Araç config'e göre widget göster/gizle
     const cfg = VEHICLE_CONFIG[newDeviceId] || { hasIso: false, hasH2: false };
@@ -265,6 +267,7 @@ function switchVehicle(newDeviceId) {
 
     // En son veriyi yeni araç için çek
     fetchLatestData();
+    updateTestButtonState();
 
     console.log(`🚗 Araç değiştirildi: ${newDeviceId}`, cfg);
 }
@@ -905,10 +908,15 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();       // Menü navigasyonunu kur
     initMainMap();          // Dashboard haritasını oluştur
     initStopwatch();        // Kronometreyi başlat
+    initializeStrategyProfiles();
+    restoreStrategyProfileForDevice(currentDeviceId);
     setInterval(updateClock, 1000);  // Saati her saniye güncelle
 
     // Pist profillerini başlat (trackData.js yüklendikten sonra)
-    setTimeout(initTrackUI, 100);
+    setTimeout(() => {
+        initTrackUI();
+        updateLapIndicators();
+    }, 100);
 
     // ---- ARAÇ SEÇİCİ ----
     // Android WebView'da inline onchange güvenilmez olduğu için
@@ -2101,12 +2109,8 @@ function addLap() {
     // Tüm listeleri güncelle
     updateAllLapLists();
 
-    // Stratejist ekranındaki tur sayısını güncelle
-    raceStrategy.currentLap = lapCount;
-    const currentLapEl = document.getElementById('current-lap');
-    if (currentLapEl) {
-        currentLapEl.innerText = lapCount;
-    }
+    // Stratejist ekranındaki tur göstergesini güncelle
+    updateLapIndicators();
 
     // ── YADYO Dur-Kalk Uyarısı ────────────────────────────────────────
     // YADYO'da her 2 turda bir SilesiaRing'deki gibi tam duruş yapılmalı.
@@ -2124,17 +2128,30 @@ function addLap() {
     // ────────────────────────────────────────────────────────────────
 
     // Adaptif strateji motorunu tetikle
-    const lapTimeSec = lapTime / 100; // centiseconds → seconds
-    triggerAdaptiveLapUpdate(lapCount, lapTimeSec);
+    const isYadyoTrack = getCurrentTrackId() === 'YADYO';
+    if (isYadyoTrack) {
+        // 2 test turu = 1 yarış turu: adaptif hesap sadece çift turda bir çalışır
+        if (lapCount % 2 === 0) {
+            const previousLap = lapData[lapData.length - 2];
+            const combinedLapCs = (previousLap?.lapTime || 0) + lapTime;
+            const combinedLapSec = combinedLapCs / 100;
+            triggerAdaptiveLapUpdate(getRaceEquivalentLap(lapCount), combinedLapSec);
+        }
+    } else {
+        const lapTimeSec = lapTime / 100; // centiseconds → seconds
+        triggerAdaptiveLapUpdate(lapCount, lapTimeSec);
+    }
 
-    // Hedef tur sayısına ulaşıldıysa testi otomatik bitir
-    const targetLaps = raceStrategy.targetLaps || 10;
-    console.log(`🏁 Tur kontrolü: ${lapCount}/${targetLaps}, test aktif: ${isTestRecording}`);
+    // Hedef yarış turuna ulaşıldıysa testi otomatik bitir
+    const targetRaceLaps = raceStrategy.targetLaps || 10;
+    const currentRaceLap = getRaceEquivalentLap(lapCount);
+    const targetTestLaps = getTargetTestLapCount(targetRaceLaps);
+    console.log(`🏁 Tur kontrolü: test=${lapCount}/${targetTestLaps}, race=${currentRaceLap}/${targetRaceLaps}, test aktif: ${isTestRecording}`);
 
-    if (lapCount >= targetLaps && isTestRecording === true) {
+    if (currentRaceLap >= targetRaceLaps && isTestRecording === true) {
         console.log('🏁 Hedef tura ulaşıldı, test durduruluyor...');
         showNotification(
-            `🏁 Hedef tur tamamlandı (${lapCount}/${targetLaps})! Test durduruluyor.`,
+            `🏁 Hedef yarış turu tamamlandı (${currentRaceLap}/${targetRaceLaps})! Test durduruluyor.`,
             'success'
         );
         // Doğrudan durdur (async fonksiyonu try-catch ile çağır)
@@ -2147,6 +2164,7 @@ function addLap() {
 
     // Kaydet
     saveStopwatchState();
+    saveActiveStrategyProfile();
 }
 
 // Kronometreyi sıfırlar
@@ -2162,13 +2180,11 @@ function resetStopwatch() {
 
     // Stratejist tur sayısını sıfırla
     raceStrategy.currentLap = 0;
-    const currentLapEl = document.getElementById('current-lap');
-    if (currentLapEl) {
-        currentLapEl.innerText = '0';
-    }
+    updateLapIndicators();
 
     // localStorage'dan da sil
     localStorage.removeItem('stopwatchState_' + currentDeviceId);
+    saveActiveStrategyProfile();
 }
 
 // Kronometre bileşenini başlatır ve olay dinleyicilerini ekler
@@ -2179,6 +2195,7 @@ function initStopwatch() {
     // Görünümü güncelle
     updateAllStopwatchDisplays();
     updateAllLapLists();
+    updateLapIndicators();
 
     // Eğer önceden çalışıyorsa devam ettir
     if (wasRunning) {
@@ -2375,6 +2392,33 @@ let activeSessionTab = 'system';
 // ==================== TEST KAYDI ====================
 let isTestRecording = false;  // Test kaydı aktif mi?
 let testStartTime = null;     // Test başlangıç zamanı
+let hasCompletedTestRun = false;
+let testFlowState = 'NO_DATA';
+
+const TEST_FLOW_STATES = {
+    NO_DATA: 'NO_DATA',
+    READY: 'READY',
+    RECORDING: 'RECORDING',
+    COMPLETED: 'COMPLETED'
+};
+
+const STRATEGY_PROFILE_STORAGE_PREFIX = 'strategyProfile_';
+const STRATEGY_INPUT_FIELDS = [
+    { key: 'targetLaps', id: 'target-laps', fallback: 10, parser: 'int' },
+    { key: 'targetTimeMin', id: 'target-time', fallback: 30, parser: 'int' },
+    { key: 'lapDistanceM', id: 'lap-distance', fallback: 3000, parser: 'int' },
+    { key: 'simMass', id: 'sim-mass', fallback: 143 },
+    { key: 'simCdA', id: 'sim-cda', alternateId: 'sim-cdA', fallback: 0.13 },
+    { key: 'simCrr', id: 'sim-crr', fallback: 0.003 },
+    { key: 'simEta', id: 'sim-eta', fallback: 0.94 },
+    { key: 'simPmax', id: 'sim-pmax', fallback: 364 },
+    { key: 'simVmax', id: 'sim-vmax', fallback: 34.62 },
+    { key: 'simWind', id: 'sim-wind', fallback: 0 },
+    { key: 'simGradient', id: 'sim-gradient', fallback: 0 },
+    { key: 'simTemp', id: 'sim-temp', fallback: 20 }
+];
+
+const strategyProfiles = {};
 
 // Geçmiş sayfasında sekme değiştirir
 function switchSessionTab(tab) {
@@ -2553,6 +2597,9 @@ function updateTestButtonState() {
     const now = Date.now();
     const hasData = !!(lastDataTime && (now - lastDataTime) < 10000);
 
+    testFlowState = deriveTestFlowState(hasData);
+    applyTestFlowStateToButton(btn);
+
     // ---- Araç kapandı bildirimi ----
     // Sadece active→inactive geçişinde, sayfa yeni yüklendiyse (null) bildirim atma.
     if (lastDataActive === true && !hasData) {
@@ -2607,6 +2654,8 @@ function toggleTestRecording() {
         showNotification('Veri akışı yok! Test başlatılamıyor.', 'warning');
         btn.disabled = true;
         btn.classList.add('no-data');
+        testFlowState = deriveTestFlowState(false);
+        applyTestFlowStateToButton(btn);
         return;
     }
 
@@ -2617,6 +2666,8 @@ function toggleTestRecording() {
 function startTestRecording() {
     isTestRecording = true;
     testStartTime = new Date();
+    hasCompletedTestRun = false;
+    testFlowState = TEST_FLOW_STATES.RECORDING;
 
     // Buton görünümünü güncelle
     const btn = document.getElementById('btn-test-record');
@@ -2631,6 +2682,8 @@ function startTestRecording() {
     raceStrategy.raceStartTime = testStartTime;
     raceStrategy.isRaceActive = true;
 
+    saveActiveStrategyProfile();
+    updateTestButtonState();
 
 }
 
@@ -2642,6 +2695,8 @@ async function stopTestRecording() {
         return;
     }
     isTestRecording = false;
+    testFlowState = TEST_FLOW_STATES.COMPLETED;
+    hasCompletedTestRun = true;
 
     const endTime = new Date();
     console.log('🛑 Test durduruluyor...');
@@ -2687,6 +2742,8 @@ async function stopTestRecording() {
 
     // Durumu sıfırla
     testStartTime = null;
+    saveActiveStrategyProfile();
+    updateTestButtonState();
 }
 
 // Testleri API'den yükler ve listeler
@@ -2912,12 +2969,12 @@ function airDensityFromTemp(temp_c) {
  * Arayüzdeki değerleri vehiclePhysics nesnesine yükler
  */
 function loadVehicleParams() {
-    const get = (id, def) => {
-        const el = document.getElementById(id);
+    const get = (id, def, alternateId) => {
+        const el = getInputElement(id, alternateId);
         return el ? (parseFloat(el.value) || def) : def;
     };
     vehiclePhysics.mass_kg    = get('sim-mass',     143);
-    vehiclePhysics.cdA        = get('sim-cdA',      0.13);
+    vehiclePhysics.cdA        = get('sim-cda',      0.13, 'sim-cdA');
     vehiclePhysics.crr        = get('sim-crr',      0.003);
     vehiclePhysics.eta_drive  = get('sim-eta',      0.94);
     vehiclePhysics.p_max_w    = get('sim-pmax',     364);
@@ -3128,6 +3185,7 @@ function runSimulator() {
 
         // Adaptif strateji motorunu başlat
         initAdaptiveStrategy();
+        saveActiveStrategyProfile();
 
         // Throttle haritasını çiz
         if (window.ACTIVE_TRACK) {
@@ -3338,6 +3396,9 @@ function handleTrackSwitch(trackId) {
         `${name} (${window.ACTIVE_TRACK ? ACTIVE_TRACK.totalM + 'm' : ''})\nHava durumu yeni piste göre güncelleniyor...`,
         'info', 'fa-cloud-sun'
     );
+
+    updateLapIndicators();
+    saveActiveStrategyProfile();
 }
 
 /**
@@ -3764,25 +3825,231 @@ function startWeatherAutoRefresh() {
 // ══════════════════════════════════════════════════════════════════════
 
 
+function getCurrentTrackId() {
+    return (window.ACTIVE_TRACK && ACTIVE_TRACK.id) ? ACTIVE_TRACK.id : 'SILESIA';
+}
+
+function getRaceEquivalentLap(testLap = lapCount) {
+    if (getCurrentTrackId() === 'YADYO') {
+        return Math.floor(Math.max(testLap, 0) / 2);
+    }
+    return Math.max(testLap, 0);
+}
+
+function getTargetTestLapCount(targetRaceLaps = 10) {
+    return getCurrentTrackId() === 'YADYO' ? targetRaceLaps * 2 : targetRaceLaps;
+}
+
+function getInputElement(id, alternateId) {
+    return document.getElementById(id) || (alternateId ? document.getElementById(alternateId) : null);
+}
+
+function readNumberInput(id, fallback, parser = 'float', alternateId) {
+    const el = getInputElement(id, alternateId);
+    if (!el) return fallback;
+    const raw = parser === 'int' ? parseInt(el.value, 10) : parseFloat(el.value);
+    return Number.isFinite(raw) ? raw : fallback;
+}
+
+function readStrategyInputsFromDOM() {
+    const inputs = {};
+    STRATEGY_INPUT_FIELDS.forEach(field => {
+        inputs[field.key] = readNumberInput(field.id, field.fallback, field.parser || 'float', field.alternateId);
+    });
+    return inputs;
+}
+
+function applyStrategyInputsToDOM(inputs = {}) {
+    STRATEGY_INPUT_FIELDS.forEach(field => {
+        const el = getInputElement(field.id, field.alternateId);
+        if (!el) return;
+        const value = Object.prototype.hasOwnProperty.call(inputs, field.key) ? inputs[field.key] : field.fallback;
+        el.value = value;
+    });
+}
+
+function createDefaultRaceStrategy() {
+    return {
+        targetLaps: 10,
+        targetTimeMin: 30,
+        lapDistanceM: 3000,
+        targetSpeedKph: 0,
+        targetLapTimeSec: 0,
+        totalConsumedWh: 0,
+        currentLap: 0,
+        avgConsumptionWhKm: 0,
+        raceStartTime: null,
+        isRaceActive: false,
+        simulatedEnergyWh: 0,
+        currentSpeed: 0
+    };
+}
+
+function createDefaultAdaptiveStrategy() {
+    return {
+        totalBudgetWh: 0,
+        perLapBudgetWh: 0,
+        lapHistory: [],
+        isInitialized: false
+    };
+}
+
+function createDefaultTestSessionState() {
+    return {
+        isRecording: false,
+        startTimeIso: null,
+        flowState: TEST_FLOW_STATES.NO_DATA,
+        hasCompleted: false
+    };
+}
+
+function createDefaultStrategyProfile() {
+    return {
+        raceStrategy: createDefaultRaceStrategy(),
+        adaptiveStrategy: createDefaultAdaptiveStrategy(),
+        testSession: createDefaultTestSessionState(),
+        inputs: readStrategyInputsFromDOM()
+    };
+}
+
+function cloneState(data) {
+    return JSON.parse(JSON.stringify(data));
+}
+
+function normalizeStrategyProfile(rawProfile = {}) {
+    const defaultProfile = createDefaultStrategyProfile();
+    return {
+        raceStrategy: { ...defaultProfile.raceStrategy, ...(rawProfile.raceStrategy || {}) },
+        adaptiveStrategy: {
+            ...defaultProfile.adaptiveStrategy,
+            ...(rawProfile.adaptiveStrategy || {}),
+            lapHistory: Array.isArray(rawProfile?.adaptiveStrategy?.lapHistory)
+                ? rawProfile.adaptiveStrategy.lapHistory
+                : []
+        },
+        testSession: { ...defaultProfile.testSession, ...(rawProfile.testSession || {}) },
+        inputs: { ...defaultProfile.inputs, ...(rawProfile.inputs || {}) }
+    };
+}
+
+function loadStrategyProfileFromStorage(deviceId) {
+    try {
+        const raw = localStorage.getItem(`${STRATEGY_PROFILE_STORAGE_PREFIX}${deviceId}`);
+        if (!raw) return null;
+        return normalizeStrategyProfile(JSON.parse(raw));
+    } catch (err) {
+        console.error('Strategy profile load error:', err);
+        return null;
+    }
+}
+
+function saveStrategyProfileToStorage(deviceId) {
+    const profile = strategyProfiles[deviceId];
+    if (!profile) return;
+    try {
+        localStorage.setItem(`${STRATEGY_PROFILE_STORAGE_PREFIX}${deviceId}`, JSON.stringify(profile));
+    } catch (err) {
+        console.error('Strategy profile save error:', err);
+    }
+}
+
+function ensureStrategyProfile(deviceId) {
+    if (!strategyProfiles[deviceId]) {
+        strategyProfiles[deviceId] = loadStrategyProfileFromStorage(deviceId) || createDefaultStrategyProfile();
+    }
+    return strategyProfiles[deviceId];
+}
+
+function initializeStrategyProfiles() {
+    Object.keys(VEHICLE_CONFIG).forEach(deviceId => {
+        ensureStrategyProfile(deviceId);
+    });
+}
+
+function deriveTestFlowState(hasLiveData) {
+    if (isTestRecording) return TEST_FLOW_STATES.RECORDING;
+    if (hasLiveData) return TEST_FLOW_STATES.READY;
+    if (hasCompletedTestRun) return TEST_FLOW_STATES.COMPLETED;
+    return TEST_FLOW_STATES.NO_DATA;
+}
+
+function applyTestFlowStateToButton(btn) {
+    if (!btn) return;
+    btn.dataset.flowState = (testFlowState || TEST_FLOW_STATES.NO_DATA).toLowerCase();
+}
+
+function saveActiveStrategyProfile() {
+    const profile = ensureStrategyProfile(currentDeviceId);
+    profile.raceStrategy = cloneState(raceStrategy);
+    profile.adaptiveStrategy = cloneState(adaptiveStrategy);
+    profile.inputs = readStrategyInputsFromDOM();
+    profile.testSession = {
+        isRecording: isTestRecording,
+        startTimeIso: testStartTime ? testStartTime.toISOString() : null,
+        flowState: testFlowState,
+        hasCompleted: hasCompletedTestRun
+    };
+    saveStrategyProfileToStorage(currentDeviceId);
+}
+
+function refreshStrategyStateUI() {
+    const targetLaps = raceStrategy.targetLaps || 10;
+    const targetTimeMin = raceStrategy.targetTimeMin || 30;
+    const totalTimeStr = `${Math.floor(targetTimeMin / 60)}:${(targetTimeMin % 60).toString().padStart(2, '0')}`;
+
+    ['total-laps', 'total-laps-sw'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = targetLaps;
+    });
+    ['remaining-time', 'remaining-time-sw'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !raceStrategy.isRaceActive) el.textContent = totalTimeStr;
+    });
+
+    animateValue('target-speed', raceStrategy.targetSpeedKph > 0 ? raceStrategy.targetSpeedKph.toFixed(1) : '--');
+    updateLapIndicators();
+    updatePaceStatus(raceStrategy.currentSpeed || 0);
+    updateAdaptiveUI();
+    updateAdaptiveLapTable();
+}
+
+function restoreStrategyProfileForDevice(deviceId) {
+    const profile = ensureStrategyProfile(deviceId);
+    raceStrategy = cloneState(profile.raceStrategy);
+    adaptiveStrategy = cloneState(profile.adaptiveStrategy);
+
+    isTestRecording = !!profile.testSession.isRecording;
+    testStartTime = profile.testSession.startTimeIso ? new Date(profile.testSession.startTimeIso) : null;
+    hasCompletedTestRun = !!profile.testSession.hasCompleted;
+    testFlowState = profile.testSession.flowState || TEST_FLOW_STATES.NO_DATA;
+
+    applyStrategyInputsToDOM(profile.inputs);
+    refreshStrategyStateUI();
+    updateTestButtonState();
+}
+
+function updateLapIndicators() {
+    const raceLap = getRaceEquivalentLap(lapCount);
+    raceStrategy.currentLap = raceLap;
+
+    const currentLapText = getCurrentTrackId() === 'YADYO'
+        ? `${lapCount} (R${raceLap})`
+        : String(raceLap);
+
+    ['current-lap', 'current-lap-sw'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = currentLapText;
+    });
+}
+
 // Yarış ayarları ve strateji verilerini saklamak için
-let raceStrategy = {
-    targetLaps: 10,            // Hedef tur sayısı
-    targetTimeMin: 30,         // Hedef süre (dakika)
-    lapDistanceM: 3000,        // Tur uzunluğu (metre)
-    targetSpeedKph: 0,         // Hesaplanan hedef hız
-    targetLapTimeSec: 0,       // Hedef tur süresi (saniye)
-    totalConsumedWh: 0,        // Toplam harcanan enerji
-    currentLap: 0,             // Mevcut tur
-    avgConsumptionWhKm: 0,     // Ortalama tüketim (Wh/km)
-    raceStartTime: null,       // Yarış başlangıç zamanı
-    isRaceActive: false        // Yarış aktif mi
-};
+let raceStrategy = createDefaultRaceStrategy();
 
 // Yarış stratejisini hesaplar
 function calculateRaceStrategy() {
-    const targetLaps = parseInt(document.getElementById('target-laps').value) || 10;
-    const targetTimeMin = parseInt(document.getElementById('target-time').value) || 30;
-    const lapDistanceM = parseInt(document.getElementById('lap-distance').value) || 3000;
+    const targetLaps = readNumberInput('target-laps', 10, 'int');
+    const targetTimeMin = readNumberInput('target-time', 30, 'int');
+    const lapDistanceM = readNumberInput('lap-distance', 3000, 'int');
 
     raceStrategy.targetLaps = targetLaps;
     raceStrategy.targetTimeMin = targetTimeMin;
@@ -3816,6 +4083,8 @@ function calculateRaceStrategy() {
     showNotification('🏎️ Strateji Hesaplandı',
         `Hedef hız: ${targetSpeedKph.toFixed(1)} km/h | Tur süresi: ${lapTimeStr}`,
         'success', 'fa-check');
+    updateLapIndicators();
+    saveActiveStrategyProfile();
     updatePaceStatus();
 }
 
@@ -3845,6 +4114,7 @@ function updateStrategyView(data) {
     // Toplam harcanan enerji (mWh -> Wh)
     const totalConsumedWh = energyMwh / 1000;
     raceStrategy.totalConsumedWh = totalConsumedWh;
+    raceStrategy.currentSpeed = speed;
 
     // UI Güncellemeleri
     animateValue('current-wh-km', currentConsumption.toFixed(1));
@@ -3902,25 +4172,26 @@ function updateStrategyView(data) {
 function updatePaceStatus(currentSpeed = 0) {
     const paceStatus = document.getElementById('pace-status');
     if (!paceStatus) return;
+    const paceVal = paceStatus.querySelector('.pace-val') || paceStatus.querySelector('span:last-child');
+    if (!paceVal) return;
 
     const targetSpeed = raceStrategy.targetSpeedKph;
 
     // Eğer hedef hız atanmamışsa
     if (!targetSpeed || targetSpeed <= 0) {
         paceStatus.className = 'pace-detail status-indicator-pace';
-        paceStatus.querySelector('.pace-val').innerText = 'Ayarlanmadı';
+        paceVal.innerText = 'Ayarlanmadı';
         return;
     }
 
     // Hedef atanmış ama araç duruyorsa veya yarış başlamamışsa tuhaf negatif sayılar yazmasın
     if (currentSpeed === 0 && !raceStrategy.isRaceActive) {
         paceStatus.className = 'pace-detail status-indicator-pace';
-        paceStatus.querySelector('.pace-val').innerText = 'Bekleniyor';
+        paceVal.innerText = 'Bekleniyor';
         return;
     }
 
     const speedDiff = currentSpeed - targetSpeed;
-    const paceVal = paceStatus.querySelector('.pace-val');
 
     if (Math.abs(speedDiff) < 2) {
         // Hedefte ±2 km/h tolerans
@@ -4013,12 +4284,7 @@ function loadStrategyNotes() {
 // ══════════════════════════════════════════════════════════════════════
 
 // Adaptif strateji veri yapısı
-let adaptiveStrategy = {
-    totalBudgetWh:  0,          // Simülatörün verdiği toplam enerji tahmini
-    perLapBudgetWh: 0,          // Tur başına bütçe
-    lapHistory:     [],          // [{lapNum, lapTimeSec, energyWh, whKm, deltaWh}]
-    isInitialized:  false        // Simülatör çalıştırıldıktan sonra true
-};
+let adaptiveStrategy = createDefaultAdaptiveStrategy();
 
 /**
  * Adaptif strateji motorunu başlatır (simülatör çalıştırıldıktan sonra çağrılır)
@@ -4137,6 +4403,7 @@ function adaptStrategyAfterLap(lapNum, lapTimeSec, actualEnergyWh) {
 
     // Bildirim
     showNotification(recTitle, recText, notifType, 'fa-arrows-spin');
+    saveActiveStrategyProfile();
 }
 
 /**

@@ -1,4 +1,4 @@
-﻿// public/sw.js
+// public/sw.js
 // ============================================================
 // SERVİCE WORKER - PWA (Progressive Web App) Desteği
 // ============================================================
@@ -10,7 +10,7 @@
 // ============================================================
 
 // Önbellek versiyonu - Her güncellemede artırılmalı
-const CACHE_NAME = 'telemetri-v122';
+const CACHE_NAME = 'telemetri-v124';
 
 // Statik dosyalar - Cache First (sadece ikonlar ve manifest)
 const STATIC_ASSETS = [
@@ -25,6 +25,7 @@ const STATIC_ASSETS = [
 const NETWORK_FIRST_ASSETS = [
     '/index.html',
     '/css/style.css',
+    '/js/app.js',
     '/js/app.min.js'
 ];
 
