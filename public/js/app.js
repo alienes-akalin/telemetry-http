@@ -3090,6 +3090,9 @@ function runSimulator() {
             fillEl.style.background = powerPct < 65 ? '#34d399' : powerPct < 85 ? '#f59e0b' : '#ef4444';
         }
 
+        // Simülasyon bittiğinde Pace statusu yenile (Bekleniyor durumuna geçirsin)
+        updatePaceStatus(raceStrategy.currentSpeed || 0);
+
         // Strateji önerisi
         const recEl  = document.getElementById('sim-rec-text');
         const recDiv = document.getElementById('sim-recommendation');
@@ -3902,9 +3905,17 @@ function updatePaceStatus(currentSpeed = 0) {
 
     const targetSpeed = raceStrategy.targetSpeedKph;
 
-    if (targetSpeed <= 0) {
+    // Eğer hedef hız atanmamışsa
+    if (!targetSpeed || targetSpeed <= 0) {
         paceStatus.className = 'pace-detail status-indicator-pace';
         paceStatus.querySelector('.pace-val').innerText = 'Ayarlanmadı';
+        return;
+    }
+
+    // Hedef atanmış ama araç duruyorsa veya yarış başlamamışsa tuhaf negatif sayılar yazmasın
+    if (currentSpeed === 0 && !raceStrategy.isRaceActive) {
+        paceStatus.className = 'pace-detail status-indicator-pace';
+        paceStatus.querySelector('.pace-val').innerText = 'Bekleniyor';
         return;
     }
 
