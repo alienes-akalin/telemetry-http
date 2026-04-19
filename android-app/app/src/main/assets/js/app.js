@@ -2120,7 +2120,7 @@ function addLap() {
         const silesiaEquivLap = lapCount / 2;
         showNotification(
             `🛑 Dur-Kalk! (YADYO Tur ${lapCount})`,
-            `Bu tur sonunda TAM DURUŞ yap! SilesiaRing Tur ${silesiaEquivLap} eşdeğeri tamamlandı. Kalkışta tam gaz →`,
+            `Bu tur sonunda tam dur, 10 sn bekle ve araç tamamen durunca TUR bayrak butonuna bas. SilesiaRing Tur ${silesiaEquivLap} eşdeğeri tamamlandı.`,
             'warning',
             'fa-hand'
         );
@@ -2143,7 +2143,7 @@ function addLap() {
     }
 
     // Hedef yarış turuna ulaşıldıysa testi otomatik bitir
-    const targetRaceLaps = raceStrategy.targetLaps || 10;
+    const targetRaceLaps = raceStrategy.targetLaps || getTrackStrategyDefaults().targetLaps;
     const currentRaceLap = getRaceEquivalentLap(lapCount);
     const targetTestLaps = getTargetTestLapCount(targetRaceLaps);
     console.log(`🏁 Tur kontrolü: test=${lapCount}/${targetTestLaps}, race=${currentRaceLap}/${targetRaceLaps}, test aktif: ${isTestRecording}`);
@@ -2403,10 +2403,33 @@ const TEST_FLOW_STATES = {
 };
 
 const STRATEGY_PROFILE_STORAGE_PREFIX = 'strategyProfile_';
+const TRACK_STRATEGY_DEFAULTS = {
+    SILESIA: {
+        targetLaps: 11,
+        targetTimeMin: 35,
+        lapDistanceM: 1340,
+        stopWaitSecPerStop: 10,
+        stopsPerLap: 1
+    },
+    YADYO: {
+        targetLaps: 22,
+        targetTimeMin: 35,
+        lapDistanceM: 697,
+        stopWaitSecPerStop: 10,
+        stopsPerLap: 0.5
+    }
+};
+
+const LEGACY_STRATEGY_TARGETS = {
+    targetLaps: 10,
+    targetTimeMin: 30,
+    lapDistanceM: 3000
+};
+
 const STRATEGY_INPUT_FIELDS = [
-    { key: 'targetLaps', id: 'target-laps', fallback: 10, parser: 'int' },
-    { key: 'targetTimeMin', id: 'target-time', fallback: 30, parser: 'int' },
-    { key: 'lapDistanceM', id: 'lap-distance', fallback: 3000, parser: 'int' },
+    { key: 'targetLaps', id: 'target-laps', fallback: TRACK_STRATEGY_DEFAULTS.SILESIA.targetLaps, parser: 'int' },
+    { key: 'targetTimeMin', id: 'target-time', fallback: TRACK_STRATEGY_DEFAULTS.SILESIA.targetTimeMin, parser: 'int' },
+    { key: 'lapDistanceM', id: 'lap-distance', fallback: TRACK_STRATEGY_DEFAULTS.SILESIA.lapDistanceM, parser: 'int' },
     { key: 'simMass', id: 'sim-mass', fallback: 143 },
     { key: 'simCdA', id: 'sim-cda', alternateId: 'sim-cdA', fallback: 0.13 },
     { key: 'simCrr', id: 'sim-crr', fallback: 0.003 },
@@ -3070,11 +3093,12 @@ function calcStopAndGoEnergy(speed_kph, stopsPerLap = 1) {
  */
 function runSimulator() {
     loadVehicleParams();
+    const strategyDefaults = getTrackStrategyDefaults();
 
-    const distance_m   = raceStrategy.lapDistanceM  || parseInt(document.getElementById('lap-distance')?.value) || 3000;
+    const distance_m   = raceStrategy.lapDistanceM  || parseInt(document.getElementById('lap-distance')?.value) || strategyDefaults.lapDistanceM;
     const max_time_s   = raceStrategy.targetLapTimeSec ||
-                         ((parseInt(document.getElementById('target-time')?.value) || 30) * 60 /
-                          (parseInt(document.getElementById('target-laps')?.value)  || 10));
+                         ((parseInt(document.getElementById('target-time')?.value) || strategyDefaults.targetTimeMin) * 60 /
+                          (parseInt(document.getElementById('target-laps')?.value)  || strategyDefaults.targetLaps));
     const wind_mps     = parseFloat(document.getElementById('sim-wind')?.value)     || 0;
     const gradient_deg = parseFloat(document.getElementById('sim-gradient')?.value) || 0;
 
@@ -3121,14 +3145,17 @@ function runSimulator() {
         set('sim-opt-power',      result.power_W.toFixed(0));
         set('sim-resistance',     result.F_resistance_N.toFixed(1) + ' N');
         set('sim-pmax-label',     vehiclePhysics.p_max_w + ' W');
-        set('sim-total-energy',   (result.energy_Wh * (raceStrategy.targetLaps || 10)).toFixed(0) + ' Wh');
+        set('sim-total-energy',   (result.energy_Wh * (raceStrategy.targetLaps || getTrackStrategyDefaults().targetLaps)).toFixed(0) + ' Wh');
 
         // Stop-and-Go maliyetini ayrı satırda göster
         const stopGoEl = document.getElementById('sim-stopgo-energy');
         if (stopGoEl && result.stopGoEnergy_Wh !== undefined) {
             const trackId = window.ACTIVE_TRACK ? (ACTIVE_TRACK.id || 'SILESIA') : 'SILESIA';
             const stopsLabel = trackId === 'YADYO' ? '(her 2 turda 1 kalkış)' : '(her tur kalkış)';
-            stopGoEl.textContent = `${result.stopGoEnergy_Wh.toFixed(3)} Wh/tur ${stopsLabel}`;
+            const waitLabel = (result.stopWaitSecPerLap !== undefined)
+                ? ` | Bekleme: ${result.stopWaitSecPerLap.toFixed(1)} sn/tur`
+                : '';
+            stopGoEl.textContent = `${result.stopGoEnergy_Wh.toFixed(3)} Wh/tur ${stopsLabel}${waitLabel}`;
             const stopGoRow = document.getElementById('sim-stopgo-row');
             if (stopGoRow) stopGoRow.style.display = 'flex';
         }
@@ -3229,24 +3256,26 @@ function calcLapEnergyTracked(speed_kph, wind_mps = 0) {
         totalForce_N   += F_R;
     });
 
-    // ── Stop-and-Go maliyeti ─────────────────────────────────────────
-    // SilesiaRing: her tur start/finish'te tam duruş = 1 stop/lap
-    // YADYO: 2 tur = 1 Silesia turu → 0.5 stop/lap eşdeğeri
+    // ── Stop-and-Go maliyeti + bekleme süresi ────────────────────────
+    // SilesiaRing: her tur 1 stop, stop başına 10 sn bekleme
+    // YADYO: 2 turda 1 stop (0.5 stop/lap), stop başına 10 sn bekleme
     const trackId = ACTIVE_TRACK.id || 'SILESIA';
-    const stopsPerLap = (trackId === 'YADYO') ? 0.5 : 1.0;
+    const { stopsPerLap, stopWaitSecPerLap } = getTrackStopGoConfig(trackId);
     const stopGoEnergy_Wh = calcStopAndGoEnergy(speed_kph, stopsPerLap);
     totalEnergy_Wh += stopGoEnergy_Wh;
+    const totalLapTime_s = totalTime_s + stopWaitSecPerLap;
     // ────────────────────────────────────────────────────────────────
 
     const dist_m    = ACTIVE_TRACK.totalM;
-    const avgPow    = totalEnergy_Wh * 3600 / totalTime_s;
+    const avgPow    = totalEnergy_Wh * 3600 / totalLapTime_s;
     const efficiency = (dist_m / 1000) / (totalEnergy_Wh / 1000);
 
     return {
         energy_Wh:        parseFloat(totalEnergy_Wh.toFixed(4)),
         stopGoEnergy_Wh:  parseFloat(stopGoEnergy_Wh.toFixed(4)),
+        stopWaitSecPerLap: parseFloat(stopWaitSecPerLap.toFixed(2)),
         power_W:          parseFloat(avgPow.toFixed(2)),
-        lap_time_s:       parseFloat(totalTime_s.toFixed(2)),
+        lap_time_s:       parseFloat(totalLapTime_s.toFixed(2)),
         F_resistance_N:   parseFloat((totalForce_N / segs.length).toFixed(2)),
         efficiency_kmkwh: parseFloat(efficiency.toFixed(1))
     };
@@ -3371,14 +3400,8 @@ function handleTrackSwitch(trackId) {
     // Throttle haritası etiketlerini güncelle
     updateThrottleMapLabels();
 
-    // Lap distance girişini güncelle (varsa)
-    const lapDistEl = document.getElementById('lap-distance');
-    if (lapDistEl && window.ACTIVE_TRACK) lapDistEl.value = ACTIVE_TRACK.totalM;
-
-    // Strateji nesnesi güncelle
-    if (window.raceStrategy && window.ACTIVE_TRACK) {
-        raceStrategy.lapDistanceM = ACTIVE_TRACK.totalM;
-    }
+    // Pist default hedeflerini uygula
+    setTrackTargetInputs(trackId, { silent: true });
 
     // Grafikleri yeniden çiz
     if (window.ACTIVE_TRACK) {
@@ -3430,9 +3453,18 @@ function initTrackUI() {
         badge.innerHTML = `<i class="fa-solid fa-road"></i> ${t.totalM} m • Δ${t.altMinM.toFixed(0)}–${t.altMaxM.toFixed(0)} m • ${t.name.split('—')[0].trim()}`;
     }
 
-    // Lap distance varsayılan değer
-    const lapDistEl = document.getElementById('lap-distance');
-    if (lapDistEl && !lapDistEl.value) lapDistEl.value = ACTIVE_TRACK.totalM;
+    // Legacy hedefleri yeni pist defaultlarına geçir (özelleştirilmiş değerleri bozma)
+    const currentInputs = readStrategyInputsFromDOM();
+    const normalizedInputs = applyTrackTargetDefaults(currentInputs, getCurrentTrackId(), false);
+    const hasTargetChange = (
+        normalizedInputs.targetLaps !== currentInputs.targetLaps
+        || normalizedInputs.targetTimeMin !== currentInputs.targetTimeMin
+        || normalizedInputs.lapDistanceM !== currentInputs.lapDistanceM
+    );
+    if (hasTargetChange) {
+        applyStrategyInputsToDOM({ ...currentInputs, ...normalizedInputs });
+        calculateRaceStrategy({ silent: true });
+    }
 
     // Grafikleri çiz
     drawThrottleMap();
@@ -3829,6 +3861,64 @@ function getCurrentTrackId() {
     return (window.ACTIVE_TRACK && ACTIVE_TRACK.id) ? ACTIVE_TRACK.id : 'SILESIA';
 }
 
+function getTrackStrategyDefaults(trackId = getCurrentTrackId()) {
+    return TRACK_STRATEGY_DEFAULTS[trackId] || TRACK_STRATEGY_DEFAULTS.SILESIA;
+}
+
+function getTrackStopGoConfig(trackId = getCurrentTrackId()) {
+    const defaults = getTrackStrategyDefaults(trackId);
+    const stopsPerLap = Number.isFinite(defaults.stopsPerLap) ? defaults.stopsPerLap : 1;
+    const stopWaitSecPerStop = Number.isFinite(defaults.stopWaitSecPerStop) ? defaults.stopWaitSecPerStop : 10;
+    return {
+        stopsPerLap,
+        stopWaitSecPerStop,
+        stopWaitSecPerLap: stopsPerLap * stopWaitSecPerStop
+    };
+}
+
+function shouldApplyTrackTargetDefaults(inputs = {}) {
+    const laps = Number(inputs.targetLaps);
+    const time = Number(inputs.targetTimeMin);
+    const distance = Number(inputs.lapDistanceM);
+
+    if (!Number.isFinite(laps) || !Number.isFinite(time) || !Number.isFinite(distance)) {
+        return true;
+    }
+
+    return (
+        laps === LEGACY_STRATEGY_TARGETS.targetLaps
+        && time === LEGACY_STRATEGY_TARGETS.targetTimeMin
+        && distance === LEGACY_STRATEGY_TARGETS.lapDistanceM
+    );
+}
+
+function applyTrackTargetDefaults(inputs = {}, trackId = getCurrentTrackId(), force = false) {
+    const defaults = getTrackStrategyDefaults(trackId);
+    const normalized = { ...inputs };
+
+    if (force || shouldApplyTrackTargetDefaults(normalized)) {
+        normalized.targetLaps = defaults.targetLaps;
+        normalized.targetTimeMin = defaults.targetTimeMin;
+        normalized.lapDistanceM = defaults.lapDistanceM;
+    }
+
+    return normalized;
+}
+
+function setTrackTargetInputs(trackId = getCurrentTrackId(), options = {}) {
+    const { silent = true } = options;
+    const defaults = getTrackStrategyDefaults(trackId);
+    const targetLapsEl = document.getElementById('target-laps');
+    const targetTimeEl = document.getElementById('target-time');
+    const lapDistanceEl = document.getElementById('lap-distance');
+
+    if (targetLapsEl) targetLapsEl.value = defaults.targetLaps;
+    if (targetTimeEl) targetTimeEl.value = defaults.targetTimeMin;
+    if (lapDistanceEl) lapDistanceEl.value = defaults.lapDistanceM;
+
+    calculateRaceStrategy({ silent });
+}
+
 function getRaceEquivalentLap(testLap = lapCount) {
     if (getCurrentTrackId() === 'YADYO') {
         return Math.floor(Math.max(testLap, 0) / 2);
@@ -3836,7 +3926,7 @@ function getRaceEquivalentLap(testLap = lapCount) {
     return Math.max(testLap, 0);
 }
 
-function getTargetTestLapCount(targetRaceLaps = 10) {
+function getTargetTestLapCount(targetRaceLaps = getTrackStrategyDefaults().targetLaps) {
     return getCurrentTrackId() === 'YADYO' ? targetRaceLaps * 2 : targetRaceLaps;
 }
 
@@ -3869,10 +3959,11 @@ function applyStrategyInputsToDOM(inputs = {}) {
 }
 
 function createDefaultRaceStrategy() {
+    const defaults = getTrackStrategyDefaults();
     return {
-        targetLaps: 10,
-        targetTimeMin: 30,
-        lapDistanceM: 3000,
+        targetLaps: defaults.targetLaps,
+        targetTimeMin: defaults.targetTimeMin,
+        lapDistanceM: defaults.lapDistanceM,
         targetSpeedKph: 0,
         targetLapTimeSec: 0,
         totalConsumedWh: 0,
@@ -3908,7 +3999,7 @@ function createDefaultStrategyProfile() {
         raceStrategy: createDefaultRaceStrategy(),
         adaptiveStrategy: createDefaultAdaptiveStrategy(),
         testSession: createDefaultTestSessionState(),
-        inputs: readStrategyInputsFromDOM()
+        inputs: applyTrackTargetDefaults(readStrategyInputsFromDOM(), getCurrentTrackId(), true)
     };
 }
 
@@ -3918,6 +4009,12 @@ function cloneState(data) {
 
 function normalizeStrategyProfile(rawProfile = {}) {
     const defaultProfile = createDefaultStrategyProfile();
+    const normalizedInputs = applyTrackTargetDefaults(
+        { ...defaultProfile.inputs, ...(rawProfile.inputs || {}) },
+        getCurrentTrackId(),
+        false
+    );
+
     return {
         raceStrategy: { ...defaultProfile.raceStrategy, ...(rawProfile.raceStrategy || {}) },
         adaptiveStrategy: {
@@ -3928,7 +4025,7 @@ function normalizeStrategyProfile(rawProfile = {}) {
                 : []
         },
         testSession: { ...defaultProfile.testSession, ...(rawProfile.testSession || {}) },
-        inputs: { ...defaultProfile.inputs, ...(rawProfile.inputs || {}) }
+        inputs: normalizedInputs
     };
 }
 
@@ -3993,8 +4090,9 @@ function saveActiveStrategyProfile() {
 }
 
 function refreshStrategyStateUI() {
-    const targetLaps = raceStrategy.targetLaps || 10;
-    const targetTimeMin = raceStrategy.targetTimeMin || 30;
+    const defaults = getTrackStrategyDefaults();
+    const targetLaps = raceStrategy.targetLaps || defaults.targetLaps;
+    const targetTimeMin = raceStrategy.targetTimeMin || defaults.targetTimeMin;
     const totalTimeStr = `${Math.floor(targetTimeMin / 60)}:${(targetTimeMin % 60).toString().padStart(2, '0')}`;
 
     ['total-laps', 'total-laps-sw'].forEach(id => {
@@ -4024,6 +4122,7 @@ function restoreStrategyProfileForDevice(deviceId) {
     testFlowState = profile.testSession.flowState || TEST_FLOW_STATES.NO_DATA;
 
     applyStrategyInputsToDOM(profile.inputs);
+    calculateRaceStrategy({ silent: true });
     refreshStrategyStateUI();
     updateTestButtonState();
 }
@@ -4046,10 +4145,19 @@ function updateLapIndicators() {
 let raceStrategy = createDefaultRaceStrategy();
 
 // Yarış stratejisini hesaplar
-function calculateRaceStrategy() {
-    const targetLaps = readNumberInput('target-laps', 10, 'int');
-    const targetTimeMin = readNumberInput('target-time', 30, 'int');
-    const lapDistanceM = readNumberInput('lap-distance', 3000, 'int');
+function calculateRaceStrategy(options = {}) {
+    const { silent = false } = options;
+    const defaults = getTrackStrategyDefaults();
+    const targetLaps = Math.max(1, readNumberInput('target-laps', defaults.targetLaps, 'int'));
+    const targetTimeMin = Math.max(1, readNumberInput('target-time', defaults.targetTimeMin, 'int'));
+    const lapDistanceM = Math.max(1, readNumberInput('lap-distance', defaults.lapDistanceM, 'int'));
+
+    const targetLapsEl = document.getElementById('target-laps');
+    const targetTimeEl = document.getElementById('target-time');
+    const lapDistanceEl = document.getElementById('lap-distance');
+    if (targetLapsEl) targetLapsEl.value = targetLaps;
+    if (targetTimeEl) targetTimeEl.value = targetTimeMin;
+    if (lapDistanceEl) lapDistanceEl.value = lapDistanceM;
 
     raceStrategy.targetLaps = targetLaps;
     raceStrategy.targetTimeMin = targetTimeMin;
@@ -4080,9 +4188,11 @@ function calculateRaceStrategy() {
     const lapTimeEl = document.getElementById('target-lap-time');
     if (lapTimeEl) lapTimeEl.textContent = lapTimeStr;
 
-    showNotification('🏎️ Strateji Hesaplandı',
-        `Hedef hız: ${targetSpeedKph.toFixed(1)} km/h | Tur süresi: ${lapTimeStr}`,
-        'success', 'fa-check');
+    if (!silent) {
+        showNotification('🏎️ Strateji Hesaplandı',
+            `Hedef hız: ${targetSpeedKph.toFixed(1)} km/h | Tur süresi: ${lapTimeStr}`,
+            'success', 'fa-check');
+    }
     updateLapIndicators();
     saveActiveStrategyProfile();
     updatePaceStatus();
