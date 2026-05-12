@@ -1,4 +1,94 @@
 /* public/css/style.css */
+
+/* ══════════════════════════════════════════════════════════════
+   VISUAL EFFECTS ENGINE — React Bits Port (Vanilla JS)
+   1. SpotlightCard  2. CountUp  3. ClickSpark  4. DotField  5. DecryptedText
+══════════════════════════════════════════════════════════════ */
+
+/* 1. SPOTLIGHT CARD */
+[data-spotlight],
+.stat-card, .card, .chart-wrapper, .custom-chart-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+[data-spotlight]::before,
+.stat-card::before,
+.card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        400px circle at var(--spot-x, -999px) var(--spot-y, -999px),
+        rgba(99, 102, 241, 0.10),
+        transparent 60%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+}
+.stat-card.spotlight-active::before,
+.card.spotlight-active::before,
+[data-spotlight].spotlight-active::before {
+    opacity: 1;
+}
+/* Kartın içeriği spotlight'ın üzerinde kalmalı */
+.stat-card > *,
+.card > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* 3. CLICK SPARK */
+.click-spark-particle {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99999;
+    transform: translate(-50%, -50%);
+    animation: spark-fly var(--dur, 500ms) ease-out forwards;
+}
+@keyframes spark-fly {
+    0%   { transform: translate(-50%, -50%) translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+}
+
+/* 4. DOT FIELD — canvas z-index */
+#dot-field-canvas {
+    position: fixed !important;
+    z-index: 0 !important;
+    pointer-events: none !important;
+}
+.app-wrapper {
+    position: relative;
+    z-index: 1;
+}
+
+/* 5. DECRYPTED TEXT */
+.logo-main,
+.logo-sub {
+    display: inline-block;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+    transition: color 0.1s;
+}
+/* Çözme sırasında hafif parlama */
+.logo-main {
+    text-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+}
+
+/* 2. COUNTUP — sayma sırasında hafif pulse */
+@keyframes countup-pulse {
+    0%   { opacity: 0.65; }
+    50%  { opacity: 1; }
+    100% { opacity: 1; }
+}
+.counting {
+    animation: countup-pulse 0.2s ease-out;
+}
+
+
 :root {
     /* Glassmorphism & Neon Palette */
     --bg-dark: #0f172a;

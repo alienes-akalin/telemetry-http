@@ -427,7 +427,7 @@
 
                 <!-- Üst Kartlar (Kritik Veriler) -->
                 <div class="stats-grid">
-                    <div class="stat-card critical">
+                    <div class="stat-card critical" data-spotlight>
                         <div class="stat-icon"><i class="fa-solid fa-gauge"></i></div>
                         <div class="stat-info">
                             <h3>HIZ</h3>
@@ -438,7 +438,7 @@
                         </div>
                     </div>
 
-                    <div class="stat-card info" id="current-card">
+                    <div class="stat-card info" id="current-card" data-spotlight>
                         <div class="stat-icon"><i class="fa-solid fa-bolt"></i></div>
                         <div class="stat-info">
                             <h3>AKIM</h3>
@@ -449,7 +449,7 @@
                         </div>
                     </div>
 
-                    <div class="stat-card warning">
+                    <div class="stat-card warning" data-spotlight>
                         <div class="stat-icon"><i class="fa-solid fa-car-battery"></i></div>
                         <div class="stat-info">
                             <h3>VOLTAJ</h3>
@@ -460,7 +460,7 @@
                         </div>
                     </div>
 
-                    <div class="stat-card" id="temp-card">
+                    <div class="stat-card" id="temp-card" data-spotlight>
                         <div class="stat-icon"><i class="fa-solid fa-temperature-three-quarters"></i></div>
                         <div class="stat-info">
                             <h3>SICAKLIK</h3>
@@ -1608,7 +1608,8 @@
     <!-- Custom Scripts (Minified for Production) -->
     <!-- Pist Profili (trackData.js) -->
     <script src="js/trackData.js?v=3"></script>
-    <script src="js/app.js?v=125"></script>
+    <script src="js/app.js?v=126"></script>
+    <script src="js/effects.js?v=1"></script>
 
     <!-- Service Worker & Pull-to-Refresh -->
     <script>

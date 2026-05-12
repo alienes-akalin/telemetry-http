@@ -26,7 +26,8 @@ const NETWORK_FIRST_ASSETS = [
     '/index.html',
     '/css/style.css',
     '/js/app.js',
-    '/js/app.min.js'
+    '/js/app.min.js',
+    '/js/effects.js'
 ];
 
 // Offline fallback HTML
