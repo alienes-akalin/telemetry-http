@@ -164,6 +164,15 @@ function switchVehicle(newDeviceId) {
     const currentCard = document.getElementById('current-card');
     if (currentCard) currentCard.classList.remove('current-warning');
 
+    // GSM sinyal widget sıfırla
+    const gsmWidget = document.getElementById('gsm-signal-widget');
+    if (gsmWidget) {
+        gsmWidget.style.display = newDeviceId === 'a1' ? 'flex' : 'none';
+        const pctEl = document.getElementById('gsm-signal-pct');
+        if (pctEl) { pctEl.textContent = '--%'; pctEl.style.color = ''; }
+        updateSignalBars(-1);
+    }
+
     // Global alarm + zaman state sıfırla
     lastTempState = null;
     lastCurrentWarning = null;
@@ -1299,6 +1308,86 @@ function updateDashboardWidgets(data) {
     const updateTime = data.ts_server || new Date();
     const dateTimeStr = formatTR(updateTime);
     document.getElementById('val-last-update').innerText = dateTimeStr;
+
+    // GPS Rakımı
+    const altEl = document.getElementById('val-altitude');
+    if (altEl) {
+        const alt = data.gps?.alt_m;
+        altEl.textContent = (alt != null) ? `${alt.toFixed(0)} m` : '-- m';
+    }
+
+    // GSM sinyal göstergesi (sadece a1 / Hidromobil)
+    updateGsmWidget(data.gsm);
+}
+
+// ==================== GSM SİNYAL WİDGET'I ====================
+// SIM800L CSQ → % değerini 4 bar üzerinden gösterir.
+// Widget sadece currentDeviceId === 'a1' iken görünür.
+
+/** Bar sayısı ve rengi günceller (pct=-1 → tüm barlar gri) */
+function updateSignalBars(pct) {
+    const barIds = ['gsm-b1', 'gsm-b2', 'gsm-b3', 'gsm-b4'];
+    let active = 0;
+    let color  = '#22c55e';  // yeşil = iyi
+
+    if (pct < 0) {
+        active = 0; color = 'rgba(255,255,255,0.15)';
+    } else if (pct <= 25) {
+        active = 1; color = '#ef4444';    // kırmızı = çok zayıf
+    } else if (pct <= 50) {
+        active = 2; color = '#f97316';    // turuncu = zayıf
+    } else if (pct <= 75) {
+        active = 3; color = '#f59e0b';    // sarı = orta
+    } else {
+        active = 4; color = '#22c55e';    // yeşil = iyi
+    }
+
+    barIds.forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.setAttribute('fill', i < active ? color : 'rgba(255,255,255,0.15)');
+    });
+
+    // Aydınlık modda gri barları siyahımsı yap
+    if (document.body.classList.contains('light-mode')) {
+        barIds.forEach((id, i) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (i >= active) el.setAttribute('fill', 'rgba(0,0,0,0.12)');
+        });
+    }
+}
+
+/**
+ * GSM widget'ını günceller.
+ * @param {Object|undefined} gsm  - data.gsm nesnesi ({signal_pct: number})
+ */
+function updateGsmWidget(gsm) {
+    const widget = document.getElementById('gsm-signal-widget');
+    if (!widget) return;
+
+    const isHidromobil = currentDeviceId === 'a1';
+    widget.style.display = isHidromobil ? 'flex' : 'none';
+    if (!isHidromobil) return;
+
+    const pctEl = document.getElementById('gsm-signal-pct');
+    const pct   = (gsm != null && gsm.signal_pct != null) ? gsm.signal_pct : null;
+
+    if (pct === null) {
+        if (pctEl) pctEl.textContent = '--%';
+        updateSignalBars(-1);
+        return;
+    }
+
+    if (pctEl) {
+        pctEl.textContent = `${pct}%`;
+        // Renk değişimi: metin rengini bar rengiyle eşleştir
+        pctEl.style.color = pct <= 25 ? '#ef4444'
+                          : pct <= 50 ? '#f97316'
+                          : pct <= 75 ? '#f59e0b'
+                          :             '#22c55e';
+    }
+    updateSignalBars(pct);
 }
 
 // ==================== HARİTA İŞLEVLERİ ====================

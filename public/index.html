@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=123">
+    <link rel="stylesheet" href="css/style.css?v=124">
 
     <!-- FAST SPLASH CHECK -->
     <script>
@@ -276,6 +276,16 @@
                 <div class="topbar-controls">
                     <!-- Mobil: Satır 1 - Kullanıcı bilgileri + cihaz + saat -->
                     <div class="topbar-row topbar-row-1">
+                        <!-- GSM Sinyal Göstergesi (sadece Hidromobil / a1) -->
+                        <div id="gsm-signal-widget" class="gsm-signal-widget" style="display:none;" title="GSM Sinyal Kalitesi (SIM800L)">
+                            <svg class="gsm-bars-svg" viewBox="0 0 22 16" width="20" height="16" id="gsm-bars-svg">
+                                <rect id="gsm-b1" x="0"  y="12" width="4" height="4"  rx="1" fill="rgba(255,255,255,0.15)"/>
+                                <rect id="gsm-b2" x="6"  y="8"  width="4" height="8"  rx="1" fill="rgba(255,255,255,0.15)"/>
+                                <rect id="gsm-b3" x="12" y="4"  width="4" height="12" rx="1" fill="rgba(255,255,255,0.15)"/>
+                                <rect id="gsm-b4" x="18" y="0"  width="4" height="16" rx="1" fill="rgba(255,255,255,0.15)"/>
+                            </svg>
+                            <span id="gsm-signal-pct">--%</span>
+                        </div>
                         <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()"
                             title="Tema Değiştir">
                             <i class="fa-solid fa-sun"></i>
@@ -376,6 +386,11 @@
                         </div>
                         <div class="card-body">
                             <div id="main-map"></div>
+                            <!-- Rakım göstergesi — haritanın sağ altında Leaflet yazısının hemen altı -->
+                            <div class="map-altitude-bar" id="map-altitude-bar">
+                                <i class="fa-solid fa-mountain"></i>
+                                <span id="val-altitude">-- m</span>
+                            </div>
                         </div>
                     </div>
 

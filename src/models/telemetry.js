@@ -34,7 +34,8 @@ const TelemetrySchema = new Schema({
   // ==================== GPS ====================
   gps: {
     lat_deg: Number,  // Enlem (ondalık derece)
-    lon_deg: Number   // Boylam (ondalık derece)
+    lon_deg: Number,  // Boylam (ondalık derece)
+    alt_m:   Number   // Rakım (metre) — GY-NEO6MV2 GGA cümlesi
   },
 
   // ==================== İZOLASYON / KAÇAK ÖLÇÜMÜ ====================
@@ -48,6 +49,11 @@ const TelemetrySchema = new Schema({
     ppm: Number,  // H2 gaz konsantrasyonu (ppm)
     temp_c: Number,  // Hidrojen tankı sıcaklığı (°C)
     flowmeter: Number   // Anlık akış hızı (birim: cihaza göre değişir)
+  },
+
+  // ==================== GSM (Sadece Hidromobil / a1) ====================
+  gsm: {
+    signal_pct: Number   // SIM800L CSQ sinyali → yüzde (0-100%). RSSI 0-31 normalise edilmiş.
   }
 }, {
   timestamps: true  // Mongoose'un eklediği createdAt / updatedAt alanları

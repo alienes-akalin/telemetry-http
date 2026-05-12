@@ -1,4 +1,4 @@
-﻿/* public/css/style.css */
+/* public/css/style.css */
 :root {
     /* Glassmorphism & Neon Palette */
     --bg-dark: #0f172a;
@@ -6824,5 +6824,128 @@ body.light-mode .login-container input {
     background: rgba(56, 189, 248, 0.15) !important;
     border: 1px solid rgba(56, 189, 248, 0.4) !important;
     box-shadow: 0 0 10px rgba(56, 189, 248, 0.1) !important;
+}
+
+/* ==================== GSM SİNYAL WİDGET'I ==================== */
+/* Karanlık/Aydınlık mod butonunun solunda durur, sadece a1/Hidromobil için görünür */
+.gsm-signal-widget {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    cursor: default;
+    transition: background 0.3s ease, border-color 0.3s ease;
+    user-select: none;
+}
+
+.gsm-signal-widget:hover {
+    background: rgba(255, 255, 255, 0.11);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Sinyal yüzde metni */
+.gsm-signal-widget #gsm-signal-pct {
+    font-family: 'Rajdhani', 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+    min-width: 34px;
+    text-align: left;
+    transition: color 0.4s ease;
+}
+
+/* SVG bar geçiş animasyonu */
+.gsm-bars-svg rect {
+    transition: fill 0.5s ease;
+}
+
+/* Aydınlık modda widget arka planı */
+body.light-mode .gsm-signal-widget {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-mode .gsm-signal-widget #gsm-signal-pct {
+    color: #1e293b;
+}
+
+body.light-mode .gsm-bars-svg rect[fill="rgba(255,255,255,0.15)"] {
+    fill: rgba(0, 0, 0, 0.12);
+}
+
+/* Mobilde küçük tut */
+@media (max-width: 768px) {
+    .gsm-signal-widget {
+        padding: 4px 8px;
+        gap: 5px;
+    }
+
+    .gsm-signal-widget #gsm-signal-pct {
+        font-size: 0.78rem;
+        min-width: 30px;
+    }
+}
+
+
+/* =====================================================================
+   RAKM (ALTİTÜD) GÖSTERGESİ — harita kart body içi, sağ alt köşe
+   ===================================================================== */
+
+.card-body {
+    position: relative; /* altitude bar için */
+}
+
+.map-altitude-bar {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    border-left: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px 0 0 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #94a3b8;
+    z-index: 500;
+    pointer-events: none;
+    letter-spacing: 0.3px;
+}
+
+.map-altitude-bar i {
+    font-size: 0.85rem;
+    color: #10b981;
+    filter: drop-shadow(0 0 4px rgba(16,185,129,0.5));
+}
+
+.map-altitude-bar span {
+    color: #e2e8f0;
+    font-variant-numeric: tabular-nums;
+}
+
+.light-mode .map-altitude-bar {
+    background: rgba(241, 245, 249, 0.88);
+    border-color: rgba(0,0,0,0.1);
+}
+
+.light-mode .map-altitude-bar span { color: #1e293b; }
+
+@media (max-width: 600px) {
+    .map-altitude-bar {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+        gap: 4px;
+    }
 }
 

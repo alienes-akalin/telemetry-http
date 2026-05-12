@@ -166,7 +166,8 @@ router.post('/', async (req, res) => {
             } : undefined,
             gps: body.gps ? {
                 lat_deg: body.gps.lat_deg,
-                lon_deg: body.gps.lon_deg
+                lon_deg: body.gps.lon_deg,
+                alt_m:   body.gps.alt_m    // Rakım (metre)
             } : undefined,
             iso: body.iso ? {
                 res_1_kohm: body.iso.res_1_kohm,
@@ -176,6 +177,9 @@ router.post('/', async (req, res) => {
                 ppm: body.hydrogen.ppm,
                 temp_c: body.hydrogen.temp_c,
                 flowmeter: body.hydrogen.flowmeter
+            } : undefined,
+            gsm: body.gsm ? {
+                signal_pct: body.gsm.signal_pct   // SIM800L CSQ → %, 0-100
             } : undefined
         };
 
@@ -244,11 +248,13 @@ router.get('/ingest', async (req, res) => {
     const dut = q.dut ?? q.motor_duty_pct;
     const lat = q.lat ?? q.gps_lat_deg;
     const lon = q.lon ?? q.gps_lon_deg;
+    const alt = q.alt ?? q.gps_alt_m;  // Rakım (metre) — GGA cümlesinden
     const ir1 = q.ir1 ?? q.iso_res_1_kohm;
     const ir2 = q.ir2 ?? q.iso_res_2_kohm;
     const h2p = q.h2p ?? q.hydrogen_ppm;
     const h2t = q.h2t ?? q.hydrogen_temp_c;
     const flw = q.flw ?? q.hydrogen_flowmeter;
+    const sig = q.sig;   // GSM sinyal kalitesi (%, 0-100) — sadece SIM800L/a1 gönderir
 
     try {
         const telemetryData = {
@@ -268,9 +274,10 @@ router.get('/ingest', async (req, res) => {
                 speed_kph: toFloat(spd),
                 duty_pct: toFloat(dut)
             } : undefined,
-            gps: (lat || lon) ? {
+            gps: (lat || lon || alt) ? {
                 lat_deg: toFloat(lat),
-                lon_deg: toFloat(lon)
+                lon_deg: toFloat(lon),
+                alt_m:   toFloat(alt)
             } : undefined,
             // İzolasyon ve hidrojen sensörleri — yalnızca Araç 1 (Hidromobil)
             iso: (ir1 || ir2) ? {
@@ -281,6 +288,9 @@ router.get('/ingest', async (req, res) => {
                 ppm: toInt(h2p),
                 temp_c: toFloat(h2t),
                 flowmeter: toFloat(flw)
+            } : undefined,
+            gsm: (sig !== undefined) ? {
+                signal_pct: toInt(sig)
             } : undefined
         };
 

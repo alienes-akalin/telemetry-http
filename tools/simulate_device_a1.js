@@ -66,6 +66,8 @@ const state = {
     // İzolasyon simülasyon değişkenleri
     isoPos: 500.0,
     isoNeg: 500.0,
+    // GSM sinyal kalitesi simülasyonu (0-100%)
+    signalPct: 72,
 };
 
 // ==================== YARDIMCI FONKSİYONLAR ====================
@@ -146,6 +148,11 @@ function updatePhysics(dt_s) {
     // -- Hidrojen sensörü (baz değer + gürültü) --
     state.h2Ppm = Math.max(0, Math.round(3 + jitter(2)));
     state.h2Temp = 20 + jitter(1);
+
+    // -- GSM sinyal: gerçekçi dalgalanma (55-90% arası) --
+    state.signalPct = Math.max(55, Math.min(90,
+        state.signalPct + (Math.random() - 0.48) * 3
+    ));
 }
 
 // ==================== VERİ GÖNDERİMİ ====================
@@ -171,7 +178,8 @@ function sendTelemetry() {
         },
         gps: {
             lat_deg: parseFloat(state.lat.toFixed(6)),
-            lon_deg: parseFloat(state.lon.toFixed(6))
+            lon_deg: parseFloat(state.lon.toFixed(6)),
+            alt_m:   parseFloat((38.0 + Math.random() * 4).toFixed(1))
         },
         // Hidromobil'e özgü sensörler
         iso: {
@@ -182,6 +190,10 @@ function sendTelemetry() {
             ppm: state.h2Ppm,
             temp_c: parseFloat(state.h2Temp.toFixed(1)),
             flowmeter: 0
+        },
+        // GSM sinyal kalitesi (SIM800L CSQ simüle edilmiş)
+        gsm: {
+            signal_pct: Math.round(state.signalPct)
         }
     });
 
@@ -213,7 +225,8 @@ function sendTelemetry() {
         `[${t}] [Hidromobil/a1] Hız: ${state.speed.toFixed(1)} km/h | ` +
         `SOC: ${state.soc.toFixed(1)}% | V: ${state.voltage.toFixed(1)}V | ` +
         `A: ${state.current.toFixed(1)}A | T: ${state.temp.toFixed(1)}°C | ` +
-        `H2: ${state.h2Ppm}ppm | İzo+: ${state.isoPos.toFixed(0)}kΩ`
+        `H2: ${state.h2Ppm}ppm | İzo+: ${state.isoPos.toFixed(0)}kΩ | ` +
+        `GSM: ${Math.round(state.signalPct)}%`
     );
 }
 
@@ -225,7 +238,7 @@ console.log('╠═════════════════════�
 console.log(`║  Sunucu: ${protocol}://${CONFIG.host}:${CONFIG.port}`.padEnd(41) + '║');
 console.log(`║  Cihaz:  ${CONFIG.deviceId}`.padEnd(41) + '║');
 console.log(`║  Aralık: ${CONFIG.intervalMs}ms`.padEnd(41) + '║');
-console.log('║  Sensörler: BMS, Motor, GPS, ISO, H2 ║');
+console.log('║  Sensörler: BMS, Motor, GPS, ISO, H2, GSM ║');
 console.log('╚══════════════════════════════════════╝');
 console.log('Durdurmak için Ctrl+C\n');
 
