@@ -7027,3 +7027,205 @@ body.light-mode .gsm-bars-svg rect[fill="rgba(255,255,255,0.15)"] {
     }
 }
 
+
+/* ══════════════════════════════════════════════════════════════════════
+   ✨ PURE CSS VISUAL EFFECTS — Zero JS, Zero DOM Manipulation
+   A. Moving Border  B. Card Hover Spring  C. Neon Pulse  E. View Fade
+   ══════════════════════════════════════════════════════════════════════ */
+
+
+/* ──────────────────────────────────────────────────────────────────────
+   A. MOVING BORDER — Aceternity UI (Pure CSS Port)
+   conic-gradient dönen kenar — ::after pseudo-element ile
+   stat-card zaten position:relative + overflow:hidden var
+   ────────────────────────────────────────────────────────────────────── */
+
+@property --mb-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
+@keyframes mb-rotate {
+    to { --mb-angle: 360deg; }
+}
+
+/* Critical (Hız) — mavi-mor-cyan */
+.stat-card.critical::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 18px;
+    background: conic-gradient(
+        from var(--mb-angle),
+        transparent 0%,
+        transparent 30%,
+        #3b82f6 40%, #8b5cf6 50%, #06b6d4 60%,
+        transparent 70%, transparent 100%
+    );
+    animation: mb-rotate 3.5s linear infinite;
+    z-index: -1;
+    opacity: 0.75;
+}
+
+/* Warning (Voltaj) — turuncu-amber */
+.stat-card.warning::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 18px;
+    background: conic-gradient(
+        from var(--mb-angle),
+        transparent 0%,
+        transparent 30%,
+        #f97316 40%, #eab308 50%, #f59e0b 60%,
+        transparent 70%, transparent 100%
+    );
+    animation: mb-rotate 3s linear infinite;
+    z-index: -1;
+    opacity: 0.72;
+}
+
+/* Info (Akım) — yeşil-teal */
+.stat-card.info::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 18px;
+    background: conic-gradient(
+        from var(--mb-angle),
+        transparent 0%,
+        transparent 35%,
+        #10b981 48%, #14b8a6 55%,
+        transparent 68%, transparent 100%
+    );
+    animation: mb-rotate 4s linear infinite;
+    z-index: -1;
+    opacity: 0.60;
+}
+
+.light-mode .stat-card.critical::after { opacity: 0.45; }
+.light-mode .stat-card.warning::after  { opacity: 0.45; }
+.light-mode .stat-card.info::after     { opacity: 0.35; }
+
+
+/* ──────────────────────────────────────────────────────────────────────
+   B. CARD HOVER SPRING ANIMATION
+   Spring cubic-bezier ile yukarı kayma + glow güçlenme
+   ────────────────────────────────────────────────────────────────────── */
+
+.stat-card {
+    transition:
+        transform    0.38s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow   0.38s cubic-bezier(0.34, 1.56, 0.64, 1),
+        border-color 0.25s ease;
+}
+
+.stat-card:hover { transform: translateY(-6px) scale(1.015); }
+
+.stat-card.critical:hover {
+    box-shadow:
+        0 0 25px rgba(59,130,246,0.55) inset,
+        0 14px 36px rgba(59,130,246,0.28),
+        0 4px 12px rgba(0,0,0,0.2);
+}
+.stat-card.warning:hover {
+    box-shadow:
+        0 0 25px rgba(245,158,11,0.55) inset,
+        0 14px 36px rgba(245,158,11,0.28),
+        0 4px 12px rgba(0,0,0,0.2);
+}
+.stat-card.info:hover {
+    box-shadow:
+        0 0 25px rgba(16,185,129,0.55) inset,
+        0 14px 36px rgba(16,185,129,0.28),
+        0 4px 12px rgba(0,0,0,0.2);
+}
+.stat-card:not(.critical):not(.warning):not(.info):not(.danger):hover {
+    box-shadow:
+        0 0 20px rgba(99,102,241,0.15) inset,
+        0 12px 32px rgba(0,0,0,0.25);
+    border-color: rgba(99,102,241,0.25);
+}
+
+.card {
+    transition:
+        transform    0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow   0.32s ease,
+        border-color 0.25s ease;
+}
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.22);
+    border-color: rgba(99,102,241,0.20);
+}
+
+
+/* ──────────────────────────────────────────────────────────────────────
+   C. NEON AMBIENT PULSE — Critical & Warning sürekli glow
+   ────────────────────────────────────────────────────────────────────── */
+
+@keyframes neon-pulse-blue {
+    0%,100% {
+        box-shadow: 0 0 15px rgba(59,130,246,0.30) inset, 0 0 6px rgba(59,130,246,0.08);
+    }
+    50% {
+        box-shadow: 0 0 28px rgba(59,130,246,0.58) inset, 0 0 22px rgba(59,130,246,0.22), 0 0 40px rgba(139,92,246,0.10);
+    }
+}
+@keyframes neon-pulse-orange {
+    0%,100% {
+        box-shadow: 0 0 15px rgba(245,158,11,0.30) inset, 0 0 6px rgba(245,158,11,0.08);
+    }
+    50% {
+        box-shadow: 0 0 28px rgba(245,158,11,0.58) inset, 0 0 22px rgba(245,158,11,0.22), 0 0 40px rgba(249,115,22,0.10);
+    }
+}
+
+.stat-card.critical { animation: neon-pulse-blue   2.8s ease-in-out infinite; }
+.stat-card.warning  { animation: neon-pulse-orange  2.4s ease-in-out infinite; }
+
+.stat-card.critical:hover,
+.stat-card.warning:hover { animation-play-state: paused; }
+
+@keyframes neon-pulse-blue-lm {
+    0%,100% { box-shadow: 0 0 10px rgba(59,130,246,0.18) inset; }
+    50%     { box-shadow: 0 0 18px rgba(59,130,246,0.35) inset, 0 0 12px rgba(59,130,246,0.12); }
+}
+@keyframes neon-pulse-orange-lm {
+    0%,100% { box-shadow: 0 0 10px rgba(245,158,11,0.18) inset; }
+    50%     { box-shadow: 0 0 18px rgba(245,158,11,0.35) inset, 0 0 12px rgba(245,158,11,0.12); }
+}
+.light-mode .stat-card.critical { animation-name: neon-pulse-blue-lm; }
+.light-mode .stat-card.warning  { animation-name: neon-pulse-orange-lm; }
+
+
+/* ──────────────────────────────────────────────────────────────────────
+   E. VIEW FADE + NAV SPRING — Sekme geçişi + sidebar hover
+   ────────────────────────────────────────────────────────────────────── */
+
+.view.active {
+    animation: view-fade-in 0.28s cubic-bezier(0.16, 1, 0.30, 1) both;
+}
+@keyframes view-fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.nav-item {
+    transition:
+        transform    0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background   0.2s ease,
+        color        0.2s ease;
+}
+.nav-item:hover  { transform: translateX(4px); }
+.nav-item.active { transform: translateX(4px); }
+
+
+/* ── Reduced motion ───────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .stat-card.critical, .stat-card.warning,
+    .stat-card.critical::after, .stat-card.warning::after,
+    .stat-card.info::after, .view.active { animation: none; }
+}
+
