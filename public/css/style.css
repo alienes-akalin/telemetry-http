@@ -6897,30 +6897,35 @@ body.light-mode .gsm-bars-svg rect[fill="rgba(255,255,255,0.15)"] {
    RAKM (ALTİTÜD) GÖSTERGESİ — harita kart body içi, sağ alt köşe
    ===================================================================== */
 
-.card-body {
-    position: relative; /* altitude bar için */
+/* Her card-body'nin kendi içeriğine göre relative — sadece harita kartında overflow:hidden */
+.map-card .card-body {
+    position: relative;
+    overflow: hidden;
 }
 
 .map-altitude-bar {
     position: absolute;
-    bottom: 0;
+    bottom: 22px;   /* Leaflet attribution yüksekliği kadar yukarıda */
     right: 0;
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 10px;
-    background: rgba(15, 23, 42, 0.72);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border-top: 1px solid rgba(255,255,255,0.08);
-    border-left: 1px solid rgba(255,255,255,0.08);
-    border-radius: 8px 0 0 0;
+    padding: 5px 11px;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255,255,255,0.10);
+    border-left: 1px solid rgba(255,255,255,0.10);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px 0 0 10px;
     font-size: 0.82rem;
     font-weight: 600;
     color: #94a3b8;
     z-index: 500;
     pointer-events: none;
     letter-spacing: 0.3px;
+    max-width: calc(100% - 16px);
+    box-sizing: border-box;
 }
 
 .map-altitude-bar i {

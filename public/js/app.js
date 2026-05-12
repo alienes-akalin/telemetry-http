@@ -1835,23 +1835,32 @@ function renderCustomChart() {
 function initChartPointFilter() {
     const container = document.getElementById('chart-point-filter');
     if (!container) return;
-    container.querySelectorAll('.cpf-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            container.querySelectorAll('.cpf-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            chartMaxPoints = parseInt(btn.dataset.pts) || 0;
-        });
+    container.addEventListener('click', e => {
+        const btn = e.target.closest('.cpf-btn');
+        if (!btn || !btn.hasAttribute('data-pts')) return;
+        container.querySelectorAll('.cpf-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        // '0' → sınırsız (All), diğer değerler sayısal limit
+        chartMaxPoints = btn.dataset.pts === '0' ? 0 : (parseInt(btn.dataset.pts) || 100);
     });
 }
 
 // Custom chart alan seçimi ve nokta filtresi kontrollerini başlatır
 function initCustomChartControls() {
-    // Field butonları
-    document.querySelectorAll('#custom-field-selector .cfs-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+    const selector = document.getElementById('custom-field-selector');
+    const allBtn   = document.getElementById('cfs-all-btn');
+    const resetBtn = document.getElementById('cfs-reset-btn');
+    const cpFilter = document.getElementById('custom-point-filter');
+
+    // --- Field butonları (event delegation) ---
+    if (selector) {
+        selector.addEventListener('click', e => {
+            const btn = e.target.closest('.cfs-btn');
+            if (!btn || !btn.hasAttribute('data-field')) return;
             const field = btn.dataset.field;
             const def = CUSTOM_FIELDS[field];
             if (!def) return;
+
             if (customSelectedFields.includes(field)) {
                 customSelectedFields = customSelectedFields.filter(f => f !== field);
                 btn.classList.remove('active');
@@ -1863,47 +1872,53 @@ function initCustomChartControls() {
             }
             renderCustomChart();
         });
-    });
+    }
 
-    // All butonu
-    const allBtn = document.getElementById('cfs-all-btn');
+    // --- All butonu ---
     if (allBtn) {
         allBtn.addEventListener('click', () => {
             customSelectedFields = Object.keys(CUSTOM_FIELDS);
-            document.querySelectorAll('#custom-field-selector .cfs-btn').forEach(btn => {
-                btn.classList.add('active');
-                const def = CUSTOM_FIELDS[btn.dataset.field];
-                if (def) btn.style.setProperty('--field-color', def.color);
-            });
+            if (selector) {
+                selector.querySelectorAll('.cfs-btn').forEach(btn => {
+                    btn.classList.add('active');
+                    const def = CUSTOM_FIELDS[btn.dataset.field];
+                    if (def) btn.style.setProperty('--field-color', def.color);
+                });
+            }
             renderCustomChart();
         });
     }
 
-    // Reset butonu
-    const resetBtn = document.getElementById('cfs-reset-btn');
+    // --- Reset butonu ---
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
             customSelectedFields = [];
-            document.querySelectorAll('#custom-field-selector .cfs-btn').forEach(btn => {
-                btn.classList.remove('active');
-                btn.style.removeProperty('--field-color');
-            });
-            if (customChart) { customChart.data.labels = []; customChart.data.datasets = []; customChart.update('none'); }
+            if (selector) {
+                selector.querySelectorAll('.cfs-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.style.removeProperty('--field-color');
+                });
+            }
+            if (customChart) {
+                customChart.data.labels = [];
+                customChart.data.datasets = [];
+                customChart.update('none');
+            }
             const sub = document.getElementById('custom-chart-subtitle');
             if (sub) sub.textContent = '0 field seçili · Son 100 nokta';
         });
     }
 
-    // Custom nokta filtresi
-    const cpFilter = document.getElementById('custom-point-filter');
+    // --- Custom nokta filtresi (event delegation) ---
     if (cpFilter) {
-        cpFilter.querySelectorAll('.cpf-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                cpFilter.querySelectorAll('.cpf-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                customChartMaxPoints = parseInt(btn.dataset.cpts) || 0;
-                renderCustomChart();
-            });
+        cpFilter.addEventListener('click', e => {
+            const btn = e.target.closest('.cpf-btn');
+            if (!btn || !btn.hasAttribute('data-cpts')) return;
+            cpFilter.querySelectorAll('.cpf-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            // '0' → sınırsız (All)
+            customChartMaxPoints = btn.dataset.cpts === '0' ? 0 : (parseInt(btn.dataset.cpts) || 100);
+            renderCustomChart();
         });
     }
 }
