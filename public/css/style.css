@@ -4316,22 +4316,69 @@ body::after {
     background: #22c55e !important;
 }
 
-/* ==================== PAGE TRANSITIONS ==================== */
+/* ══════════════════════════════════════════════════════════════
+   6. MOVING BORDER (Aceternity UI Port)
+   Dönen gradyan kenarlık — kritik/uyarı kartları için
+══════════════════════════════════════════════════════════════ */
+.mb-wrapper {
+    position: relative;
+    border-radius: inherit;
+    display: contents; /* Wrapper layout'u bozmaz */
+}
+/* mb-wrapper'ı block yapmak gerekiyor */
+.stats-grid .mb-wrapper {
+    display: block;
+    position: relative;
+    border-radius: 14px;
+}
+.mb-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.85;
+}
+/* Canvas'ın arkasında kart içeriği görünür kalsın */
+.mb-wrapper .stat-card {
+    position: relative;
+    z-index: 1;
+    background: transparent; /* wrapper içinde, border canvas üstte */
+}
+
+/* ══════════════════════════════════════════════════════════════
+   7. GSAP-STYLE PAGE TRANSITIONS
+   Web Animations API (WAAPI) — GSAP'ye gerek yok
+══════════════════════════════════════════════════════════════ */
 .view {
-    animation: fadeSlideIn 0.3s ease-out;
+    /* Eski CSS animasyonu kaldırıldı — JS ile yönetiliyor */
+    animation: none;
 }
 
+/* İlk yükleme animasyonu (JS çalışmadan önce fallback) */
 @keyframes fadeSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
+
+/* Kart stagger için başlangıç durumu
+   (JS animate() çağrısından önce gizli olmasın — fill:both ile yönetiliyor) */
+
+/* ══════════════════════════════════════════════════════════════
+   8. LENIS SMOOTH SCROLL
+══════════════════════════════════════════════════════════════ */
+html {
+    scroll-behavior: auto; /* Lenis bunu yönetir */
+}
+/* Lenis yüklü değilse fallback */
+.lenis-fallback html { scroll-behavior: smooth; }
+.main-content,
+.card-body.scrollable {
+    -webkit-overflow-scrolling: touch;
+}
+
 
 /* ==================== COUNTER ANIMATION ==================== */
 .value-animate {
