@@ -41,7 +41,7 @@ function updateChartTheme(isLight) {
     Chart.defaults.borderColor = gridColor;
 
     // Mevcut chart'ları güncelle
-    [speedChart, energyChart, tempChart, socChart, isoChart].forEach(chart => {
+    [speedChart, energyChart, tempChart, socChart, isoChart, customChart].forEach(chart => {
         if (!chart) return;
         if (chart.options.scales) {
             Object.values(chart.options.scales).forEach(scale => {
@@ -880,7 +880,35 @@ let routePolylines = [];             // Haritaya eklenen tüm renkli polyline'la
 
 // ==================== GRAFİK DEĞİŞKENLERİ ====================
 // Chart.js grafik nesneleri
-let speedChart, energyChart, socChart, tempChart, isoChart;
+let speedChart, energyChart, socChart, tempChart, isoChart, customChart;
+
+// Grafik nokta limiti (0 = sınırsız)
+let chartMaxPoints = 100;
+let customChartMaxPoints = 100;
+
+// Custom chart seçili alanlar
+let customSelectedFields = [];
+
+// Custom chart veri tamponu { label: [], fieldKey: [] }
+const customChartBuffer = { labels: [] };
+
+// Field tanımları: key → { label, color, getter }
+const CUSTOM_FIELDS = {
+    speed:     { label: 'Hız (km/h)',     color: '#3b82f6', getter: d => d.motor?.speed_kph ?? null },
+    temp:      { label: 'Sıcaklık (°C)',  color: '#ef4444', getter: d => d.bms?.temp_c ?? null },
+    voltage:   { label: 'Voltaj (V)',      color: '#10b981', getter: d => d.bms?.voltage_v ?? null },
+    current:   { label: 'Akım (A)',        color: '#f59e0b', getter: d => d.bms?.current_a ?? null },
+    consumption:{ label: 'Tüketim (Wh/km)', color: '#a78bfa', getter: d => d.bms?.consumption_whkm ?? null },
+    vd:        { label: 'Vd',             color: '#06b6d4', getter: d => d.motor?.vd ?? null },
+    id:        { label: 'Id',             color: '#ec4899', getter: d => d.motor?.id ?? null },
+    vq:        { label: 'Vq',             color: '#f97316', getter: d => d.motor?.vq ?? null },
+    rpm:       { label: 'RPM',            color: '#8b5cf6', getter: d => d.motor?.rpm ?? null },
+    ref_speed: { label: 'Ref. Hız',       color: '#34d399', getter: d => d.motor?.ref_speed ?? null },
+    throttle:  { label: 'Throttle (Pot)', color: '#fbbf24', getter: d => d.motor?.throttle_pot ?? null },
+};
+
+// Her field için veri tamponu
+Object.keys(CUSTOM_FIELDS).forEach(k => { customChartBuffer[k] = []; });
 
 // ==================== HARİTA İKONLARI ====================
 // Harita konum işaretçisi (Google Maps tarzı mavi nokta)
@@ -1583,12 +1611,47 @@ function initCharts() {
     Chart.defaults.color = '#94a3b8';
     Chart.defaults.borderColor = '#334155';
 
-    // Ortak grafik ayarları
+    // Ortak Tooltip Plugin: noktada saat ve değer göster
+    const sharedTooltip = {
+        mode: 'index',
+        intersect: false,
+        backgroundColor: 'rgba(15,23,42,0.92)',
+        borderColor: 'rgba(99,102,241,0.4)',
+        borderWidth: 1,
+        padding: 10,
+        titleColor: '#a5b4fc',
+        bodyColor: '#cbd5e1',
+        titleFont: { size: 12, weight: '700' },
+        bodyFont: { size: 12 },
+        callbacks: {
+            title: items => items.length ? items[0].label : '',
+            label: item => ` ${item.dataset.label} : ${item.formattedValue}`
+        }
+    };
+
+    // Ortak grafik ayarları (tooltip + x ekseni zaman gösterimli)
     const commonOptions = {
         responsive: true,
-        maintainAspectRatio: false,  // Container'a uyum
-        animation: { duration: 0 },   // Performans için animasyon kapalı
-        scales: { x: { display: false } }
+        maintainAspectRatio: false,
+        animation: { duration: 0 },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            tooltip: sharedTooltip,
+            legend: { labels: { boxWidth: 12, padding: 14 } }
+        },
+        scales: {
+            x: {
+                display: true,
+                ticks: {
+                    maxRotation: 0,
+                    autoSkip: true,
+                    maxTicksLimit: 8,
+                    color: '#64748b',
+                    font: { size: 10 }
+                },
+                grid: { color: 'rgba(51,65,85,0.5)' }
+            }
+        }
     };
 
     // 1. HIZ & RPM GRAFİĞİ (Çift eksen)
@@ -1596,23 +1659,16 @@ function initCharts() {
         type: 'line',
         data: {
             labels: [], datasets: [
-                { label: 'Hız (km/h)', data: [], borderColor: '#3b82f6', yAxisID: 'y', tension: 0.3, fill: true, backgroundColor: 'rgba(59,130,246,0.1)' },
-                { label: 'RPM', data: [], borderColor: '#8b5cf6', yAxisID: 'y1', tension: 0.3 }
+                { label: 'Hız (km/h)', data: [], borderColor: '#3b82f6', yAxisID: 'y', tension: 0.3, pointRadius: 2, fill: true, backgroundColor: 'rgba(59,130,246,0.1)' },
+                { label: 'RPM', data: [], borderColor: '#8b5cf6', yAxisID: 'y1', tension: 0.3, pointRadius: 2 }
             ]
         },
         options: {
             ...commonOptions,
             scales: {
-                x: { display: false },
-                y: {
-                    position: 'left',
-                    title: { display: true, text: 'Hız (km/h)', color: '#3b82f6' }
-                },
-                y1: {
-                    position: 'right',
-                    grid: { drawOnChartArea: false },
-                    title: { display: true, text: 'RPM', color: '#8b5cf6' }
-                }
+                x: commonOptions.scales.x,
+                y: { position: 'left', title: { display: true, text: 'Hız (km/h)', color: '#3b82f6' } },
+                y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'RPM', color: '#8b5cf6' } }
             }
         }
     });
@@ -1622,23 +1678,16 @@ function initCharts() {
         type: 'line',
         data: {
             labels: [], datasets: [
-                { label: 'Voltaj (V)', data: [], borderColor: '#10b981', yAxisID: 'y', tension: 0.3, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' },
-                { label: 'Akım (A)', data: [], borderColor: '#f59e0b', yAxisID: 'y1', tension: 0.3, fill: true, backgroundColor: 'rgba(245, 158, 11, 0.1)' }
+                { label: 'Voltaj (V)', data: [], borderColor: '#10b981', yAxisID: 'y', tension: 0.3, pointRadius: 2, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' },
+                { label: 'Akım (A)', data: [], borderColor: '#f59e0b', yAxisID: 'y1', tension: 0.3, pointRadius: 2, fill: true, backgroundColor: 'rgba(245, 158, 11, 0.1)' }
             ]
         },
         options: {
             ...commonOptions,
             scales: {
-                x: { display: false },
-                y: {
-                    position: 'left',
-                    title: { display: true, text: 'Voltaj (V)', color: '#10b981' }
-                },
-                y1: {
-                    position: 'right',
-                    grid: { drawOnChartArea: false },
-                    title: { display: true, text: 'Akım (A)', color: '#f59e0b' }
-                }
+                x: commonOptions.scales.x,
+                y: { position: 'left', title: { display: true, text: 'Voltaj (V)', color: '#10b981' } },
+                y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Akım (A)', color: '#f59e0b' } }
             }
         }
     });
@@ -1646,14 +1695,14 @@ function initCharts() {
     // 3. SICAKLIK GRAFİĞİ
     tempChart = new Chart(document.getElementById('chart-temp'), {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'Sıcaklık (°C)', data: [], borderColor: '#ef4444', tension: 0.3, fill: true, backgroundColor: 'rgba(239,68,68,0.1)' }] },
+        data: { labels: [], datasets: [{ label: 'Sıcaklık (°C)', data: [], borderColor: '#ef4444', tension: 0.3, pointRadius: 2, fill: true, backgroundColor: 'rgba(239,68,68,0.1)' }] },
         options: commonOptions
     });
 
     // 4. SOC (Şarj Durumu) GRAFİĞİ
     socChart = new Chart(document.getElementById('chart-soc'), {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'SOC (%)', data: [], borderColor: '#f59e0b', tension: 0.3, fill: true, backgroundColor: 'rgba(245,158,11,0.1)' }] },
+        data: { labels: [], datasets: [{ label: 'SOC (%)', data: [], borderColor: '#f59e0b', tension: 0.3, pointRadius: 2, fill: true, backgroundColor: 'rgba(245,158,11,0.1)' }] },
         options: commonOptions
     });
 
@@ -1662,27 +1711,204 @@ function initCharts() {
         type: 'line',
         data: {
             labels: [], datasets: [
-                { label: 'İzo+ (kΩ)', data: [], borderColor: '#06b6d4', tension: 0.3, yAxisID: 'y', fill: true, backgroundColor: 'rgba(6, 182, 212, 0.1)' },
-                { label: 'İzo- (kΩ)', data: [], borderColor: '#ec4899', tension: 0.3, yAxisID: 'y1', fill: true, backgroundColor: 'rgba(236, 72, 153, 0.1)' }
+                { label: 'İzo+ (kΩ)', data: [], borderColor: '#06b6d4', tension: 0.3, pointRadius: 2, yAxisID: 'y', fill: true, backgroundColor: 'rgba(6, 182, 212, 0.1)' },
+                { label: 'İzo- (kΩ)', data: [], borderColor: '#ec4899', tension: 0.3, pointRadius: 2, yAxisID: 'y1', fill: true, backgroundColor: 'rgba(236, 72, 153, 0.1)' }
             ]
         },
         options: {
             ...commonOptions,
             scales: {
-                x: { display: false },
-                y: {
-                    position: 'left',
-                    title: { display: true, text: 'İzo+ (kΩ)', color: '#06b6d4' }
+                x: commonOptions.scales.x,
+                y: { position: 'left', title: { display: true, text: 'İzo+ (kΩ)', color: '#06b6d4' } },
+                y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'İzo- (kΩ)', color: '#ec4899' } }
+            }
+        }
+    });
+
+    // 6. CUSTOM MULTI-FIELD CHART
+    initCustomChart();
+
+    // Nokta filtresi buton kontrolleri
+    initChartPointFilter();
+    initCustomChartControls();
+}
+
+// Custom Multi-Field Chart oluşturur
+function initCustomChart() {
+    const canvas = document.getElementById('chart-custom');
+    if (!canvas) return;
+    customChart = new Chart(canvas, {
+        type: 'line',
+        data: { labels: [], datasets: [] },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 },
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(15,23,42,0.95)',
+                    borderColor: 'rgba(99,102,241,0.5)',
+                    borderWidth: 1,
+                    padding: 12,
+                    titleColor: '#a5b4fc',
+                    bodyColor: '#cbd5e1',
+                    titleFont: { size: 12, weight: '700' },
+                    bodyFont: { size: 12 },
+                    callbacks: {
+                        title: items => items.length ? items[0].label : '',
+                        label: item => ` ${item.dataset.label} : ${item.formattedValue}`
+                    }
                 },
-                y1: {
-                    position: 'right',
-                    grid: { drawOnChartArea: false },
-                    title: { display: true, text: 'İzo- (kΩ)', color: '#ec4899' }
+                legend: { labels: { boxWidth: 14, padding: 16, color: '#94a3b8' } }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 10, color: '#64748b', font: { size: 10 } },
+                    grid: { color: 'rgba(51,65,85,0.5)' }
+                },
+                y: {
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: 'rgba(51,65,85,0.5)' }
                 }
             }
         }
     });
 }
+
+// Custom chart'a yeni telemetri verisi buffer'a ekler
+function updateCustomChartBuffer(data) {
+    const now = formatTR(data.ts_server).split(' ')[1];
+    customChartBuffer.labels.push(now);
+    Object.keys(CUSTOM_FIELDS).forEach(k => {
+        const val = CUSTOM_FIELDS[k].getter(data);
+        customChartBuffer[k].push(val !== null ? val : null);
+    });
+
+    // Buffer'ı çok büyütme (max 2000 nokta tut)
+    const MAX_BUF = 2000;
+    if (customChartBuffer.labels.length > MAX_BUF) {
+        customChartBuffer.labels.shift();
+        Object.keys(CUSTOM_FIELDS).forEach(k => customChartBuffer[k].shift());
+    }
+
+    // Seçili field varsa chart'ı yenile
+    if (customSelectedFields.length > 0) renderCustomChart();
+}
+
+// Seçili fieldlara ve nokta limitine göre custom chart'ı render eder
+function renderCustomChart() {
+    if (!customChart) return;
+    const buf = customChartBuffer;
+    const limit = customChartMaxPoints;
+    const labels = limit > 0 ? buf.labels.slice(-limit) : buf.labels;
+
+    customChart.data.labels = labels;
+    customChart.data.datasets = customSelectedFields.map(key => {
+        const def = CUSTOM_FIELDS[key];
+        const raw = limit > 0 ? buf[key].slice(-limit) : buf[key];
+        return {
+            label: def.label,
+            data: raw,
+            borderColor: def.color,
+            backgroundColor: def.color + '22',
+            tension: 0.3,
+            pointRadius: 2,
+            fill: false,
+            spanGaps: true
+        };
+    });
+    customChart.update('none');
+
+    // Altyazıyı güncelle
+    const sub = document.getElementById('custom-chart-subtitle');
+    if (sub) {
+        const pts = limit > 0 ? `Son ${limit} nokta` : 'Tüm veri';
+        sub.textContent = `${customSelectedFields.length} field seçili · ${pts}`;
+    }
+}
+
+// Ana grafik nokta filtresi butonlarını başlatır
+function initChartPointFilter() {
+    const container = document.getElementById('chart-point-filter');
+    if (!container) return;
+    container.querySelectorAll('.cpf-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            container.querySelectorAll('.cpf-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            chartMaxPoints = parseInt(btn.dataset.pts) || 0;
+        });
+    });
+}
+
+// Custom chart alan seçimi ve nokta filtresi kontrollerini başlatır
+function initCustomChartControls() {
+    // Field butonları
+    document.querySelectorAll('#custom-field-selector .cfs-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const field = btn.dataset.field;
+            const def = CUSTOM_FIELDS[field];
+            if (!def) return;
+            if (customSelectedFields.includes(field)) {
+                customSelectedFields = customSelectedFields.filter(f => f !== field);
+                btn.classList.remove('active');
+                btn.style.removeProperty('--field-color');
+            } else {
+                customSelectedFields.push(field);
+                btn.classList.add('active');
+                btn.style.setProperty('--field-color', def.color);
+            }
+            renderCustomChart();
+        });
+    });
+
+    // All butonu
+    const allBtn = document.getElementById('cfs-all-btn');
+    if (allBtn) {
+        allBtn.addEventListener('click', () => {
+            customSelectedFields = Object.keys(CUSTOM_FIELDS);
+            document.querySelectorAll('#custom-field-selector .cfs-btn').forEach(btn => {
+                btn.classList.add('active');
+                const def = CUSTOM_FIELDS[btn.dataset.field];
+                if (def) btn.style.setProperty('--field-color', def.color);
+            });
+            renderCustomChart();
+        });
+    }
+
+    // Reset butonu
+    const resetBtn = document.getElementById('cfs-reset-btn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            customSelectedFields = [];
+            document.querySelectorAll('#custom-field-selector .cfs-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.removeProperty('--field-color');
+            });
+            if (customChart) { customChart.data.labels = []; customChart.data.datasets = []; customChart.update('none'); }
+            const sub = document.getElementById('custom-chart-subtitle');
+            if (sub) sub.textContent = '0 field seçili · Son 100 nokta';
+        });
+    }
+
+    // Custom nokta filtresi
+    const cpFilter = document.getElementById('custom-point-filter');
+    if (cpFilter) {
+        cpFilter.querySelectorAll('.cpf-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                cpFilter.querySelectorAll('.cpf-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                customChartMaxPoints = parseInt(btn.dataset.cpts) || 0;
+                renderCustomChart();
+            });
+        });
+    }
+}
+
+
 
 // Tüm grafiklere yeni veri noktası ekler (Plan 2.1: tek toplu update)
 function updateCharts(data) {
@@ -1705,23 +1931,26 @@ function updateCharts(data) {
     addPoint(isoChart, now, data.iso?.res_2_kohm || 0, 1, true);
 
     // Tüm chart'ları tek seferde güncelle (Plan 2.1)
-    // 'none' animasyonu atlar → daha hızlı render, özellikle yüksek frekanslı veri akışında kritik
     [speedChart, energyChart, tempChart, socChart, isoChart].forEach(c => c && c.update('none'));
+
+    // Custom multi-field chart buffer'ını besle
+    updateCustomChartBuffer(data);
 }
 
 // Bir grafiğe yeni veri noktası ekler — chart.update() YAPILMAZ
 // updateCharts() sonda tüm chartları bir kerede update eder (Plan 2.1)
 function addPoint(chart, label, value, datasetIndex = 0, skipLabel = false) {
-    const maxPoints = 50;  // Maksimum görünür nokta sayısı
+    // chartMaxPoints = 0 ise sınırsız, aksi halde kullanıcının seçtiği limit
+    const maxPoints = chartMaxPoints > 0 ? chartMaxPoints : Infinity;
 
     // Label sadece ilk dataset için eklenir (diğerleri skipLabel=true ile geçer)
     if (!skipLabel) {
-        if (chart.data.labels.length > maxPoints) chart.data.labels.shift();
+        if (chart.data.labels.length >= maxPoints) chart.data.labels.shift();
         chart.data.labels.push(label);
     }
 
     // En eski noktayı sil, yeni noktayı ekle
-    if (chart.data.datasets[datasetIndex].data.length > maxPoints) {
+    if (chart.data.datasets[datasetIndex].data.length >= maxPoints) {
         chart.data.datasets[datasetIndex].data.shift();
     }
     chart.data.datasets[datasetIndex].data.push(value);
