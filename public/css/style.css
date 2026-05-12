@@ -4317,21 +4317,18 @@ body::after {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   6. MOVING BORDER (Aceternity UI Port)
-   Dönen gradyan kenarlık — kritik/uyarı kartları için
+   6. MOVING BORDER (Aceternity UI Port — DOM-SAFE)
+   Canvas doğrudan stat-card içine eklenir, wrapper YOK.
 ══════════════════════════════════════════════════════════════ */
-.mb-wrapper {
+
+/* stat-card'a pozisyon ver (moving border canvas için) */
+.stat-card {
     position: relative;
-    border-radius: inherit;
-    display: contents; /* Wrapper layout'u bozmaz */
+    overflow: hidden;
 }
-/* mb-wrapper'ı block yapmak gerekiyor */
-.stats-grid .mb-wrapper {
-    display: block;
-    position: relative;
-    border-radius: 14px;
-}
-.mb-canvas {
+
+/* Canvas kenar efekti — z-index 0, içeriğin ALTINDA */
+.stat-card .mb-canvas {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -4339,43 +4336,32 @@ body::after {
     border-radius: inherit;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.85;
+    opacity: 0.9;
 }
-/* Canvas'ın arkasında kart içeriği görünür kalsın */
-.mb-wrapper .stat-card {
+
+/* Stat-card içindeki tüm içerik canvas'ın ÜSTÜNDE */
+.stat-card > *:not(.mb-canvas) {
     position: relative;
     z-index: 1;
-    background: transparent; /* wrapper içinde, border canvas üstte */
 }
 
 /* ══════════════════════════════════════════════════════════════
-   7. GSAP-STYLE PAGE TRANSITIONS
-   Web Animations API (WAAPI) — GSAP'ye gerek yok
+   7. GSAP-STYLE PAGE TRANSITIONS (WAAPI — DOM-SAFE)
 ══════════════════════════════════════════════════════════════ */
 .view {
-    /* Eski CSS animasyonu kaldırıldı — JS ile yönetiliyor */
+    /* JS ile yönetiliyor */
     animation: none;
 }
 
-/* İlk yükleme animasyonu (JS çalışmadan önce fallback) */
 @keyframes fadeSlideIn {
     from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Kart stagger için başlangıç durumu
-   (JS animate() çağrısından önce gizli olmasın — fill:both ile yönetiliyor) */
-
 /* ══════════════════════════════════════════════════════════════
    8. LENIS SMOOTH SCROLL
 ══════════════════════════════════════════════════════════════ */
-html {
-    scroll-behavior: auto; /* Lenis bunu yönetir */
-}
-/* Lenis yüklü değilse fallback */
-.lenis-fallback html { scroll-behavior: smooth; }
-.main-content,
-.card-body.scrollable {
+.main-content {
     -webkit-overflow-scrolling: touch;
 }
 

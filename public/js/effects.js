@@ -1,121 +1,101 @@
 /**
  * ╔══════════════════════════════════════════════════════════════╗
- * ║  1.5 ADANA Telemetri — Visual Effects Engine v2.0           ║
- * ║  React Bits Port + Aceternity UI + GSAP-style + Lenis       ║
- * ╠══════════════════════════════════════════════════════════════╣
- * ║  1. SpotlightCard   — kart fare spotlight efekti            ║
- * ║  2. CountUp         — smooth sayısal animasyon              ║
- * ║  3. ClickSpark      — buton kıvılcım efekti                 ║
- * ║  4. DotField        — hareketli nokta arka planı            ║
- * ║  5. DecryptedText   — metin çözme animasyonu                ║
- * ║  6. MovingBorder    — dönen gradyan kenar animasyonu (yeni) ║
- * ║  7. GSAP Transitions— sekme geçişi animasyonları  (yeni)   ║
- * ║  8. Lenis Scroll    — pürüzsüz kaydırma          (yeni)    ║
+ * ║  1.5 ADANA Telemetri — Visual Effects Engine v2.1 (SAFE)   ║
+ * ║                                                              ║
+ * ║  [DÜZELTME] DOM manipülasyonu kaldırıldı → layout güvenli  ║
+ * ║  [DÜZELTME] Stagger fill:'forwards' → görünmezlik yok      ║
+ * ║  [DÜZELTME] Lenis yalnızca main-content'e uygulandı        ║
  * ╚══════════════════════════════════════════════════════════════╝
  */
 
 'use strict';
 
 /* ═══════════════════════════════════════════════════════════════
-   6. MOVING BORDER (Aceternity UI Port)
-   Kritik/uyarı kartlarında dönen konik gradyan kenarlık.
-   JS, CSS @property (Houdini) ve requestAnimationFrame kullanır.
+   6. MOVING BORDER — GÜVENLİ VERSİYON
+   DOM manipülasyonu YOK. Kart üzerine position:absolute canvas
+   eklenir, layout değişmez. data-mb-inited ile tekrar çalışmaz.
    ═══════════════════════════════════════════════════════════════ */
-const _movingBorders = [];
-
 function initMovingBorders() {
-    // Uygulanacak kartlar: critical stat-card, warning stat-card ve alert sınıflı öğeler
     const targets = document.querySelectorAll(
-        '.stat-card.critical, .stat-card.warning, [data-moving-border]'
+        '.stat-card.critical:not([data-mb-inited]), .stat-card.warning:not([data-mb-inited])'
     );
 
     targets.forEach(el => {
-        if (el.dataset.mbInited) return;
-        el.dataset.mbInited = 'true';
+        el.setAttribute('data-mb-inited', 'true');
 
-        // Wrapper: mevcut kartı sarmala
-        const wrapper = document.createElement('div');
-        wrapper.className = 'mb-wrapper';
-        // Orijinal boyutları koru
-        el.parentNode.insertBefore(wrapper, el);
-        wrapper.appendChild(el);
-
-        // Dönen kenarlık canvas'ı
+        // Kartın position'ı zaten relative — CSS'de ayarlı
+        // DOM'a WRAPPER EKLEMİYORUZ. Doğrudan card'a canvas ekliyoruz.
         const canvas = document.createElement('canvas');
         canvas.className = 'mb-canvas';
-        wrapper.appendChild(canvas);
+        canvas.setAttribute('aria-hidden', 'true');
+        // Canvas'ı kartın ilk child'ı yap (z-index:0 → içerik üstte kalır)
+        el.insertBefore(canvas, el.firstChild);
 
-        const ctx = canvas.getContext('2d');
-        let angle = Math.random() * Math.PI * 2; // Her kart farklı açıdan başlasın
-        let animId = null;
-        let isActive = true;
+        const ctx   = canvas.getContext('2d');
+        let angle   = Math.random() * Math.PI * 2;
+        let rafId   = null;
+        let running = true;
 
-        // Renge göre gradyan renkleri belirle
-        const isCritical = el.classList.contains('critical');
-        const color1 = isCritical ? '#ef4444' : '#f59e0b';
-        const color2 = isCritical ? '#7c3aed' : '#f97316';
-        const color3 = isCritical ? '#3b82f6' : '#fbbf24';
+        const isCrit = el.classList.contains('critical');
+        const c1 = isCrit ? '#ef4444' : '#f59e0b';
+        const c2 = isCrit ? '#7c3aed' : '#f97316';
+        const c3 = isCrit ? '#60a5fa' : '#fbbf24';
 
         function resize() {
-            canvas.width  = wrapper.offsetWidth;
-            canvas.height = wrapper.offsetHeight;
+            canvas.width  = el.offsetWidth;
+            canvas.height = el.offsetHeight;
         }
 
         function draw() {
-            if (!isActive) return;
+            if (!running) return;
             resize();
-            const W = canvas.width;
-            const H = canvas.height;
+            const W = canvas.width, H = canvas.height;
+            if (!W || !H) { rafId = requestAnimationFrame(draw); return; }
+
             ctx.clearRect(0, 0, W, H);
+            angle += 0.007;
 
-            angle += 0.008; // Dönüş hızı
-
-            const cx = W / 2;
-            const cy = H / 2;
-            const r  = Math.max(W, H) * 0.75;
-
-            // Dönen konik gradyan simülasyonu (iki nokta arasında yay)
+            const cx = W / 2, cy = H / 2;
+            const r  = Math.max(W, H) * 0.8;
             const x1 = cx + Math.cos(angle) * r;
             const y1 = cy + Math.sin(angle) * r;
             const x2 = cx + Math.cos(angle + Math.PI) * r;
             const y2 = cy + Math.sin(angle + Math.PI) * r;
 
             const grad = ctx.createLinearGradient(x1, y1, x2, y2);
-            grad.addColorStop(0,   color1 + '00');
-            grad.addColorStop(0.3, color1 + 'CC');
-            grad.addColorStop(0.5, color2 + 'FF');
-            grad.addColorStop(0.7, color3 + 'CC');
-            grad.addColorStop(1,   color3 + '00');
+            grad.addColorStop(0,   c1 + '00');
+            grad.addColorStop(0.3, c1 + 'BB');
+            grad.addColorStop(0.5, c2 + 'EE');
+            grad.addColorStop(0.7, c3 + 'BB');
+            grad.addColorStop(1,   c3 + '00');
 
-            const bw = 2; // kenar kalınlığı (piksel)
-            const br = parseFloat(getComputedStyle(el).borderRadius) || 12;
+            const bw = 2; // kenar kalınlığı px
+            const br = 14; // border-radius
 
-            // Dış kenar yolu
-            roundRect(ctx, 0, 0, W, H, br);
+            // Sadece kenar şeridini boya
             ctx.save();
+            _roundRectPath(ctx, 0, 0, W, H, br);
             ctx.clip();
-
-            // Gradyan ile doldur
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, W, H);
+            // İç alanı temizle (sadece kenar kalır)
+            ctx.clearRect(bw, bw, W - bw * 2, H - bw * 2);
             ctx.restore();
 
-            // İç kısımı sil (sadece kenar kalsın)
-            ctx.clearRect(bw, bw, W - bw * 2, H - bw * 2);
-
-            animId = requestAnimationFrame(draw);
+            rafId = requestAnimationFrame(draw);
         }
 
-        _movingBorders.push({ stop: () => { isActive = false; cancelAnimationFrame(animId); } });
         draw();
 
-        // Resize observer
-        new ResizeObserver(resize).observe(wrapper);
+        // Sayfa görünürlüğünde pause/resume (batarya tasarrufu)
+        document.addEventListener('visibilitychange', () => {
+            running = !document.hidden;
+            if (running) draw();
+        });
     });
 }
 
-// Canvas'ta yuvarlak dikdörtgen çizer
-function roundRect(ctx, x, y, w, h, r) {
+function _roundRectPath(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
     ctx.lineTo(x + w - r, y);
@@ -131,112 +111,107 @@ function roundRect(ctx, x, y, w, h, r) {
 
 
 /* ═══════════════════════════════════════════════════════════════
-   7. GSAP-STYLE PAGE TRANSITIONS
-   GSAP CDN yüklüyse kullan, yoksa kendi fallback animasyonumuzu
-   çalıştır. İkisi de aynı sonucu verir.
+   7. GSAP-STYLE PAGE TRANSITIONS — GÜVENLİ VERSİYON
+   - fill:'forwards' kullanılır (opacity:0 başlangıç kalmaz)
+   - Stagger sadece görünür kartlara uygulanır
+   - app.js flow'unu kesmez
    ═══════════════════════════════════════════════════════════════ */
 
-/**
- * Bir view elemanını animasyonlu olarak gösterir.
- * @param {HTMLElement} el  - Gösterilecek view
- * @param {string} from     - 'left' | 'right' | 'up' (eski view nereye gitti)
- */
-function animateViewIn(el, direction = 'up') {
+function animateViewIn(el) {
     if (!el) return;
-
-    const keyframes = {
-        up:    [{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'translateY(0)' }],
-        down:  [{ opacity: 0, transform: 'translateY(-18px)'}, { opacity: 1, transform: 'translateY(0)' }],
-        left:  [{ opacity: 0, transform: 'translateX(24px)' }, { opacity: 1, transform: 'translateX(0)' }],
-        right: [{ opacity: 0, transform: 'translateX(-24px)'}, { opacity: 1, transform: 'translateX(0)' }],
-    };
-
-    const frames = keyframes[direction] || keyframes.up;
-
-    // Web Animations API (tüm modern tarayıcılarda çalışır, GSAP olmadan)
-    el.animate(frames, {
-        duration: 320,
-        easing: 'cubic-bezier(0.16, 1, 0.3, 1)', // Framer Motion'dan "spring" benzeri ease
-        fill: 'both',
-    });
+    el.animate(
+        [
+            { opacity: 0, transform: 'translateY(14px)' },
+            { opacity: 1, transform: 'translateY(0)'    },
+        ],
+        {
+            duration: 280,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            fill: 'forwards',
+        }
+    );
 }
 
-/**
- * Bir view'in içindeki kartları stagger (sırayla) animasyonla gösterir.
- * @param {HTMLElement} viewEl
- */
 function staggerCardsIn(viewEl) {
     if (!viewEl) return;
-    const cards = viewEl.querySelectorAll(
-        '.stat-card, .card, .chart-wrapper, .strategy-card, .mb-wrapper'
-    );
+
+    // Yalnızca doğrudan görünür kartlar — iç içe geçmiş kartları dışla
+    const cards = Array.from(viewEl.querySelectorAll(
+        ':scope > * .stat-card, :scope > * .card:not(.stat-card)'
+    )).slice(0, 12); // max 12 kart (performans)
 
     cards.forEach((card, i) => {
         card.animate(
             [
-                { opacity: 0, transform: 'translateY(14px) scale(0.98)' },
-                { opacity: 1, transform: 'translateY(0)   scale(1)'    },
+                { opacity: 0, transform: 'translateY(10px)' },
+                { opacity: 1, transform: 'translateY(0)'    },
             ],
             {
-                duration: 280,
-                delay: i * 55,  // Her kart 55ms sonra başlar (stagger)
-                easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)', // Hafif spring overshoot
-                fill: 'both',
+                duration: 240,
+                delay: Math.min(i * 45, 400), // max toplam delay: 400ms
+                easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+                fill: 'forwards',
             }
         );
     });
 }
 
-/**
- * Nav geçişini ele alır — eski view'i çıkar, yeni view'i içeri alır.
- * app.js'deki nav click handler'ın ÖNÜNDE çağrılır.
- */
 function hookViewTransitions() {
-    const navItems = document.querySelectorAll('.nav-item');
-    if (!navItems.length) return;
+    // useCapture:false — app.js'nin işini bitirmesini BEKLE
+    // RAF double-buffer ile animasyon sıralaması güvenli
+    document.addEventListener('click', e => {
+        const navItem = e.target.closest('.nav-item[data-page]');
+        if (!navItem) return;
+        const page = navItem.dataset.page;
 
-    navItems.forEach(item => {
-        // Capture phase'de çalışsın ki app.js'den önce yakalasin
-        item.addEventListener('click', () => {
-            const targetPage = item.dataset.page;
-            if (!targetPage) return;
-
-            const newView = document.getElementById(`view-${targetPage}`);
-            if (!newView) return;
-
-            // Kısa bir delay ver (app.js'nin DOM'u güncellemesi için)
+        // app.js DOM'u güncelledikten sonra animasyonu başlat
+        // app.js click handler'ı sync çalıştığı için 2×rAF yeterli
+        requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    animateViewIn(newView, 'up');
-                    // Stagger'ı çok kısa bir gecikme ile başlat
-                    setTimeout(() => staggerCardsIn(newView), 30);
-                });
+                const view = document.getElementById(`view-${page}`);
+                if (view && view.classList.contains('active')) {
+                    animateViewIn(view);
+                    setTimeout(() => staggerCardsIn(view), 40);
+                }
             });
-        }, true); // useCapture: true → app.js'den önce tetiklenir
+        });
     });
 }
 
 
 /* ═══════════════════════════════════════════════════════════════
-   8. LENIS SMOOTH SCROLL
-   Lenis kütüphanesi CDN'den yüklü ise kullanır.
-   Yoksa native smooth scroll'u aktifleştirir (CSS ile).
+   8. LENIS SMOOTH SCROLL — GÜVENLİ VERSİYON
+   Yalnızca .main-content scroll'una uygulanır.
+   Leaflet ve diğer scroll container'lar etkilenmez.
    ═══════════════════════════════════════════════════════════════ */
 let lenisInstance = null;
 
 function initLenis() {
-    // Lenis CDN'den yüklüyse
-    if (typeof Lenis !== 'undefined') {
+    if (typeof Lenis === 'undefined') {
+        // Lenis yüklü değil — sessizce geç
+        return;
+    }
+
+    const mainContent = document.querySelector('.main-content');
+    if (!mainContent) return;
+
+    try {
         lenisInstance = new Lenis({
-            duration: 1.1,
-            easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Exponential ease-out
-            direction: 'vertical',
-            gestureDirection: 'vertical',
-            smooth: true,
-            mouseMultiplier: 0.9,
-            smoothTouch: false,    // Mobilde native scroll daha iyi
-            touchMultiplier: 2,
-            infinite: false,
+            wrapper: mainContent,     // Yalnızca main-content'e uygula
+            content: mainContent.firstElementChild || mainContent,
+            duration: 1.0,
+            easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            smoothTouch: false,       // Mobilde native
+            syncTouch: false,
+            prevent: el => {          // Bu elementleri Lenis'ten muaf tut
+                return (
+                    el.closest('#main-map')      ||
+                    el.closest('#full-map')       ||
+                    el.closest('.leaflet-container') ||
+                    el.closest('.card-body.scrollable') ||
+                    el.closest('[data-lenis-prevent]')
+                );
+            },
         });
 
         function lenisRaf(time) {
@@ -244,57 +219,51 @@ function initLenis() {
             requestAnimationFrame(lenisRaf);
         }
         requestAnimationFrame(lenisRaf);
-    } else {
-        // Fallback: CSS native smooth scroll
-        const style = document.createElement('style');
-        style.textContent = `
-            html { scroll-behavior: smooth; }
-            .main-content, .card-body.scrollable {
-                scroll-behavior: smooth;
-                -webkit-overflow-scrolling: touch;
-            }
-        `;
-        document.head.appendChild(style);
+
+    } catch (err) {
+        // Lenis init başarısız oldu — sessizce geç, uygulama çalışmaya devam eder
+        lenisInstance = null;
     }
 }
 
 
 /* ═══════════════════════════════════════════════════════════════
-   1. SPOTLIGHT CARD (v1'den taşındı, iyileştirildi)
+   1. SPOTLIGHT CARD
    ═══════════════════════════════════════════════════════════════ */
 function initSpotlightCards() {
-    const selector = '.stat-card, .card, .chart-wrapper, [data-spotlight]';
+    const SELECTOR = '.stat-card, .card, [data-spotlight]';
 
-    // Event delegation ile tüm kartları yakala
     document.addEventListener('mousemove', e => {
-        const card = e.target.closest(selector);
-        if (!card) {
-            // Üzerinde kart yoksa aktif olanları temizle
-            document.querySelectorAll('.spotlight-active').forEach(c => {
-                c.classList.remove('spotlight-active');
-            });
-            return;
-        }
+        const card = e.target.closest(SELECTOR);
+        if (!card || card.closest('#main-map, #full-map, .leaflet-container')) return;
+
         const rect = card.getBoundingClientRect();
         card.style.setProperty('--spot-x', `${e.clientX - rect.left}px`);
         card.style.setProperty('--spot-y', `${e.clientY - rect.top}px`);
-        card.classList.add('spotlight-active');
+
+        if (!card.classList.contains('spotlight-active')) {
+            // Diğer aktif spotlight'ları kapat
+            document.querySelectorAll('.spotlight-active').forEach(c => {
+                if (c !== card) c.classList.remove('spotlight-active');
+            });
+            card.classList.add('spotlight-active');
+        }
     });
 
     document.addEventListener('mouseleave', () => {
-        document.querySelectorAll('.spotlight-active').forEach(c => {
-            c.classList.remove('spotlight-active');
-        });
-    }, true);
+        document.querySelectorAll('.spotlight-active').forEach(c =>
+            c.classList.remove('spotlight-active')
+        );
+    }, { capture: true });
 }
 
 
 /* ═══════════════════════════════════════════════════════════════
-   2. COUNT-UP ANIMATION (v1'den taşındı)
+   2. COUNT-UP
    ═══════════════════════════════════════════════════════════════ */
-const _countUpAnimations = new Map();
+const _countUpMap = new Map();
 
-function countUpTo(el, targetStr, duration = 350) {
+function countUpTo(el, targetStr, duration = 320) {
     if (!el) return;
     const targetNum = parseFloat(targetStr);
     if (isNaN(targetNum)) { el.textContent = targetStr; return; }
@@ -303,163 +272,147 @@ function countUpTo(el, targetStr, duration = 350) {
     const diff = targetNum - currentNum;
     if (Math.abs(diff) < 0.005) return;
 
-    if (_countUpAnimations.has(el.id)) {
-        cancelAnimationFrame(_countUpAnimations.get(el.id));
-    }
+    if (_countUpMap.has(el.id)) cancelAnimationFrame(_countUpMap.get(el.id));
 
-    const startTime = performance.now();
-    const decimals = (targetStr.split('.')[1] || '').length;
+    const t0 = performance.now();
+    const dec = (targetStr.split('.')[1] || '').length;
 
     function step(now) {
-        const elapsed = now - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const ease = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
-        el.textContent = (currentNum + diff * ease).toFixed(decimals);
-        if (progress < 1) {
-            _countUpAnimations.set(el.id, requestAnimationFrame(step));
+        const p = Math.min((now - t0) / duration, 1);
+        const e = 1 - Math.pow(1 - p, 3);
+        el.textContent = (currentNum + diff * e).toFixed(dec);
+        if (p < 1) {
+            _countUpMap.set(el.id, requestAnimationFrame(step));
         } else {
             el.textContent = targetStr;
-            _countUpAnimations.delete(el.id);
+            _countUpMap.delete(el.id);
         }
     }
-    _countUpAnimations.set(el.id, requestAnimationFrame(step));
+    _countUpMap.set(el.id, requestAnimationFrame(step));
 }
 
 function upgradeAnimateValue() {
-    const originalAnimateValue = window.animateValue;
-    if (!originalAnimateValue) return;
-
+    const orig = window.animateValue;
+    if (!orig) return;
     window.animateValue = function(elementId, newValue) {
         const el = document.getElementById(elementId);
         if (!el) return;
-        const valueStr = newValue.toString();
-        if (el.textContent === valueStr) return;
-
-        const num = parseFloat(valueStr);
-        if (!isNaN(num) && !valueStr.includes(':')) {
-            countUpTo(el, valueStr, 300);
+        const s = newValue.toString();
+        if (el.textContent === s) return;
+        const n = parseFloat(s);
+        if (!isNaN(n) && !s.includes(':')) {
+            countUpTo(el, s, 300);
         } else {
-            originalAnimateValue(elementId, newValue);
+            orig(elementId, newValue);
         }
     };
 }
 
 
 /* ═══════════════════════════════════════════════════════════════
-   3. CLICK SPARK (v1'den taşındı)
+   3. CLICK SPARK
    ═══════════════════════════════════════════════════════════════ */
 function initClickSparks() {
     document.addEventListener('click', e => {
         const btn = e.target.closest('.sw-btn, .params-btn-apply, #btn-run-sim, [data-spark]');
         if (!btn) return;
-        spawnSparks(e.clientX, e.clientY);
+        _spawnSparks(e.clientX, e.clientY);
     });
 }
 
-function spawnSparks(x, y) {
-    const colors = ['#6366f1', '#818cf8', '#a5b4fc', '#34d399', '#60a5fa', '#f59e0b', '#f97316'];
-    for (let i = 0; i < 10; i++) {
-        const spark = document.createElement('div');
-        spark.className = 'click-spark-particle';
-        const angle = (Math.PI * 2 / 10) * i + (Math.random() - 0.5) * 0.6;
-        const dist  = 28 + Math.random() * 38;
-        const size  = 3 + Math.random() * 4;
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const dur   = 400 + Math.random() * 200;
-
-        Object.assign(spark.style, {
+function _spawnSparks(x, y) {
+    const colors = ['#6366f1', '#818cf8', '#34d399', '#60a5fa', '#f59e0b', '#f97316'];
+    for (let i = 0; i < 8; i++) {
+        const sp = document.createElement('div');
+        sp.className = 'click-spark-particle';
+        const angle = (Math.PI * 2 / 8) * i + (Math.random() - 0.5) * 0.5;
+        const dist  = 24 + Math.random() * 32;
+        const color = colors[i % colors.length];
+        const dur   = 380 + Math.random() * 180;
+        Object.assign(sp.style, {
             left: x + 'px', top: y + 'px',
-            width: size + 'px', height: size + 'px',
+            width:  (3 + Math.random() * 3) + 'px',
+            height: (3 + Math.random() * 3) + 'px',
             background: color,
-            boxShadow: `0 0 6px ${color}`,
+            boxShadow: `0 0 5px ${color}`,
             '--dx': `${Math.cos(angle) * dist}px`,
             '--dy': `${Math.sin(angle) * dist}px`,
             animationDuration: dur + 'ms',
         });
-        document.body.appendChild(spark);
-        spark.addEventListener('animationend', () => spark.remove());
+        document.body.appendChild(sp);
+        sp.addEventListener('animationend', () => sp.remove(), { once: true });
     }
 }
 
 
 /* ═══════════════════════════════════════════════════════════════
-   4. DOT FIELD BACKGROUND (v1'den taşındı)
+   4. DOT FIELD
    ═══════════════════════════════════════════════════════════════ */
-let dotFieldCanvas = null;
-let dotFieldCtx    = null;
-let dotFieldAnimId = null;
-const DOT_SPACING  = 34;
-let dotOffset      = { x: 0, y: 0 };
+const DOT_SPACING = 34;
+let _dotOffset = { x: 0, y: 0 };
+let _dotCanvas  = null;
+let _dotCtx     = null;
 
 function initDotField() {
     if (document.getElementById('dot-field-canvas')) return;
 
-    dotFieldCanvas = document.createElement('canvas');
-    dotFieldCanvas.id = 'dot-field-canvas';
-    Object.assign(dotFieldCanvas.style, {
+    _dotCanvas = document.createElement('canvas');
+    _dotCanvas.id = 'dot-field-canvas';
+    Object.assign(_dotCanvas.style, {
         position: 'fixed', top: '0', left: '0',
         width: '100%', height: '100%',
-        zIndex: '0', pointerEvents: 'none', opacity: '0.15',
+        zIndex: '0', pointerEvents: 'none', opacity: '0.14',
     });
-    document.body.insertBefore(dotFieldCanvas, document.body.firstChild);
-    dotFieldCtx = dotFieldCanvas.getContext('2d');
+    document.body.insertBefore(_dotCanvas, document.body.firstChild);
+    _dotCtx = _dotCanvas.getContext('2d');
 
-    function resize() {
-        dotFieldCanvas.width  = window.innerWidth;
-        dotFieldCanvas.height = window.innerHeight;
-    }
+    const resize = () => {
+        _dotCanvas.width  = window.innerWidth;
+        _dotCanvas.height = window.innerHeight;
+    };
     resize();
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', resize, { passive: true });
 
-    function draw() {
-        const W = dotFieldCanvas.width, H = dotFieldCanvas.height;
-        dotFieldCtx.clearRect(0, 0, W, H);
-        dotOffset.x = (dotOffset.x + 0.10) % DOT_SPACING;
-        dotOffset.y = (dotOffset.y + 0.05) % DOT_SPACING;
-
-        const isLight = document.body.classList.contains('light-mode');
-        const c = isLight ? '51,65,85' : '148,163,184';
-
+    (function draw() {
+        const W = _dotCanvas.width, H = _dotCanvas.height;
+        _dotCtx.clearRect(0, 0, W, H);
+        _dotOffset.x = (_dotOffset.x + 0.09) % DOT_SPACING;
+        _dotOffset.y = (_dotOffset.y + 0.045) % DOT_SPACING;
+        const light = document.body.classList.contains('light-mode');
+        const c = light ? '51,65,85' : '148,163,184';
         for (let x = -DOT_SPACING; x < W + DOT_SPACING; x += DOT_SPACING) {
             for (let y = -DOT_SPACING; y < H + DOT_SPACING; y += DOT_SPACING) {
-                dotFieldCtx.beginPath();
-                dotFieldCtx.arc(x + dotOffset.x, y + dotOffset.y, 1.1, 0, Math.PI * 2);
-                dotFieldCtx.fillStyle = `rgba(${c}, 0.65)`;
-                dotFieldCtx.fill();
+                _dotCtx.beginPath();
+                _dotCtx.arc(x + _dotOffset.x, y + _dotOffset.y, 1.1, 0, Math.PI * 2);
+                _dotCtx.fillStyle = `rgba(${c},0.6)`;
+                _dotCtx.fill();
             }
         }
-        dotFieldAnimId = requestAnimationFrame(draw);
-    }
-    draw();
+        requestAnimationFrame(draw);
+    })();
 }
 
 
 /* ═══════════════════════════════════════════════════════════════
-   5. DECRYPTED TEXT (v1'den taşındı)
+   5. DECRYPTED TEXT
    ═══════════════════════════════════════════════════════════════ */
-const DECRYPT_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%!?<>';
+const _CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%!?';
 
-function decryptText(el, finalText, duration = 1100, delay = 0) {
+function decryptText(el, finalText, duration, delay) {
     if (!el || !finalText) return;
     const chars = finalText.split('');
-
     setTimeout(() => {
-        let frame = 0;
-        const totalFrames = Math.round(duration / 38);
-        const interval = setInterval(() => {
-            frame++;
-            const progress = frame / totalFrames;
-            el.textContent = chars.map((char, i) => {
-                if (char === ' ') return ' ';
-                const revealAt = (i / chars.length) * 0.75;
-                if (progress > revealAt + 0.15) return char;
-                return DECRYPT_CHARS[Math.floor(Math.random() * DECRYPT_CHARS.length)];
+        let f = 0;
+        const total = Math.round(duration / 38);
+        const iv = setInterval(() => {
+            f++;
+            const p = f / total;
+            el.textContent = chars.map((ch, i) => {
+                if (ch === ' ') return ' ';
+                if (p > (i / chars.length) * 0.75 + 0.15) return ch;
+                return _CHARS[Math.floor(Math.random() * _CHARS.length)];
             }).join('');
-
-            if (frame >= totalFrames) {
-                clearInterval(interval);
-                el.textContent = finalText;
-            }
+            if (f >= total) { clearInterval(iv); el.textContent = finalText; }
         }, 38);
     }, delay);
 }
@@ -467,42 +420,35 @@ function decryptText(el, finalText, duration = 1100, delay = 0) {
 function initDecryptedText() {
     document.querySelectorAll('.logo-main').forEach((el, i) => {
         const txt = el.textContent;
-        decryptText(el, txt, 950, 250 + i * 80);
+        decryptText(el, txt, 900, 250 + i * 70);
     });
 }
 
 
 /* ═══════════════════════════════════════════════════════════════
-   ANA BAŞLATICI
+   BAŞLATICI
    ═══════════════════════════════════════════════════════════════ */
 function initAllEffects() {
-    // Sıra önemli: önce scroll, sonra görsel efektler
-    initLenis();
-    initDotField();
-    initSpotlightCards();
-    initClickSparks();
-    upgradeAnimateValue();
-    initDecryptedText();
-    hookViewTransitions();
+    initDotField();          // Arka plan (DOM'a ilk ekle)
+    initSpotlightCards();    // Mouse takibi
+    initClickSparks();       // Buton kıvılcım
+    upgradeAnimateValue();   // CountUp upgrade
+    initDecryptedText();     // Logo efekti
+    hookViewTransitions();   // Sekme geçişleri
 
-    // Moving Border: biraz gecikmeyle başlat (DOM tam hazır olsun)
-    setTimeout(initMovingBorders, 400);
+    // Lenis — en son, diğer init'ler bittikten sonra
+    setTimeout(initLenis, 300);
 
-    // Dinamik eklenen kartlar için Moving Border'ı tekrar çalıştır
-    const mbObserver = new MutationObserver(() => {
-        initMovingBorders();
-    });
-    mbObserver.observe(document.body, { childList: true, subtree: true });
+    // Moving Border — layout tam oturduğunda
+    setTimeout(initMovingBorders, 600);
 
-    // İlk açılışta aktif view için stagger animasyonu
-    const activeView = document.querySelector('.view.active') || document.getElementById('view-dashboard');
-    if (activeView) {
-        setTimeout(() => staggerCardsIn(activeView), 200);
-    }
+    // İlk yükleme stagger (çok hafif delay)
+    const first = document.querySelector('.view.active, #view-dashboard');
+    if (first) setTimeout(() => staggerCardsIn(first), 350);
 }
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAllEffects);
 } else {
-    setTimeout(initAllEffects, 80);
+    setTimeout(initAllEffects, 100);
 }
