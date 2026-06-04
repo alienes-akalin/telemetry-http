@@ -54,6 +54,15 @@ const TelemetrySchema = new Schema({
   // ==================== GSM (Sadece Hidromobil / a1) ====================
   gsm: {
     signal_pct: Number   // SIM800L CSQ sinyali → yüzde (0-100%). RSSI 0-31 normalise edilmiş.
+  },
+
+  // ==================== IMU / İVME (ADXL345) ====================
+  imu: {
+    pitch_deg: Number,  // Dikey eğim açısı (derece) — pozitif: burun yukarı
+    roll_deg:  Number,  // Yanal eğim açısı (derece) — pozitif: sağa yatış
+    ax:        Number,  // X ekseni ivmesi (g)
+    ay:        Number,  // Y ekseni ivmesi (g)
+    az:        Number   // Z ekseni ivmesi (g)
   }
 }, {
   timestamps: true  // Mongoose'un eklediği createdAt / updatedAt alanları

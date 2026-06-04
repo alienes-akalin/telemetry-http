@@ -68,6 +68,10 @@ const state = {
     isoNeg: 500.0,
     // GSM sinyal kalitesi simülasyonu (0-100%)
     signalPct: 72,
+    // IMU (ADXL345) simülasyon
+    imuTime: 0,
+    imuRoll:  0.0,
+    imuPitch: 0.0,
 };
 
 // ==================== YARDIMCI FONKSİYONLAR ====================
@@ -153,6 +157,11 @@ function updatePhysics(dt_s) {
     state.signalPct = Math.max(55, Math.min(90,
         state.signalPct + (Math.random() - 0.48) * 3
     ));
+
+    // -- IMU simülasyon: sinüzoidal eğim (viraj + yıdız katsayısı) --
+    state.imuTime += CONFIG.intervalMs / 1000;   // saniyede ilerle
+    state.imuRoll  = 12 * Math.sin(state.imuTime * 0.25) + jitter(1.5);
+    state.imuPitch =  6 * Math.sin(state.imuTime * 0.13 + 1.2) + jitter(0.8);
 }
 
 // ==================== VERİ GÖNDERİMİ ====================
@@ -194,6 +203,11 @@ function sendTelemetry() {
         // GSM sinyal kalitesi (SIM800L CSQ simüle edilmiş)
         gsm: {
             signal_pct: Math.round(state.signalPct)
+        },
+        // IMU / ADXL345 İvme sensörü
+        imu: {
+            pitch_deg: parseFloat(state.imuPitch.toFixed(2)),
+            roll_deg:  parseFloat(state.imuRoll.toFixed(2))
         }
     });
 

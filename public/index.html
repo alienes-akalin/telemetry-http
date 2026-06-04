@@ -22,9 +22,11 @@
 
     <!-- İkonlar (Icons) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tabler Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=124">
+    <link rel="stylesheet" href="css/style.css?v=126">
 
     <!-- FAST SPLASH CHECK -->
     <script>
@@ -337,25 +339,25 @@
 
             <nav class="nav-menu">
                 <a href="#" class="nav-item active" data-page="dashboard">
-                    <i class="fa-solid fa-gauge-high"></i> Dashboard
+                    <i class="ti ti-dashboard"></i> Dashboard
                 </a>
                 <a href="#" class="nav-item" data-page="race">
-                    <i class="fa-solid fa-flag-checkered"></i> Yarış
+                    <i class="ti ti-flag-3"></i> Yarış
                 </a>
                 <a href="#" class="nav-item" data-page="charts">
-                    <i class="fa-solid fa-chart-line"></i> Grafikler
+                    <i class="ti ti-chart-line"></i> Grafikler
                 </a>
                 <a href="#" class="nav-item" data-page="map">
-                    <i class="fa-solid fa-map-location-dot"></i> Harita
+                    <i class="ti ti-map-pin"></i> Harita
                 </a>
                 <a href="#" class="nav-item" data-page="history">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Geçmiş
+                    <i class="ti ti-history"></i> Geçmiş
                 </a>
                 <a href="#" class="nav-item" data-page="strategy">
-                    <i class="fa-solid fa-chess"></i> Stratejist
+                    <i class="ti ti-chess"></i> Stratejist
                 </a>
                 <a href="#" class="nav-item" data-page="media">
-                    <i class="fa-solid fa-music"></i> Medya
+                    <i class="ti ti-music"></i> Medya
                 </a>
             </nav>
 
@@ -551,21 +553,65 @@
                     </div>
                 </div>
 
-                <!-- Kronometre (Sadece Gösterim) -->
-                <div class="card stopwatch-card">
-                    <div class="card-header">
-                        <h3><i class="fa-solid fa-stopwatch"></i> Kronometre</h3>
+                <!-- Alt Widget'lar: Kronometre + IMU -->
+                <div class="dashboard-bottom-widgets">
+                    <!-- Kronometre (Sadece Gösterim) -->
+                    <div class="card stopwatch-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-stopwatch"></i> Kronometre</h3>
+                        </div>
+                        <div class="card-body stopwatch-body">
+                            <div class="stopwatch-display" id="stopwatch-display"><span class="sw-digit"
+                                    id="sw-h1">0</span><span class="sw-digit" id="sw-h2">0</span><span
+                                    class="sw-sep">:</span><span class="sw-digit" id="sw-m1">0</span><span class="sw-digit"
+                                    id="sw-m2">0</span><span class="sw-sep">:</span><span class="sw-digit"
+                                    id="sw-s1">0</span><span class="sw-digit" id="sw-s2">0</span><span class="ms">.<span
+                                        class="sw-digit sw-ms-digit" id="sw-c1">0</span><span class="sw-digit sw-ms-digit"
+                                        id="sw-c2">0</span></span></div>
+                            <!-- Kontrol butonları kaldırıldı - Stratejist sekmesinde kontrol edilir -->
+                            <div class="lap-list" id="lap-list"></div>
+                        </div>
                     </div>
-                    <div class="card-body stopwatch-body">
-                        <div class="stopwatch-display" id="stopwatch-display"><span class="sw-digit"
-                                id="sw-h1">0</span><span class="sw-digit" id="sw-h2">0</span><span
-                                class="sw-sep">:</span><span class="sw-digit" id="sw-m1">0</span><span class="sw-digit"
-                                id="sw-m2">0</span><span class="sw-sep">:</span><span class="sw-digit"
-                                id="sw-s1">0</span><span class="sw-digit" id="sw-s2">0</span><span class="ms">.<span
-                                    class="sw-digit sw-ms-digit" id="sw-c1">0</span><span class="sw-digit sw-ms-digit"
-                                    id="sw-c2">0</span></span></div>
-                        <!-- Kontrol butonları kaldırıldı - Stratejist sekmesinde kontrol edilir -->
-                        <div class="lap-list" id="lap-list"></div>
+
+                    <!-- IMU (Pitch/Roll) -->
+                    <div class="card imu-card" id="imu-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-compass"></i> IMU Pitch/Roll</h3>
+                        </div>
+                        <div class="card-body imu-body">
+                            <div class="imu-columns">
+                                <div class="imu-gauge">
+                                    <div class="imu-gauge-head">
+                                        <span class="imu-label">Roll</span>
+                                        <span class="imu-value" id="imu-roll-val">-- deg</span>
+                                    </div>
+                                    <div class="imu-track-row">
+                                        <div class="imu-bar">
+                                            <div class="imu-zero"></div>
+                                            <div class="imu-indicator" id="imu-roll-indicator"></div>
+                                        </div>
+                                        <div class="imu-car-wrap">
+                                            <img src="img/header-hydro-top.png" alt="Roll araci" class="imu-car" id="imu-roll-car">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="imu-gauge">
+                                    <div class="imu-gauge-head">
+                                        <span class="imu-label">Pitch</span>
+                                        <span class="imu-value" id="imu-pitch-val">-- deg</span>
+                                    </div>
+                                    <div class="imu-track-row">
+                                        <div class="imu-bar">
+                                            <div class="imu-zero"></div>
+                                            <div class="imu-indicator" id="imu-pitch-indicator"></div>
+                                        </div>
+                                        <div class="imu-car-wrap">
+                                            <img src="img/header-hydro-side.png" alt="Pitch araci" class="imu-car" id="imu-pitch-car">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -769,13 +815,13 @@
                     <div class="card-header detail-card-header">
                         <!-- Geri butonu satırı -->
                         <div class="detail-nav">
-                            <button class="btn-back" onclick="backToSessions()"><i class="fa-solid fa-arrow-left"></i>
+                            <button class="btn-back" onclick="backToSessions()"><i class="ti ti-arrow-left"></i>
                                 Geri</button>
                         </div>
                         <!-- Başlık + CSV (sağa yaslı) -->
                         <div class="detail-title-row">
                             <h3 id="session-title">Oturum Detayı</h3>
-                            <button class="btn-csv" onclick="downloadSessionCSV()"><i class="fa-solid fa-download"></i>
+                            <button class="btn-csv" onclick="downloadSessionCSV()"><i class="ti ti-download"></i>
                                 CSV İndir</button>
                         </div>
                         <!-- İsim + Açıklama alanı (sadece Testler için gösterilir) -->
@@ -787,7 +833,7 @@
                                 </p>
                                 <button class="sw-btn" onclick="editTestLabelDetail()" id="label-toggle-btn"
                                     style="background:#3b82f6; padding:4px 14px; font-size:0.8rem;">
-                                    <i class="fa-solid fa-pen"></i> <span id="label-btn-text">İsim Ekle</span>
+                                    <i class="ti ti-pencil"></i> <span id="label-btn-text">İsim Ekle</span>
                                 </button>
                                 <div id="test-label-editor" style="display:none; margin-top:10px;">
                                     <input id="test-label-input" type="text" maxlength="80"
@@ -806,7 +852,7 @@
                                 style="color:#94a3b8; font-size:0.88rem; white-space:pre-wrap; margin:0 0 8px;"></p>
                             <button class="sw-btn" onclick="editTestDescription()" id="desc-toggle-btn"
                                 style="background:#3b82f6; padding:4px 14px; font-size:0.8rem;">
-                                <i class="fa-solid fa-pen"></i> <span id="desc-btn-text">Açıklama Ekle</span>
+                                <i class="ti ti-pencil"></i> <span id="desc-btn-text">Açıklama Ekle</span>
                             </button>
                             <div id="test-description-editor" style="display:none; margin-top:10px;">
                                 <textarea id="test-description-input" rows="3" placeholder="Açıklama girin..."
@@ -820,6 +866,91 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- ─── YENİ: İstatistik Özet Kartları ─── -->
+                    <div class="session-stats-grid" id="session-stats-grid">
+                        <div class="session-stat-card">
+                            <div class="ssc-icon"><i class="ti ti-database"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">TOPLAM KAYIT</div>
+                                <div class="ssc-value" id="sstat-total">—</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#3b82f6;"><i class="ti ti-gauge"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">ORT. HIZ</div>
+                                <div class="ssc-value" id="sstat-avg-speed" style="color:#60a5fa;">—</div>
+                                <div class="ssc-unit">km/h</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#10b981;"><i class="ti ti-bolt"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">MAKS. HIZ</div>
+                                <div class="ssc-value" id="sstat-max-speed" style="color:#34d399;">—</div>
+                                <div class="ssc-unit">km/h</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#f59e0b;"><i class="ti ti-battery"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">MAKS. VOLTAJ</div>
+                                <div class="ssc-value" id="sstat-max-volt" style="color:#fbbf24;">—</div>
+                                <div class="ssc-unit">V</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#f97316;"><i class="ti ti-battery-charging"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">MİN. VOLTAJ</div>
+                                <div class="ssc-value" id="sstat-min-volt" style="color:#fb923c;">—</div>
+                                <div class="ssc-unit">V</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#8b5cf6;"><i class="ti ti-thermometer"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">MAKS. SICAKLIK</div>
+                                <div class="ssc-value" id="sstat-max-temp" style="color:#a78bfa;">—</div>
+                                <div class="ssc-unit">°C</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#06b6d4;"><i class="ti ti-current-ac"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">ORT. AKIM</div>
+                                <div class="ssc-value" id="sstat-avg-current" style="color:#22d3ee;">—</div>
+                                <div class="ssc-unit">A</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#ec4899;"><i class="ti ti-clock"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">SÜRE</div>
+                                <div class="ssc-value" id="sstat-duration" style="color:#f472b6;">—</div>
+                                <div class="ssc-unit">dk</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ─── YENİ: Session Grafiği ─── -->
+                    <div class="session-chart-wrapper" id="session-chart-section">
+                        <div class="session-chart-header">
+                            <span class="session-chart-title"><i class="ti ti-chart-line"></i> Son Grafik</span>
+                            <div class="session-chart-field-selector" id="session-field-selector">
+                                <button class="scf-btn active" data-sfield="speed" style="--fc:#3b82f6">Hız</button>
+                                <button class="scf-btn" data-sfield="voltage" style="--fc:#f59e0b">Voltaj</button>
+                                <button class="scf-btn" data-sfield="current" style="--fc:#10b981">Akım</button>
+                                <button class="scf-btn" data-sfield="temp" style="--fc:#8b5cf6">Sıcaklık</button>
+                                <button class="scf-btn" data-sfield="rpm" style="--fc:#06b6d4">RPM</button>
+                                <button class="scf-btn" data-sfield="duty" style="--fc:#f97316">Duty %</button>
+                                <button class="scf-btn" data-sfield="soc" style="--fc:#ec4899">SOC %</button>
+                            </div>
+                        </div>
+                        <canvas id="session-chart" style="width:100%; max-height:320px;"></canvas>
+                    </div>
+
                     <div class="card-body scrollable">
                         <table class="history-table">
                             <thead>
@@ -832,6 +963,8 @@
                                     <th>SOC</th>
                                     <th>Sıcaklık</th>
                                     <th>RPM</th>
+                                    <th class="imu-col">Roll</th>
+                                    <th class="imu-col">Pitch</th>
                                 </tr>
                             </thead>
                             <tbody id="session-detail-body">
@@ -1607,9 +1740,9 @@
 
     <!-- Custom Scripts (Minified for Production) -->
     <!-- Pist Profili (trackData.js) -->
-    <script src="js/trackData.js?v=3"></script>
-    <script src="js/app.js?v=126"></script>
-    <script src="js/effects.js?v=3"></script>
+    <script src="js/trackData.js?v=5"></script>
+    <script src="js/app.js?v=128"></script>
+    <script src="js/effects.js?v=5"></script>
 
     <!-- Service Worker & Pull-to-Refresh -->
     <script>

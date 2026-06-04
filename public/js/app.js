@@ -154,7 +154,6 @@ function switchVehicle(newDeviceId) {
     }
 
     // Alarm durumlarını sıfırla
-    const tempCard = document.getElementById('temp-card');
     if (tempCard) {
         tempCard.classList.remove('temp-fan', 'temp-buzzer', 'temp-critical');
         tempCard.classList.add('temp-normal');
@@ -170,8 +169,11 @@ function switchVehicle(newDeviceId) {
         gsmWidget.style.display = newDeviceId === 'a1' ? 'flex' : 'none';
         const pctEl = document.getElementById('gsm-signal-pct');
         if (pctEl) { pctEl.textContent = '--%'; pctEl.style.color = ''; }
-        updateSignalBars(-1);
     }
+
+    // IMU widget görünürlüğü ve sıfırlama
+    setImuVisibility(newDeviceId === 'a1');
+    resetImuWidget();
 
     // Global alarm + zaman state sıfırla
     lastTempState = null;
@@ -945,6 +947,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();       // Menü navigasyonunu kur
     initMainMap();          // Dashboard haritasını oluştur
     initStopwatch();        // Kronometreyi başlat
+    setImuVisibility(currentDeviceId === 'a1');
+    resetImuWidget();
     initializeStrategyProfiles();
     restoreStrategyProfileForDevice(currentDeviceId);
     setInterval(updateClock, 1000);  // Saati her saniye güncelle
@@ -1346,6 +1350,9 @@ function updateDashboardWidgets(data) {
 
     // GSM sinyal göstergesi (sadece a1 / Hidromobil)
     updateGsmWidget(data.gsm);
+
+    // IMU (Pitch/Roll) göstergesi (sadece a1 / Hidromobil)
+    updateImuWidget(data.imu);
 }
 
 // ==================== GSM SİNYAL WİDGET'I ====================
@@ -1416,6 +1423,60 @@ function updateGsmWidget(gsm) {
                           :             '#22c55e';
     }
     updateSignalBars(pct);
+}
+
+// ==================== IMU (PITCH / ROLL) WIDGET ====================
+const IMU_RANGE_DEG = 45;
+
+function setImuVisibility(isVisible) {
+    document.body.classList.toggle('imu-hidden', !isVisible);
+}
+
+function updateImuAxis(axis, value) {
+    const valEl = document.getElementById(`imu-${axis}-val`);
+    const indEl = document.getElementById(`imu-${axis}-indicator`);
+    const carEl = document.getElementById(`imu-${axis}-car`);
+    if (!valEl || !indEl) return;
+
+    const setCarMotion = (x, y, rot, muted) => {
+        if (!carEl) return;
+        carEl.style.setProperty('--imu-x', `${x.toFixed(2)}px`);
+        carEl.style.setProperty('--imu-y', `${y.toFixed(2)}px`);
+        carEl.style.setProperty('--imu-rot', `${rot.toFixed(2)}deg`);
+        carEl.classList.toggle('muted', muted);
+    };
+
+    if (value == null || Number.isNaN(value)) {
+        valEl.textContent = '-- deg';
+        indEl.style.left = '50%';
+        indEl.classList.add('muted');
+        setCarMotion(0, 0, 0, true);
+        return;
+    }
+
+    valEl.textContent = `${value.toFixed(1)} deg`;
+    const clamped = Math.max(-IMU_RANGE_DEG, Math.min(IMU_RANGE_DEG, value));
+    const percent = ((clamped + IMU_RANGE_DEG) / (2 * IMU_RANGE_DEG)) * 100;
+    indEl.style.left = `${percent}%`;
+    indEl.classList.remove('muted');
+
+    const norm = clamped / IMU_RANGE_DEG;
+    const motion = axis === 'roll'
+        ? { x: norm * 18, y: norm * -6, rot: norm * 6 }
+        : { x: norm * 6, y: norm * -16, rot: norm * 8 };
+    setCarMotion(motion.x, motion.y, motion.rot, false);
+}
+
+function resetImuWidget() {
+    updateImuAxis('roll', null);
+    updateImuAxis('pitch', null);
+}
+
+function updateImuWidget(imu) {
+    if (currentDeviceId !== 'a1') return;
+
+    updateImuAxis('roll', imu?.roll_deg);
+    updateImuAxis('pitch', imu?.pitch_deg);
 }
 
 // ==================== HARİTA İŞLEVLERİ ====================
@@ -2009,6 +2070,10 @@ async function loadSessions() {
     }
 }
 
+function getHistoryColspan() {
+    return currentDeviceId === 'a1' ? 10 : 8;
+}
+
 // Seçilen oturumun verilerini yükler ve tablo olarak gösterir
 async function openSession(sessionId, sessionName) {
     currentSessionId = sessionId;
@@ -2023,7 +2088,12 @@ async function openSession(sessionId, sessionName) {
     document.getElementById('session-title').innerText = sessionName;
 
     const tbody = document.getElementById('session-detail-body');
-    tbody.innerHTML = '<tr><td colspan="8">Yükleniyor...</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${getHistoryColspan()}">Yükleniyor...</td></tr>`;
+
+    // Stats sıfırla
+    ['sstat-total','sstat-avg-speed','sstat-max-speed','sstat-max-volt',
+     'sstat-min-volt','sstat-max-temp','sstat-avg-current','sstat-duration']
+        .forEach(id => { const el = document.getElementById(id); if(el) el.textContent = '—'; });
 
     try {
         const res = await fetch(`${API_BASE}/api/v1/telemetry/session/${sessionId}?device_id=${currentDeviceId}`);
@@ -2032,11 +2102,196 @@ async function openSession(sessionId, sessionName) {
         currentSessionData = json.data || [];
         renderHistoryTable(currentSessionData);
 
+        // İstatistik hesapla ve grafik çiz
+        computeSessionStats(currentSessionData);
+        renderSessionChart(currentSessionData, 'speed');
+
+        // Grafik alan seçici butonlar
+        initSessionChartButtons(currentSessionData);
+
     } catch (err) {
         console.error(err);
-        tbody.innerHTML = '<tr><td colspan="8" style="color:red;">Hata oluştu!</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${getHistoryColspan()}" style="color:red;">Hata oluştu!</td></tr>`;
     }
 }
+
+/* ──────────────────────────────────────────────────────────────
+   SESSION İSTATİSTİKLERİ
+   ────────────────────────────────────────────────────────────── */
+function computeSessionStats(rawData) {
+    const vehicleCfg = VEHICLE_CONFIG[currentDeviceId] || {};
+    const data = (!vehicleCfg.hasIso && !vehicleCfg.hasH2) ? mergeRowsBySecond(rawData) : rawData;
+
+    if (!data || !data.length) return;
+
+    let sumSpeed = 0, maxSpeed = -Infinity, countSpeed = 0;
+    let maxVolt = -Infinity, minVolt = Infinity;
+    let maxTemp = -Infinity;
+    let sumCurrent = 0, countCurrent = 0;
+
+    data.forEach(row => {
+        const spd = row.motor?.speed_kph;
+        const v   = row.bms?.voltage_v;
+        const t   = row.bms?.temp_c;
+        const a   = row.bms?.current_a;
+
+        if (spd != null) { sumSpeed += spd; countSpeed++; if (spd > maxSpeed) maxSpeed = spd; }
+        if (v   != null) { if (v > maxVolt) maxVolt = v; if (v < minVolt) minVolt = v; }
+        if (t   != null && t > maxTemp) maxTemp = t;
+        if (a   != null) { sumCurrent += a; countCurrent++; }
+    });
+
+    // Süre (ilk - son kayıt)
+    let durationMin = '—';
+    if (data.length >= 2) {
+        const ms = new Date(data[data.length-1].ts_server) - new Date(data[0].ts_server);
+        durationMin = (ms / 60000).toFixed(1);
+    }
+
+    const set = (id, val, decimals = 2) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val === -Infinity || val === Infinity ? '—' : (typeof val === 'number' ? val.toFixed(decimals) : val);
+    };
+
+    set('sstat-total',       data.length, 0);
+    set('sstat-avg-speed',   countSpeed  ? sumSpeed / countSpeed    : '—', 1);
+    set('sstat-max-speed',   maxSpeed    !== -Infinity ? maxSpeed   : '—', 1);
+    set('sstat-max-volt',    maxVolt     !== -Infinity ? maxVolt    : '—', 2);
+    set('sstat-min-volt',    minVolt     !== Infinity  ? minVolt    : '—', 2);
+    set('sstat-max-temp',    maxTemp     !== -Infinity ? maxTemp    : '—', 1);
+    set('sstat-avg-current', countCurrent ? sumCurrent / countCurrent : '—', 2);
+    document.getElementById('sstat-duration').textContent = durationMin;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   SESSION GRAFİĞİ (Chart.js — interaktif tooltip + noktalar)
+   ────────────────────────────────────────────────────────────── */
+let _sessionChart = null; // Chart.js instance
+
+const _sessionFieldCfg = {
+    speed:   { label: 'Hız (km/h)',     color: '#3b82f6', fn: r => r.motor?.speed_kph   },
+    voltage: { label: 'Voltaj (V)',     color: '#f59e0b', fn: r => r.bms?.voltage_v     },
+    current: { label: 'Akım (A)',       color: '#10b981', fn: r => r.bms?.current_a     },
+    temp:    { label: 'Sıcaklık (°C)', color: '#8b5cf6', fn: r => r.bms?.temp_c        },
+    rpm:     { label: 'RPM',            color: '#06b6d4', fn: r => r.motor?.rpm         },
+    duty:    { label: 'Duty Cycle (%)', color: '#f97316', fn: r => r.motor?.duty_pct    },
+    soc:     { label: 'SOC (%)',        color: '#ec4899', fn: r => r.bms?.soc_pct       },
+};
+
+function renderSessionChart(rawData, fieldKey) {
+    const canvas = document.getElementById('session-chart');
+    if (!canvas) return;
+
+    const cfg = _sessionFieldCfg[fieldKey] || _sessionFieldCfg.speed;
+    const vehicleCfg = VEHICLE_CONFIG[currentDeviceId] || {};
+    const data = (!vehicleCfg.hasIso && !vehicleCfg.hasH2) ? mergeRowsBySecond(rawData) : rawData;
+
+    // Örnekleme: max 300 nokta
+    const MAX_PTS = 300;
+    const step = data.length > MAX_PTS ? Math.floor(data.length / MAX_PTS) : 1;
+    const sampled = data.filter((_, i) => i % step === 0);
+
+    const labels = sampled.map(r => {
+        const d = new Date(r.ts_server);
+        return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+    });
+    const values = sampled.map(r => {
+        const v = cfg.fn(r);
+        return v != null ? +v.toFixed(3) : null;
+    });
+
+    // Eski chart'ı yok et
+    if (_sessionChart) { _sessionChart.destroy(); _sessionChart = null; }
+
+    const isDark = !document.body.classList.contains('light-mode');
+    const gridColor  = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+    const tickColor  = isDark ? '#475569' : '#94a3b8';
+    const tooltipBg  = isDark ? 'rgba(15,23,42,0.92)' : 'rgba(255,255,255,0.96)';
+    const tooltipFg  = isDark ? '#f1f5f9' : '#1e293b';
+
+    _sessionChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: cfg.label,
+                data: values,
+                borderColor: cfg.color,
+                backgroundColor: cfg.color + '18',
+                borderWidth: 1.8,
+                pointRadius: 0,           // varsayılan: nokta yok (performans)
+                pointHoverRadius: 5,      // hover'da belirgin nokta
+                pointHoverBackgroundColor: cfg.color,
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 2,
+                tension: 0.3,
+                fill: true,
+                spanGaps: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            animation: { duration: 350 },
+            interaction: {
+                mode: 'index',
+                intersect: false,   // fare herhangi bir noktada tooltip göster
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: tooltipBg,
+                    titleColor: tickColor,
+                    bodyColor: tooltipFg,
+                    borderColor: cfg.color + '55',
+                    borderWidth: 1,
+                    padding: 10,
+                    displayColors: false,
+                    callbacks: {
+                        title: items => items[0]?.label || '',
+                        label: item => {
+                            const v = item.parsed.y;
+                            return v != null ? `${cfg.label}: ${v}` : 'Veri yok';
+                        }
+                    }
+                },
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: tickColor,
+                        maxTicksLimit: 10,
+                        font: { size: 10 },
+                    },
+                    grid: { color: gridColor },
+                },
+                y: {
+                    ticks: { color: tickColor, font: { size: 10 } },
+                    grid:  { color: gridColor },
+                }
+            }
+        }
+    });
+}
+
+function initSessionChartButtons(data) {
+    const selector = document.getElementById('session-field-selector');
+    if (!selector) return;
+
+    // Önceki listener'ı temizle (clone trick)
+    const fresh = selector.cloneNode(true);
+    selector.parentNode.replaceChild(fresh, selector);
+
+    fresh.addEventListener('click', e => {
+        const btn = e.target.closest('.scf-btn');
+        if (!btn) return;
+        fresh.querySelectorAll('.scf-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderSessionChart(data, btn.dataset.sfield);
+    });
+}
+
 
 /**
  * Shell (a2) için farklı kaynaklardan gelen BMS ve motor verilerini
@@ -2113,9 +2368,12 @@ function renderHistoryTable(data) {
     const rows = (!vehicleCfg.hasIso && !vehicleCfg.hasH2) ? mergeRowsBySecond(data) : data;
 
     if (rows && rows.length > 0) {
+        const showImu = currentDeviceId === 'a1';
         // Performans için DocumentFragment kullan
         const fragment = document.createDocumentFragment();
         rows.forEach(row => {
+            const rollVal = showImu && row.imu?.roll_deg != null ? row.imu.roll_deg.toFixed(2) : '-';
+            const pitchVal = showImu && row.imu?.pitch_deg != null ? row.imu.pitch_deg.toFixed(2) : '-';
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${formatTR(row.ts_server).split(' ')[1]}</td>
@@ -2126,12 +2384,14 @@ function renderHistoryTable(data) {
                 <td>${row.bms?.soc_pct?.toFixed(1) || '-'}</td>
                 <td>${row.bms?.temp_c?.toFixed(2) || '-'}</td>
                 <td>${row.motor?.rpm || '-'}</td>
+                <td class="imu-col">${rollVal}</td>
+                <td class="imu-col">${pitchVal}</td>
             `;
             fragment.appendChild(tr);
         });
         tbody.appendChild(fragment);
     } else {
-        tbody.innerHTML = '<tr><td colspan="8">Bu pakette veri yok.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${getHistoryColspan()}">Bu pakette veri yok.</td></tr>`;
     }
 }
 
@@ -2165,6 +2425,10 @@ function downloadSessionCSV() {
     // ---- Ortak sütunlar (her iki araç için) ----
     // CSV başlıkları (Excel uyumlu ASCII karakterler)
     const headers = ['Zaman', 'Hiz_kmh', 'Duty_pct', 'Voltaj_V', 'Akim_A', 'SOC_pct', 'Sicaklik_C', 'RPM'];
+    const showImu = currentDeviceId === 'a1';
+    if (showImu) {
+        headers.push('Roll_deg', 'Pitch_deg');
+    }
 
     // ---- Hidromobil (a1) özel sütunlar ----
     if (vehicleCfg.hasIso) {
@@ -2189,6 +2453,14 @@ function downloadSessionCSV() {
             row.bms?.temp_c?.toFixed(2) || '',
             row.motor?.rpm || ''
         ];
+
+        // IMU alanları (sadece Hidromobil)
+        if (showImu) {
+            cols.push(
+                row.imu?.roll_deg != null ? row.imu.roll_deg.toFixed(2) : '',
+                row.imu?.pitch_deg != null ? row.imu.pitch_deg.toFixed(2) : ''
+            );
+        }
 
         // Hidromobil özel alanlar
         if (vehicleCfg.hasIso) {
@@ -2923,7 +3195,7 @@ async function loadCustomPacketData(id) {
 
     document.getElementById('session-title').innerText = "Yükleniyor...";
     const tbody = document.getElementById('session-detail-body');
-    tbody.innerHTML = '<tr><td colspan="7">Veriler getiriliyor...</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${getHistoryColspan()}">Veriler getiriliyor...</td></tr>`;
 
     try {
         const res = await fetch(`${API_BASE}/api/v1/custom-sessions/${id}/data`);

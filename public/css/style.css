@@ -1142,6 +1142,14 @@ body.drawer-open .drawer-overlay {
     border-bottom: 1px solid var(--border);
 }
 
+.imu-col {
+    white-space: nowrap;
+}
+
+body.imu-hidden .imu-col {
+    display: none;
+}
+
 .history-table th {
     background-color: var(--bg-dark);
     font-weight: 600;
@@ -1251,10 +1259,126 @@ body.drawer-open .drawer-overlay {
 }
 
 /* Stopwatch */
-.stopwatch-card {
+.dashboard-bottom-widgets {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.65fr) 1.35fr;
+    gap: 1.5rem;
     margin-top: 1.5rem;
-    clear: both;
+}
+
+body.imu-hidden .dashboard-bottom-widgets {
+    grid-template-columns: 1fr;
+}
+
+.stopwatch-card {
+    margin-top: 0;
+    clear: none;
     width: 100%;
+}
+
+.imu-card {
+    width: 100%;
+}
+
+body.imu-hidden .imu-card {
+    display: none;
+}
+
+.imu-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 1rem;
+}
+
+.imu-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.imu-gauge-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.imu-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.imu-value {
+    font-family: 'Orbitron', monospace;
+    color: var(--accent);
+}
+
+.imu-bar {
+    position: relative;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    flex: 1 1 auto;
+}
+
+.imu-track-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.imu-car-wrap {
+    width: 76px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.imu-car {
+    width: 68px;
+    height: 28px;
+    object-fit: contain;
+    opacity: 0.9;
+    filter: drop-shadow(0 6px 8px rgba(15, 23, 42, 0.6));
+    transform: translate(var(--imu-x, 0px), var(--imu-y, 0px)) rotate(var(--imu-rot, 0deg));
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+    will-change: transform;
+}
+
+.imu-car.muted {
+    opacity: 0.45;
+    filter: grayscale(0.7) drop-shadow(0 4px 6px rgba(15, 23, 42, 0.45));
+}
+
+.imu-zero {
+    position: absolute;
+    left: 50%;
+    top: -4px;
+    width: 2px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateX(-50%);
+}
+
+.imu-indicator {
+    position: absolute;
+    top: -9px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 10px solid #22c55e;
+    transform: translateX(-50%);
+    transition: left 0.2s ease;
+}
+
+.imu-indicator.muted {
+    border-bottom-color: rgba(255, 255, 255, 0.35);
 }
 
 .stopwatch-body {
@@ -7153,4 +7277,131 @@ body.light-mode .gsm-bars-svg rect[fill="rgba(255,255,255,0.15)"] {
     .stat-card.critical::after, .stat-card.warning::after,
     .stat-card.info::after, .view.active { animation: none; }
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   SESSION DETAIL — İstatistik Kartları + Grafik
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* İstatistik grid (4 sütun, responsive) */
+.session-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(99,102,241,0.12);
+}
+@media (max-width: 900px) {
+    .session-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 500px) {
+    .session-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; }
+}
+
+/* Tek istatistik kartı */
+.session-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(30,41,59,0.55);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 12px 14px;
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), border-color 0.2s;
+}
+.session-stat-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(99,102,241,0.22);
+}
+.ssc-icon {
+    font-size: 1.6rem;
+    color: #64748b;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.ssc-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ssc-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    text-transform: uppercase;
+}
+.ssc-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    font-family: 'Orbitron', monospace;
+    color: #f1f5f9;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+.ssc-unit {
+    font-size: 0.72rem;
+    color: #475569;
+    font-weight: 500;
+}
+
+/* Grafik wrapper */
+.session-chart-wrapper {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(99,102,241,0.10);
+}
+.session-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.session-chart-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.02em;
+}
+.session-chart-title i { color: #6366f1; font-size: 1rem; }
+
+/* Alan seçici butonlar */
+.session-chart-field-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.scf-btn {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(148,163,184,0.2);
+    background: rgba(30,41,59,0.6);
+    color: #64748b;
+    font-size: 0.73rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+}
+.scf-btn:hover {
+    border-color: var(--fc, rgba(99,102,241,0.5));
+    color: #94a3b8;
+}
+.scf-btn.active {
+    border-color: var(--fc, #6366f1);
+    color: var(--fc, #a5b4fc);
+    background: rgba(99,102,241,0.12);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--fc, #6366f1) 30%, transparent);
+}
+
+/* Tabler Icons font-size normalize (nav-item için) */
+.nav-item .ti { font-size: 1.1rem; }
+.ti { font-style: normal; }
+
+/* Light mode session stats */
+.light-mode .session-stat-card {
+    background: rgba(241,245,249,0.7);
+    border-color: rgba(0,0,0,0.07);
+}
+.light-mode .ssc-label { color: #94a3b8; }
 

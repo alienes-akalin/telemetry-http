@@ -1,4 +1,62 @@
-﻿/* public/css/style.css */
+/* public/css/style.css */
+
+/* ══════════════════════════════════════════════════════════════
+   VISUAL EFFECTS ENGINE — React Bits Port (Vanilla JS) v2.1
+══════════════════════════════════════════════════════════════ */
+
+/* 1. SPOTLIGHT CARD — sadece ::before pseudo, layout'a dokunmaz */
+.stat-card::before,
+.card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        380px circle at var(--spot-x, -9999px) var(--spot-y, -9999px),
+        rgba(99, 102, 241, 0.09),
+        transparent 55%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+    will-change: opacity;
+}
+.stat-card.spotlight-active::before,
+.card.spotlight-active::before {
+    opacity: 1;
+}
+
+/* 3. CLICK SPARK */
+.click-spark-particle {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99999;
+    transform: translate(-50%, -50%);
+    animation: spark-fly 500ms ease-out forwards;
+}
+@keyframes spark-fly {
+    0%   { transform: translate(-50%,-50%) translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(-50%,-50%) translate(var(--dx),var(--dy)) scale(0); opacity: 0; }
+}
+
+/* 4. DOT FIELD */
+#dot-field-canvas {
+    position: fixed !important;
+    z-index: 0 !important;
+    pointer-events: none !important;
+}
+
+/* 2. COUNTUP pulse */
+@keyframes countup-pulse {
+    0%   { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+.counting { animation: countup-pulse 0.25s ease-out; }
+
+
+
 :root {
     /* Glassmorphism & Neon Palette */
     --bg-dark: #0f172a;
@@ -1084,6 +1142,14 @@ body.drawer-open .drawer-overlay {
     border-bottom: 1px solid var(--border);
 }
 
+.imu-col {
+    white-space: nowrap;
+}
+
+body.imu-hidden .imu-col {
+    display: none;
+}
+
 .history-table th {
     background-color: var(--bg-dark);
     font-weight: 600;
@@ -1193,10 +1259,126 @@ body.drawer-open .drawer-overlay {
 }
 
 /* Stopwatch */
-.stopwatch-card {
+.dashboard-bottom-widgets {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.65fr) 1.35fr;
+    gap: 1.5rem;
     margin-top: 1.5rem;
-    clear: both;
+}
+
+body.imu-hidden .dashboard-bottom-widgets {
+    grid-template-columns: 1fr;
+}
+
+.stopwatch-card {
+    margin-top: 0;
+    clear: none;
     width: 100%;
+}
+
+.imu-card {
+    width: 100%;
+}
+
+body.imu-hidden .imu-card {
+    display: none;
+}
+
+.imu-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 1rem;
+}
+
+.imu-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.imu-gauge-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.imu-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.imu-value {
+    font-family: 'Orbitron', monospace;
+    color: var(--accent);
+}
+
+.imu-bar {
+    position: relative;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    flex: 1 1 auto;
+}
+
+.imu-track-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.imu-car-wrap {
+    width: 76px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.imu-car {
+    width: 68px;
+    height: 28px;
+    object-fit: contain;
+    opacity: 0.9;
+    filter: drop-shadow(0 6px 8px rgba(15, 23, 42, 0.6));
+    transform: translate(var(--imu-x, 0px), var(--imu-y, 0px)) rotate(var(--imu-rot, 0deg));
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.35s ease;
+    will-change: transform;
+}
+
+.imu-car.muted {
+    opacity: 0.45;
+    filter: grayscale(0.7) drop-shadow(0 4px 6px rgba(15, 23, 42, 0.45));
+}
+
+.imu-zero {
+    position: absolute;
+    left: 50%;
+    top: -4px;
+    width: 2px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateX(-50%);
+}
+
+.imu-indicator {
+    position: absolute;
+    top: -9px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 10px solid #22c55e;
+    transform: translateX(-50%);
+    transition: left 0.2s ease;
+}
+
+.imu-indicator.muted {
+    border-bottom-color: rgba(255, 255, 255, 0.35);
 }
 
 .stopwatch-body {
@@ -4226,22 +4408,36 @@ body::after {
     background: #22c55e !important;
 }
 
-/* ==================== PAGE TRANSITIONS ==================== */
-.view {
-    animation: fadeSlideIn 0.3s ease-out;
+/* ══════════════════════════════════════════════════════════════
+   6. MOVING BORDER — canvas sadece stat-card içinde
+══════════════════════════════════════════════════════════════ */
+.mb-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.85;
+    /* layout'u etkilemez */
 }
+
+/* ══════════════════════════════════════════════════════════════
+   7. PAGE TRANSITIONS
+══════════════════════════════════════════════════════════════ */
+.view { animation: none; }
 
 @keyframes fadeSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   8. LENIS
+══════════════════════════════════════════════════════════════ */
+.main-content { -webkit-overflow-scrolling: touch; }
+
 
 /* ==================== COUNTER ANIMATION ==================== */
 .value-animate {
@@ -6825,4 +7021,387 @@ body.light-mode .login-container input {
     border: 1px solid rgba(56, 189, 248, 0.4) !important;
     box-shadow: 0 0 10px rgba(56, 189, 248, 0.1) !important;
 }
+
+/* ==================== GSM SİNYAL WİDGET'I ==================== */
+/* Karanlık/Aydınlık mod butonunun solunda durur, sadece a1/Hidromobil için görünür */
+.gsm-signal-widget {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    cursor: default;
+    transition: background 0.3s ease, border-color 0.3s ease;
+    user-select: none;
+}
+
+.gsm-signal-widget:hover {
+    background: rgba(255, 255, 255, 0.11);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Sinyal yüzde metni */
+.gsm-signal-widget #gsm-signal-pct {
+    font-family: 'Rajdhani', 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.5px;
+    min-width: 34px;
+    text-align: left;
+    transition: color 0.4s ease;
+}
+
+/* SVG bar geçiş animasyonu */
+.gsm-bars-svg rect {
+    transition: fill 0.5s ease;
+}
+
+/* Aydınlık modda widget arka planı */
+body.light-mode .gsm-signal-widget {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.12);
+}
+
+body.light-mode .gsm-signal-widget #gsm-signal-pct {
+    color: #1e293b;
+}
+
+body.light-mode .gsm-bars-svg rect[fill="rgba(255,255,255,0.15)"] {
+    fill: rgba(0, 0, 0, 0.12);
+}
+
+/* Mobilde küçük tut */
+@media (max-width: 768px) {
+    .gsm-signal-widget {
+        padding: 4px 8px;
+        gap: 5px;
+    }
+
+    .gsm-signal-widget #gsm-signal-pct {
+        font-size: 0.78rem;
+        min-width: 30px;
+    }
+}
+
+
+/* =====================================================================
+   RAKM (ALTİTÜD) GÖSTERGESİ — harita kart body içi, sağ alt köşe
+   ===================================================================== */
+
+/* Her card-body'nin kendi içeriğine göre relative — sadece harita kartında overflow:hidden */
+.map-card .card-body {
+    position: relative;
+    overflow: hidden;
+}
+
+.map-altitude-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;           /* Leaflet attribution sağda, biz soldayız — çakışma yok */
+    right: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255,255,255,0.10);
+    border-right: 1px solid rgba(255,255,255,0.10);
+    border-radius: 0 10px 0 0;   /* sol alt köşe için üst-sağ yuvarlak */
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #94a3b8;
+    z-index: 500;
+    pointer-events: none;
+    letter-spacing: 0.3px;
+    max-width: 50%;               /* haritanın yarısından büyümesin */
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+.map-altitude-bar i {
+    font-size: 0.85rem;
+    color: #10b981;
+    filter: drop-shadow(0 0 4px rgba(16,185,129,0.5));
+}
+
+.map-altitude-bar span {
+    color: #e2e8f0;
+    font-variant-numeric: tabular-nums;
+}
+
+.light-mode .map-altitude-bar {
+    background: rgba(241, 245, 249, 0.88);
+    border-color: rgba(0,0,0,0.1);
+}
+
+.light-mode .map-altitude-bar span { color: #1e293b; }
+
+@media (max-width: 600px) {
+    .map-altitude-bar {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+        gap: 4px;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   ✨ PURE CSS VISUAL EFFECTS — Zero JS, Zero DOM Manipulation
+   A. Moving Border  B. Card Hover Spring  C. Neon Pulse  E. View Fade
+   ══════════════════════════════════════════════════════════════════════ */
+
+
+/* ──────────────────────────────────────────────────────────────────────
+   B. CARD HOVER SPRING ANIMATION
+   Spring cubic-bezier ile yukarı kayma + glow güçlenme
+   ────────────────────────────────────────────────────────────────────── */
+
+.stat-card {
+    transition:
+        transform    0.38s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow   0.38s cubic-bezier(0.34, 1.56, 0.64, 1),
+        border-color 0.25s ease;
+}
+
+.stat-card:hover { transform: translateY(-6px) scale(1.015); }
+
+.stat-card.critical:hover {
+    box-shadow:
+        0 0 25px rgba(59,130,246,0.55) inset,
+        0 14px 36px rgba(59,130,246,0.28),
+        0 4px 12px rgba(0,0,0,0.2);
+}
+.stat-card.warning:hover {
+    box-shadow:
+        0 0 25px rgba(245,158,11,0.55) inset,
+        0 14px 36px rgba(245,158,11,0.28),
+        0 4px 12px rgba(0,0,0,0.2);
+}
+.stat-card.info:hover {
+    box-shadow:
+        0 0 25px rgba(16,185,129,0.55) inset,
+        0 14px 36px rgba(16,185,129,0.28),
+        0 4px 12px rgba(0,0,0,0.2);
+}
+.stat-card:not(.critical):not(.warning):not(.info):not(.danger):hover {
+    box-shadow:
+        0 0 20px rgba(99,102,241,0.15) inset,
+        0 12px 32px rgba(0,0,0,0.25);
+    border-color: rgba(99,102,241,0.25);
+}
+
+.card {
+    transition:
+        transform    0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow   0.32s ease,
+        border-color 0.25s ease;
+}
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.22);
+    border-color: rgba(99,102,241,0.20);
+}
+
+
+/* ──────────────────────────────────────────────────────────────────────
+   C. NEON AMBIENT PULSE — Critical & Warning sürekli glow
+   ────────────────────────────────────────────────────────────────────── */
+
+@keyframes neon-pulse-blue {
+    0%,100% {
+        box-shadow: 0 0 15px rgba(59,130,246,0.30) inset, 0 0 6px rgba(59,130,246,0.08);
+    }
+    50% {
+        box-shadow: 0 0 28px rgba(59,130,246,0.58) inset, 0 0 22px rgba(59,130,246,0.22), 0 0 40px rgba(139,92,246,0.10);
+    }
+}
+@keyframes neon-pulse-orange {
+    0%,100% {
+        box-shadow: 0 0 15px rgba(245,158,11,0.30) inset, 0 0 6px rgba(245,158,11,0.08);
+    }
+    50% {
+        box-shadow: 0 0 28px rgba(245,158,11,0.58) inset, 0 0 22px rgba(245,158,11,0.22), 0 0 40px rgba(249,115,22,0.10);
+    }
+}
+
+.stat-card.critical { animation: neon-pulse-blue   2.8s ease-in-out infinite; }
+.stat-card.warning  { animation: neon-pulse-orange  2.4s ease-in-out infinite; }
+
+.stat-card.critical:hover,
+.stat-card.warning:hover { animation-play-state: paused; }
+
+@keyframes neon-pulse-blue-lm {
+    0%,100% { box-shadow: 0 0 10px rgba(59,130,246,0.18) inset; }
+    50%     { box-shadow: 0 0 18px rgba(59,130,246,0.35) inset, 0 0 12px rgba(59,130,246,0.12); }
+}
+@keyframes neon-pulse-orange-lm {
+    0%,100% { box-shadow: 0 0 10px rgba(245,158,11,0.18) inset; }
+    50%     { box-shadow: 0 0 18px rgba(245,158,11,0.35) inset, 0 0 12px rgba(245,158,11,0.12); }
+}
+.light-mode .stat-card.critical { animation-name: neon-pulse-blue-lm; }
+.light-mode .stat-card.warning  { animation-name: neon-pulse-orange-lm; }
+
+
+/* ──────────────────────────────────────────────────────────────────────
+   E. VIEW FADE + NAV SPRING — Sekme geçişi + sidebar hover
+   ────────────────────────────────────────────────────────────────────── */
+
+.view.active {
+    animation: view-fade-in 0.28s cubic-bezier(0.16, 1, 0.30, 1) both;
+}
+@keyframes view-fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.nav-item {
+    transition:
+        transform    0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background   0.2s ease,
+        color        0.2s ease;
+}
+.nav-item:hover  { transform: translateX(4px); }
+.nav-item.active { transform: translateX(4px); }
+
+
+/* ── Reduced motion ───────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .stat-card.critical, .stat-card.warning,
+    .stat-card.critical::after, .stat-card.warning::after,
+    .stat-card.info::after, .view.active { animation: none; }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   SESSION DETAIL — İstatistik Kartları + Grafik
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* İstatistik grid (4 sütun, responsive) */
+.session-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(99,102,241,0.12);
+}
+@media (max-width: 900px) {
+    .session-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 500px) {
+    .session-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; }
+}
+
+/* Tek istatistik kartı */
+.session-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(30,41,59,0.55);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 12px 14px;
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), border-color 0.2s;
+}
+.session-stat-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(99,102,241,0.22);
+}
+.ssc-icon {
+    font-size: 1.6rem;
+    color: #64748b;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.ssc-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ssc-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #64748b;
+    text-transform: uppercase;
+}
+.ssc-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    font-family: 'Orbitron', monospace;
+    color: #f1f5f9;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+.ssc-unit {
+    font-size: 0.72rem;
+    color: #475569;
+    font-weight: 500;
+}
+
+/* Grafik wrapper */
+.session-chart-wrapper {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(99,102,241,0.10);
+}
+.session-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.session-chart-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.02em;
+}
+.session-chart-title i { color: #6366f1; font-size: 1rem; }
+
+/* Alan seçici butonlar */
+.session-chart-field-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.scf-btn {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(148,163,184,0.2);
+    background: rgba(30,41,59,0.6);
+    color: #64748b;
+    font-size: 0.73rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+}
+.scf-btn:hover {
+    border-color: var(--fc, rgba(99,102,241,0.5));
+    color: #94a3b8;
+}
+.scf-btn.active {
+    border-color: var(--fc, #6366f1);
+    color: var(--fc, #a5b4fc);
+    background: rgba(99,102,241,0.12);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--fc, #6366f1) 30%, transparent);
+}
+
+/* Tabler Icons font-size normalize (nav-item için) */
+.nav-item .ti { font-size: 1.1rem; }
+.ti { font-style: normal; }
+
+/* Light mode session stats */
+.light-mode .session-stat-card {
+    background: rgba(241,245,249,0.7);
+    border-color: rgba(0,0,0,0.07);
+}
+.light-mode .ssc-label { color: #94a3b8; }
 

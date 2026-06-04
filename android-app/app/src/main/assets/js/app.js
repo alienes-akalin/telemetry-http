@@ -41,7 +41,7 @@ function updateChartTheme(isLight) {
     Chart.defaults.borderColor = gridColor;
 
     // Mevcut chart'ları güncelle
-    [speedChart, energyChart, tempChart, socChart, isoChart].forEach(chart => {
+    [speedChart, energyChart, tempChart, socChart, isoChart, customChart].forEach(chart => {
         if (!chart) return;
         if (chart.options.scales) {
             Object.values(chart.options.scales).forEach(scale => {
@@ -154,7 +154,6 @@ function switchVehicle(newDeviceId) {
     }
 
     // Alarm durumlarını sıfırla
-    const tempCard = document.getElementById('temp-card');
     if (tempCard) {
         tempCard.classList.remove('temp-fan', 'temp-buzzer', 'temp-critical');
         tempCard.classList.add('temp-normal');
@@ -163,6 +162,18 @@ function switchVehicle(newDeviceId) {
     if (badge) badge.style.display = 'none';
     const currentCard = document.getElementById('current-card');
     if (currentCard) currentCard.classList.remove('current-warning');
+
+    // GSM sinyal widget sıfırla
+    const gsmWidget = document.getElementById('gsm-signal-widget');
+    if (gsmWidget) {
+        gsmWidget.style.display = newDeviceId === 'a1' ? 'flex' : 'none';
+        const pctEl = document.getElementById('gsm-signal-pct');
+        if (pctEl) { pctEl.textContent = '--%'; pctEl.style.color = ''; }
+    }
+
+    // IMU widget görünürlüğü ve sıfırlama
+    setImuVisibility(newDeviceId === 'a1');
+    resetImuWidget();
 
     // Global alarm + zaman state sıfırla
     lastTempState = null;
@@ -871,7 +882,35 @@ let routePolylines = [];             // Haritaya eklenen tüm renkli polyline'la
 
 // ==================== GRAFİK DEĞİŞKENLERİ ====================
 // Chart.js grafik nesneleri
-let speedChart, energyChart, socChart, tempChart, isoChart;
+let speedChart, energyChart, socChart, tempChart, isoChart, customChart;
+
+// Grafik nokta limiti (0 = sınırsız)
+let chartMaxPoints = 100;
+let customChartMaxPoints = 100;
+
+// Custom chart seçili alanlar
+let customSelectedFields = [];
+
+// Custom chart veri tamponu { label: [], fieldKey: [] }
+const customChartBuffer = { labels: [] };
+
+// Field tanımları: key → { label, color, getter }
+const CUSTOM_FIELDS = {
+    speed:     { label: 'Hız (km/h)',     color: '#3b82f6', getter: d => d.motor?.speed_kph ?? null },
+    temp:      { label: 'Sıcaklık (°C)',  color: '#ef4444', getter: d => d.bms?.temp_c ?? null },
+    voltage:   { label: 'Voltaj (V)',      color: '#10b981', getter: d => d.bms?.voltage_v ?? null },
+    current:   { label: 'Akım (A)',        color: '#f59e0b', getter: d => d.bms?.current_a ?? null },
+    consumption:{ label: 'Tüketim (Wh/km)', color: '#a78bfa', getter: d => d.bms?.consumption_whkm ?? null },
+    vd:        { label: 'Vd',             color: '#06b6d4', getter: d => d.motor?.vd ?? null },
+    id:        { label: 'Id',             color: '#ec4899', getter: d => d.motor?.id ?? null },
+    vq:        { label: 'Vq',             color: '#f97316', getter: d => d.motor?.vq ?? null },
+    rpm:       { label: 'RPM',            color: '#8b5cf6', getter: d => d.motor?.rpm ?? null },
+    ref_speed: { label: 'Ref. Hız',       color: '#34d399', getter: d => d.motor?.ref_speed ?? null },
+    throttle:  { label: 'Throttle (Pot)', color: '#fbbf24', getter: d => d.motor?.throttle_pot ?? null },
+};
+
+// Her field için veri tamponu
+Object.keys(CUSTOM_FIELDS).forEach(k => { customChartBuffer[k] = []; });
 
 // ==================== HARİTA İKONLARI ====================
 // Harita konum işaretçisi (Google Maps tarzı mavi nokta)
@@ -908,6 +947,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();       // Menü navigasyonunu kur
     initMainMap();          // Dashboard haritasını oluştur
     initStopwatch();        // Kronometreyi başlat
+    setImuVisibility(currentDeviceId === 'a1');
+    resetImuWidget();
     initializeStrategyProfiles();
     restoreStrategyProfileForDevice(currentDeviceId);
     setInterval(updateClock, 1000);  // Saati her saniye güncelle
@@ -1299,6 +1340,143 @@ function updateDashboardWidgets(data) {
     const updateTime = data.ts_server || new Date();
     const dateTimeStr = formatTR(updateTime);
     document.getElementById('val-last-update').innerText = dateTimeStr;
+
+    // GPS Rakımı
+    const altEl = document.getElementById('val-altitude');
+    if (altEl) {
+        const alt = data.gps?.alt_m;
+        altEl.textContent = (alt != null) ? `${alt.toFixed(0)} m` : '-- m';
+    }
+
+    // GSM sinyal göstergesi (sadece a1 / Hidromobil)
+    updateGsmWidget(data.gsm);
+
+    // IMU (Pitch/Roll) göstergesi (sadece a1 / Hidromobil)
+    updateImuWidget(data.imu);
+}
+
+// ==================== GSM SİNYAL WİDGET'I ====================
+// SIM800L CSQ → % değerini 4 bar üzerinden gösterir.
+// Widget sadece currentDeviceId === 'a1' iken görünür.
+
+/** Bar sayısı ve rengi günceller (pct=-1 → tüm barlar gri) */
+function updateSignalBars(pct) {
+    const barIds = ['gsm-b1', 'gsm-b2', 'gsm-b3', 'gsm-b4'];
+    let active = 0;
+    let color  = '#22c55e';  // yeşil = iyi
+
+    if (pct < 0) {
+        active = 0; color = 'rgba(255,255,255,0.15)';
+    } else if (pct <= 25) {
+        active = 1; color = '#ef4444';    // kırmızı = çok zayıf
+    } else if (pct <= 50) {
+        active = 2; color = '#f97316';    // turuncu = zayıf
+    } else if (pct <= 75) {
+        active = 3; color = '#f59e0b';    // sarı = orta
+    } else {
+        active = 4; color = '#22c55e';    // yeşil = iyi
+    }
+
+    barIds.forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.setAttribute('fill', i < active ? color : 'rgba(255,255,255,0.15)');
+    });
+
+    // Aydınlık modda gri barları siyahımsı yap
+    if (document.body.classList.contains('light-mode')) {
+        barIds.forEach((id, i) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (i >= active) el.setAttribute('fill', 'rgba(0,0,0,0.12)');
+        });
+    }
+}
+
+/**
+ * GSM widget'ını günceller.
+ * @param {Object|undefined} gsm  - data.gsm nesnesi ({signal_pct: number})
+ */
+function updateGsmWidget(gsm) {
+    const widget = document.getElementById('gsm-signal-widget');
+    if (!widget) return;
+
+    const isHidromobil = currentDeviceId === 'a1';
+    widget.style.display = isHidromobil ? 'flex' : 'none';
+    if (!isHidromobil) return;
+
+    const pctEl = document.getElementById('gsm-signal-pct');
+    const pct   = (gsm != null && gsm.signal_pct != null) ? gsm.signal_pct : null;
+
+    if (pct === null) {
+        if (pctEl) pctEl.textContent = '--%';
+        updateSignalBars(-1);
+        return;
+    }
+
+    if (pctEl) {
+        pctEl.textContent = `${pct}%`;
+        // Renk değişimi: metin rengini bar rengiyle eşleştir
+        pctEl.style.color = pct <= 25 ? '#ef4444'
+                          : pct <= 50 ? '#f97316'
+                          : pct <= 75 ? '#f59e0b'
+                          :             '#22c55e';
+    }
+    updateSignalBars(pct);
+}
+
+// ==================== IMU (PITCH / ROLL) WIDGET ====================
+const IMU_RANGE_DEG = 45;
+
+function setImuVisibility(isVisible) {
+    document.body.classList.toggle('imu-hidden', !isVisible);
+}
+
+function updateImuAxis(axis, value) {
+    const valEl = document.getElementById(`imu-${axis}-val`);
+    const indEl = document.getElementById(`imu-${axis}-indicator`);
+    const carEl = document.getElementById(`imu-${axis}-car`);
+    if (!valEl || !indEl) return;
+
+    const setCarMotion = (x, y, rot, muted) => {
+        if (!carEl) return;
+        carEl.style.setProperty('--imu-x', `${x.toFixed(2)}px`);
+        carEl.style.setProperty('--imu-y', `${y.toFixed(2)}px`);
+        carEl.style.setProperty('--imu-rot', `${rot.toFixed(2)}deg`);
+        carEl.classList.toggle('muted', muted);
+    };
+
+    if (value == null || Number.isNaN(value)) {
+        valEl.textContent = '-- deg';
+        indEl.style.left = '50%';
+        indEl.classList.add('muted');
+        setCarMotion(0, 0, 0, true);
+        return;
+    }
+
+    valEl.textContent = `${value.toFixed(1)} deg`;
+    const clamped = Math.max(-IMU_RANGE_DEG, Math.min(IMU_RANGE_DEG, value));
+    const percent = ((clamped + IMU_RANGE_DEG) / (2 * IMU_RANGE_DEG)) * 100;
+    indEl.style.left = `${percent}%`;
+    indEl.classList.remove('muted');
+
+    const norm = clamped / IMU_RANGE_DEG;
+    const motion = axis === 'roll'
+        ? { x: norm * 18, y: norm * -6, rot: norm * 6 }
+        : { x: norm * 6, y: norm * -16, rot: norm * 8 };
+    setCarMotion(motion.x, motion.y, motion.rot, false);
+}
+
+function resetImuWidget() {
+    updateImuAxis('roll', null);
+    updateImuAxis('pitch', null);
+}
+
+function updateImuWidget(imu) {
+    if (currentDeviceId !== 'a1') return;
+
+    updateImuAxis('roll', imu?.roll_deg);
+    updateImuAxis('pitch', imu?.pitch_deg);
 }
 
 // ==================== HARİTA İŞLEVLERİ ====================
@@ -1494,12 +1672,47 @@ function initCharts() {
     Chart.defaults.color = '#94a3b8';
     Chart.defaults.borderColor = '#334155';
 
-    // Ortak grafik ayarları
+    // Ortak Tooltip Plugin: noktada saat ve değer göster
+    const sharedTooltip = {
+        mode: 'index',
+        intersect: false,
+        backgroundColor: 'rgba(15,23,42,0.92)',
+        borderColor: 'rgba(99,102,241,0.4)',
+        borderWidth: 1,
+        padding: 10,
+        titleColor: '#a5b4fc',
+        bodyColor: '#cbd5e1',
+        titleFont: { size: 12, weight: '700' },
+        bodyFont: { size: 12 },
+        callbacks: {
+            title: items => items.length ? items[0].label : '',
+            label: item => ` ${item.dataset.label} : ${item.formattedValue}`
+        }
+    };
+
+    // Ortak grafik ayarları (tooltip + x ekseni zaman gösterimli)
     const commonOptions = {
         responsive: true,
-        maintainAspectRatio: false,  // Container'a uyum
-        animation: { duration: 0 },   // Performans için animasyon kapalı
-        scales: { x: { display: false } }
+        maintainAspectRatio: false,
+        animation: { duration: 0 },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            tooltip: sharedTooltip,
+            legend: { labels: { boxWidth: 12, padding: 14 } }
+        },
+        scales: {
+            x: {
+                display: true,
+                ticks: {
+                    maxRotation: 0,
+                    autoSkip: true,
+                    maxTicksLimit: 8,
+                    color: '#64748b',
+                    font: { size: 10 }
+                },
+                grid: { color: 'rgba(51,65,85,0.5)' }
+            }
+        }
     };
 
     // 1. HIZ & RPM GRAFİĞİ (Çift eksen)
@@ -1507,23 +1720,16 @@ function initCharts() {
         type: 'line',
         data: {
             labels: [], datasets: [
-                { label: 'Hız (km/h)', data: [], borderColor: '#3b82f6', yAxisID: 'y', tension: 0.3, fill: true, backgroundColor: 'rgba(59,130,246,0.1)' },
-                { label: 'RPM', data: [], borderColor: '#8b5cf6', yAxisID: 'y1', tension: 0.3 }
+                { label: 'Hız (km/h)', data: [], borderColor: '#3b82f6', yAxisID: 'y', tension: 0.3, pointRadius: 2, fill: true, backgroundColor: 'rgba(59,130,246,0.1)' },
+                { label: 'RPM', data: [], borderColor: '#8b5cf6', yAxisID: 'y1', tension: 0.3, pointRadius: 2 }
             ]
         },
         options: {
             ...commonOptions,
             scales: {
-                x: { display: false },
-                y: {
-                    position: 'left',
-                    title: { display: true, text: 'Hız (km/h)', color: '#3b82f6' }
-                },
-                y1: {
-                    position: 'right',
-                    grid: { drawOnChartArea: false },
-                    title: { display: true, text: 'RPM', color: '#8b5cf6' }
-                }
+                x: commonOptions.scales.x,
+                y: { position: 'left', title: { display: true, text: 'Hız (km/h)', color: '#3b82f6' } },
+                y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'RPM', color: '#8b5cf6' } }
             }
         }
     });
@@ -1533,23 +1739,16 @@ function initCharts() {
         type: 'line',
         data: {
             labels: [], datasets: [
-                { label: 'Voltaj (V)', data: [], borderColor: '#10b981', yAxisID: 'y', tension: 0.3, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' },
-                { label: 'Akım (A)', data: [], borderColor: '#f59e0b', yAxisID: 'y1', tension: 0.3, fill: true, backgroundColor: 'rgba(245, 158, 11, 0.1)' }
+                { label: 'Voltaj (V)', data: [], borderColor: '#10b981', yAxisID: 'y', tension: 0.3, pointRadius: 2, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.1)' },
+                { label: 'Akım (A)', data: [], borderColor: '#f59e0b', yAxisID: 'y1', tension: 0.3, pointRadius: 2, fill: true, backgroundColor: 'rgba(245, 158, 11, 0.1)' }
             ]
         },
         options: {
             ...commonOptions,
             scales: {
-                x: { display: false },
-                y: {
-                    position: 'left',
-                    title: { display: true, text: 'Voltaj (V)', color: '#10b981' }
-                },
-                y1: {
-                    position: 'right',
-                    grid: { drawOnChartArea: false },
-                    title: { display: true, text: 'Akım (A)', color: '#f59e0b' }
-                }
+                x: commonOptions.scales.x,
+                y: { position: 'left', title: { display: true, text: 'Voltaj (V)', color: '#10b981' } },
+                y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Akım (A)', color: '#f59e0b' } }
             }
         }
     });
@@ -1557,14 +1756,14 @@ function initCharts() {
     // 3. SICAKLIK GRAFİĞİ
     tempChart = new Chart(document.getElementById('chart-temp'), {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'Sıcaklık (°C)', data: [], borderColor: '#ef4444', tension: 0.3, fill: true, backgroundColor: 'rgba(239,68,68,0.1)' }] },
+        data: { labels: [], datasets: [{ label: 'Sıcaklık (°C)', data: [], borderColor: '#ef4444', tension: 0.3, pointRadius: 2, fill: true, backgroundColor: 'rgba(239,68,68,0.1)' }] },
         options: commonOptions
     });
 
     // 4. SOC (Şarj Durumu) GRAFİĞİ
     socChart = new Chart(document.getElementById('chart-soc'), {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'SOC (%)', data: [], borderColor: '#f59e0b', tension: 0.3, fill: true, backgroundColor: 'rgba(245,158,11,0.1)' }] },
+        data: { labels: [], datasets: [{ label: 'SOC (%)', data: [], borderColor: '#f59e0b', tension: 0.3, pointRadius: 2, fill: true, backgroundColor: 'rgba(245,158,11,0.1)' }] },
         options: commonOptions
     });
 
@@ -1573,27 +1772,219 @@ function initCharts() {
         type: 'line',
         data: {
             labels: [], datasets: [
-                { label: 'İzo+ (kΩ)', data: [], borderColor: '#06b6d4', tension: 0.3, yAxisID: 'y', fill: true, backgroundColor: 'rgba(6, 182, 212, 0.1)' },
-                { label: 'İzo- (kΩ)', data: [], borderColor: '#ec4899', tension: 0.3, yAxisID: 'y1', fill: true, backgroundColor: 'rgba(236, 72, 153, 0.1)' }
+                { label: 'İzo+ (kΩ)', data: [], borderColor: '#06b6d4', tension: 0.3, pointRadius: 2, yAxisID: 'y', fill: true, backgroundColor: 'rgba(6, 182, 212, 0.1)' },
+                { label: 'İzo- (kΩ)', data: [], borderColor: '#ec4899', tension: 0.3, pointRadius: 2, yAxisID: 'y1', fill: true, backgroundColor: 'rgba(236, 72, 153, 0.1)' }
             ]
         },
         options: {
             ...commonOptions,
             scales: {
-                x: { display: false },
-                y: {
-                    position: 'left',
-                    title: { display: true, text: 'İzo+ (kΩ)', color: '#06b6d4' }
+                x: commonOptions.scales.x,
+                y: { position: 'left', title: { display: true, text: 'İzo+ (kΩ)', color: '#06b6d4' } },
+                y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'İzo- (kΩ)', color: '#ec4899' } }
+            }
+        }
+    });
+
+    // 6. CUSTOM MULTI-FIELD CHART
+    initCustomChart();
+
+    // Nokta filtresi buton kontrolleri
+    initChartPointFilter();
+    initCustomChartControls();
+}
+
+// Custom Multi-Field Chart oluşturur
+function initCustomChart() {
+    const canvas = document.getElementById('chart-custom');
+    if (!canvas) return;
+    customChart = new Chart(canvas, {
+        type: 'line',
+        data: { labels: [], datasets: [] },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 },
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(15,23,42,0.95)',
+                    borderColor: 'rgba(99,102,241,0.5)',
+                    borderWidth: 1,
+                    padding: 12,
+                    titleColor: '#a5b4fc',
+                    bodyColor: '#cbd5e1',
+                    titleFont: { size: 12, weight: '700' },
+                    bodyFont: { size: 12 },
+                    callbacks: {
+                        title: items => items.length ? items[0].label : '',
+                        label: item => ` ${item.dataset.label} : ${item.formattedValue}`
+                    }
                 },
-                y1: {
-                    position: 'right',
-                    grid: { drawOnChartArea: false },
-                    title: { display: true, text: 'İzo- (kΩ)', color: '#ec4899' }
+                legend: { labels: { boxWidth: 14, padding: 16, color: '#94a3b8' } }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 10, color: '#64748b', font: { size: 10 } },
+                    grid: { color: 'rgba(51,65,85,0.5)' }
+                },
+                y: {
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: 'rgba(51,65,85,0.5)' }
                 }
             }
         }
     });
 }
+
+// Custom chart'a yeni telemetri verisi buffer'a ekler
+function updateCustomChartBuffer(data) {
+    const now = formatTR(data.ts_server).split(' ')[1];
+    customChartBuffer.labels.push(now);
+    Object.keys(CUSTOM_FIELDS).forEach(k => {
+        const val = CUSTOM_FIELDS[k].getter(data);
+        customChartBuffer[k].push(val !== null ? val : null);
+    });
+
+    // Buffer'ı çok büyütme (max 2000 nokta tut)
+    const MAX_BUF = 2000;
+    if (customChartBuffer.labels.length > MAX_BUF) {
+        customChartBuffer.labels.shift();
+        Object.keys(CUSTOM_FIELDS).forEach(k => customChartBuffer[k].shift());
+    }
+
+    // Seçili field varsa chart'ı yenile
+    if (customSelectedFields.length > 0) renderCustomChart();
+}
+
+// Seçili fieldlara ve nokta limitine göre custom chart'ı render eder
+function renderCustomChart() {
+    if (!customChart) return;
+    const buf = customChartBuffer;
+    const limit = customChartMaxPoints;
+    const labels = limit > 0 ? buf.labels.slice(-limit) : buf.labels;
+
+    customChart.data.labels = labels;
+    customChart.data.datasets = customSelectedFields.map(key => {
+        const def = CUSTOM_FIELDS[key];
+        const raw = limit > 0 ? buf[key].slice(-limit) : buf[key];
+        return {
+            label: def.label,
+            data: raw,
+            borderColor: def.color,
+            backgroundColor: def.color + '22',
+            tension: 0.3,
+            pointRadius: 2,
+            fill: false,
+            spanGaps: true
+        };
+    });
+    customChart.update('none');
+
+    // Altyazıyı güncelle
+    const sub = document.getElementById('custom-chart-subtitle');
+    if (sub) {
+        const pts = limit > 0 ? `Son ${limit} nokta` : 'Tüm veri';
+        sub.textContent = `${customSelectedFields.length} field seçili · ${pts}`;
+    }
+}
+
+// Ana grafik nokta filtresi butonlarını başlatır
+function initChartPointFilter() {
+    const container = document.getElementById('chart-point-filter');
+    if (!container) return;
+    container.addEventListener('click', e => {
+        const btn = e.target.closest('.cpf-btn');
+        if (!btn || !btn.hasAttribute('data-pts')) return;
+        container.querySelectorAll('.cpf-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        // '0' → sınırsız (All), diğer değerler sayısal limit
+        chartMaxPoints = btn.dataset.pts === '0' ? 0 : (parseInt(btn.dataset.pts) || 100);
+    });
+}
+
+// Custom chart alan seçimi ve nokta filtresi kontrollerini başlatır
+function initCustomChartControls() {
+    const selector = document.getElementById('custom-field-selector');
+    const allBtn   = document.getElementById('cfs-all-btn');
+    const resetBtn = document.getElementById('cfs-reset-btn');
+    const cpFilter = document.getElementById('custom-point-filter');
+
+    // --- Field butonları (event delegation) ---
+    if (selector) {
+        selector.addEventListener('click', e => {
+            const btn = e.target.closest('.cfs-btn');
+            if (!btn || !btn.hasAttribute('data-field')) return;
+            const field = btn.dataset.field;
+            const def = CUSTOM_FIELDS[field];
+            if (!def) return;
+
+            if (customSelectedFields.includes(field)) {
+                customSelectedFields = customSelectedFields.filter(f => f !== field);
+                btn.classList.remove('active');
+                btn.style.removeProperty('--field-color');
+            } else {
+                customSelectedFields.push(field);
+                btn.classList.add('active');
+                btn.style.setProperty('--field-color', def.color);
+            }
+            renderCustomChart();
+        });
+    }
+
+    // --- All butonu ---
+    if (allBtn) {
+        allBtn.addEventListener('click', () => {
+            customSelectedFields = Object.keys(CUSTOM_FIELDS);
+            if (selector) {
+                selector.querySelectorAll('.cfs-btn').forEach(btn => {
+                    btn.classList.add('active');
+                    const def = CUSTOM_FIELDS[btn.dataset.field];
+                    if (def) btn.style.setProperty('--field-color', def.color);
+                });
+            }
+            renderCustomChart();
+        });
+    }
+
+    // --- Reset butonu ---
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            customSelectedFields = [];
+            if (selector) {
+                selector.querySelectorAll('.cfs-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.style.removeProperty('--field-color');
+                });
+            }
+            if (customChart) {
+                customChart.data.labels = [];
+                customChart.data.datasets = [];
+                customChart.update('none');
+            }
+            const sub = document.getElementById('custom-chart-subtitle');
+            if (sub) sub.textContent = '0 field seçili · Son 100 nokta';
+        });
+    }
+
+    // --- Custom nokta filtresi (event delegation) ---
+    if (cpFilter) {
+        cpFilter.addEventListener('click', e => {
+            const btn = e.target.closest('.cpf-btn');
+            if (!btn || !btn.hasAttribute('data-cpts')) return;
+            cpFilter.querySelectorAll('.cpf-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            // '0' → sınırsız (All)
+            customChartMaxPoints = btn.dataset.cpts === '0' ? 0 : (parseInt(btn.dataset.cpts) || 100);
+            renderCustomChart();
+        });
+    }
+}
+
+
 
 // Tüm grafiklere yeni veri noktası ekler (Plan 2.1: tek toplu update)
 function updateCharts(data) {
@@ -1616,23 +2007,26 @@ function updateCharts(data) {
     addPoint(isoChart, now, data.iso?.res_2_kohm || 0, 1, true);
 
     // Tüm chart'ları tek seferde güncelle (Plan 2.1)
-    // 'none' animasyonu atlar → daha hızlı render, özellikle yüksek frekanslı veri akışında kritik
     [speedChart, energyChart, tempChart, socChart, isoChart].forEach(c => c && c.update('none'));
+
+    // Custom multi-field chart buffer'ını besle
+    updateCustomChartBuffer(data);
 }
 
 // Bir grafiğe yeni veri noktası ekler — chart.update() YAPILMAZ
 // updateCharts() sonda tüm chartları bir kerede update eder (Plan 2.1)
 function addPoint(chart, label, value, datasetIndex = 0, skipLabel = false) {
-    const maxPoints = 50;  // Maksimum görünür nokta sayısı
+    // chartMaxPoints = 0 ise sınırsız, aksi halde kullanıcının seçtiği limit
+    const maxPoints = chartMaxPoints > 0 ? chartMaxPoints : Infinity;
 
     // Label sadece ilk dataset için eklenir (diğerleri skipLabel=true ile geçer)
     if (!skipLabel) {
-        if (chart.data.labels.length > maxPoints) chart.data.labels.shift();
+        if (chart.data.labels.length >= maxPoints) chart.data.labels.shift();
         chart.data.labels.push(label);
     }
 
     // En eski noktayı sil, yeni noktayı ekle
-    if (chart.data.datasets[datasetIndex].data.length > maxPoints) {
+    if (chart.data.datasets[datasetIndex].data.length >= maxPoints) {
         chart.data.datasets[datasetIndex].data.shift();
     }
     chart.data.datasets[datasetIndex].data.push(value);
@@ -1676,6 +2070,10 @@ async function loadSessions() {
     }
 }
 
+function getHistoryColspan() {
+    return currentDeviceId === 'a1' ? 10 : 8;
+}
+
 // Seçilen oturumun verilerini yükler ve tablo olarak gösterir
 async function openSession(sessionId, sessionName) {
     currentSessionId = sessionId;
@@ -1690,7 +2088,12 @@ async function openSession(sessionId, sessionName) {
     document.getElementById('session-title').innerText = sessionName;
 
     const tbody = document.getElementById('session-detail-body');
-    tbody.innerHTML = '<tr><td colspan="8">Yükleniyor...</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${getHistoryColspan()}">Yükleniyor...</td></tr>`;
+
+    // Stats sıfırla
+    ['sstat-total','sstat-avg-speed','sstat-max-speed','sstat-max-volt',
+     'sstat-min-volt','sstat-max-temp','sstat-avg-current','sstat-duration']
+        .forEach(id => { const el = document.getElementById(id); if(el) el.textContent = '—'; });
 
     try {
         const res = await fetch(`${API_BASE}/api/v1/telemetry/session/${sessionId}?device_id=${currentDeviceId}`);
@@ -1699,11 +2102,196 @@ async function openSession(sessionId, sessionName) {
         currentSessionData = json.data || [];
         renderHistoryTable(currentSessionData);
 
+        // İstatistik hesapla ve grafik çiz
+        computeSessionStats(currentSessionData);
+        renderSessionChart(currentSessionData, 'speed');
+
+        // Grafik alan seçici butonlar
+        initSessionChartButtons(currentSessionData);
+
     } catch (err) {
         console.error(err);
-        tbody.innerHTML = '<tr><td colspan="8" style="color:red;">Hata oluştu!</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${getHistoryColspan()}" style="color:red;">Hata oluştu!</td></tr>`;
     }
 }
+
+/* ──────────────────────────────────────────────────────────────
+   SESSION İSTATİSTİKLERİ
+   ────────────────────────────────────────────────────────────── */
+function computeSessionStats(rawData) {
+    const vehicleCfg = VEHICLE_CONFIG[currentDeviceId] || {};
+    const data = (!vehicleCfg.hasIso && !vehicleCfg.hasH2) ? mergeRowsBySecond(rawData) : rawData;
+
+    if (!data || !data.length) return;
+
+    let sumSpeed = 0, maxSpeed = -Infinity, countSpeed = 0;
+    let maxVolt = -Infinity, minVolt = Infinity;
+    let maxTemp = -Infinity;
+    let sumCurrent = 0, countCurrent = 0;
+
+    data.forEach(row => {
+        const spd = row.motor?.speed_kph;
+        const v   = row.bms?.voltage_v;
+        const t   = row.bms?.temp_c;
+        const a   = row.bms?.current_a;
+
+        if (spd != null) { sumSpeed += spd; countSpeed++; if (spd > maxSpeed) maxSpeed = spd; }
+        if (v   != null) { if (v > maxVolt) maxVolt = v; if (v < minVolt) minVolt = v; }
+        if (t   != null && t > maxTemp) maxTemp = t;
+        if (a   != null) { sumCurrent += a; countCurrent++; }
+    });
+
+    // Süre (ilk - son kayıt)
+    let durationMin = '—';
+    if (data.length >= 2) {
+        const ms = new Date(data[data.length-1].ts_server) - new Date(data[0].ts_server);
+        durationMin = (ms / 60000).toFixed(1);
+    }
+
+    const set = (id, val, decimals = 2) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val === -Infinity || val === Infinity ? '—' : (typeof val === 'number' ? val.toFixed(decimals) : val);
+    };
+
+    set('sstat-total',       data.length, 0);
+    set('sstat-avg-speed',   countSpeed  ? sumSpeed / countSpeed    : '—', 1);
+    set('sstat-max-speed',   maxSpeed    !== -Infinity ? maxSpeed   : '—', 1);
+    set('sstat-max-volt',    maxVolt     !== -Infinity ? maxVolt    : '—', 2);
+    set('sstat-min-volt',    minVolt     !== Infinity  ? minVolt    : '—', 2);
+    set('sstat-max-temp',    maxTemp     !== -Infinity ? maxTemp    : '—', 1);
+    set('sstat-avg-current', countCurrent ? sumCurrent / countCurrent : '—', 2);
+    document.getElementById('sstat-duration').textContent = durationMin;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   SESSION GRAFİĞİ (Chart.js — interaktif tooltip + noktalar)
+   ────────────────────────────────────────────────────────────── */
+let _sessionChart = null; // Chart.js instance
+
+const _sessionFieldCfg = {
+    speed:   { label: 'Hız (km/h)',     color: '#3b82f6', fn: r => r.motor?.speed_kph   },
+    voltage: { label: 'Voltaj (V)',     color: '#f59e0b', fn: r => r.bms?.voltage_v     },
+    current: { label: 'Akım (A)',       color: '#10b981', fn: r => r.bms?.current_a     },
+    temp:    { label: 'Sıcaklık (°C)', color: '#8b5cf6', fn: r => r.bms?.temp_c        },
+    rpm:     { label: 'RPM',            color: '#06b6d4', fn: r => r.motor?.rpm         },
+    duty:    { label: 'Duty Cycle (%)', color: '#f97316', fn: r => r.motor?.duty_pct    },
+    soc:     { label: 'SOC (%)',        color: '#ec4899', fn: r => r.bms?.soc_pct       },
+};
+
+function renderSessionChart(rawData, fieldKey) {
+    const canvas = document.getElementById('session-chart');
+    if (!canvas) return;
+
+    const cfg = _sessionFieldCfg[fieldKey] || _sessionFieldCfg.speed;
+    const vehicleCfg = VEHICLE_CONFIG[currentDeviceId] || {};
+    const data = (!vehicleCfg.hasIso && !vehicleCfg.hasH2) ? mergeRowsBySecond(rawData) : rawData;
+
+    // Örnekleme: max 300 nokta
+    const MAX_PTS = 300;
+    const step = data.length > MAX_PTS ? Math.floor(data.length / MAX_PTS) : 1;
+    const sampled = data.filter((_, i) => i % step === 0);
+
+    const labels = sampled.map(r => {
+        const d = new Date(r.ts_server);
+        return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+    });
+    const values = sampled.map(r => {
+        const v = cfg.fn(r);
+        return v != null ? +v.toFixed(3) : null;
+    });
+
+    // Eski chart'ı yok et
+    if (_sessionChart) { _sessionChart.destroy(); _sessionChart = null; }
+
+    const isDark = !document.body.classList.contains('light-mode');
+    const gridColor  = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+    const tickColor  = isDark ? '#475569' : '#94a3b8';
+    const tooltipBg  = isDark ? 'rgba(15,23,42,0.92)' : 'rgba(255,255,255,0.96)';
+    const tooltipFg  = isDark ? '#f1f5f9' : '#1e293b';
+
+    _sessionChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: cfg.label,
+                data: values,
+                borderColor: cfg.color,
+                backgroundColor: cfg.color + '18',
+                borderWidth: 1.8,
+                pointRadius: 0,           // varsayılan: nokta yok (performans)
+                pointHoverRadius: 5,      // hover'da belirgin nokta
+                pointHoverBackgroundColor: cfg.color,
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 2,
+                tension: 0.3,
+                fill: true,
+                spanGaps: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            animation: { duration: 350 },
+            interaction: {
+                mode: 'index',
+                intersect: false,   // fare herhangi bir noktada tooltip göster
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: tooltipBg,
+                    titleColor: tickColor,
+                    bodyColor: tooltipFg,
+                    borderColor: cfg.color + '55',
+                    borderWidth: 1,
+                    padding: 10,
+                    displayColors: false,
+                    callbacks: {
+                        title: items => items[0]?.label || '',
+                        label: item => {
+                            const v = item.parsed.y;
+                            return v != null ? `${cfg.label}: ${v}` : 'Veri yok';
+                        }
+                    }
+                },
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: tickColor,
+                        maxTicksLimit: 10,
+                        font: { size: 10 },
+                    },
+                    grid: { color: gridColor },
+                },
+                y: {
+                    ticks: { color: tickColor, font: { size: 10 } },
+                    grid:  { color: gridColor },
+                }
+            }
+        }
+    });
+}
+
+function initSessionChartButtons(data) {
+    const selector = document.getElementById('session-field-selector');
+    if (!selector) return;
+
+    // Önceki listener'ı temizle (clone trick)
+    const fresh = selector.cloneNode(true);
+    selector.parentNode.replaceChild(fresh, selector);
+
+    fresh.addEventListener('click', e => {
+        const btn = e.target.closest('.scf-btn');
+        if (!btn) return;
+        fresh.querySelectorAll('.scf-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderSessionChart(data, btn.dataset.sfield);
+    });
+}
+
 
 /**
  * Shell (a2) için farklı kaynaklardan gelen BMS ve motor verilerini
@@ -1780,9 +2368,12 @@ function renderHistoryTable(data) {
     const rows = (!vehicleCfg.hasIso && !vehicleCfg.hasH2) ? mergeRowsBySecond(data) : data;
 
     if (rows && rows.length > 0) {
+        const showImu = currentDeviceId === 'a1';
         // Performans için DocumentFragment kullan
         const fragment = document.createDocumentFragment();
         rows.forEach(row => {
+            const rollVal = showImu && row.imu?.roll_deg != null ? row.imu.roll_deg.toFixed(2) : '-';
+            const pitchVal = showImu && row.imu?.pitch_deg != null ? row.imu.pitch_deg.toFixed(2) : '-';
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${formatTR(row.ts_server).split(' ')[1]}</td>
@@ -1793,12 +2384,14 @@ function renderHistoryTable(data) {
                 <td>${row.bms?.soc_pct?.toFixed(1) || '-'}</td>
                 <td>${row.bms?.temp_c?.toFixed(2) || '-'}</td>
                 <td>${row.motor?.rpm || '-'}</td>
+                <td class="imu-col">${rollVal}</td>
+                <td class="imu-col">${pitchVal}</td>
             `;
             fragment.appendChild(tr);
         });
         tbody.appendChild(fragment);
     } else {
-        tbody.innerHTML = '<tr><td colspan="8">Bu pakette veri yok.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="${getHistoryColspan()}">Bu pakette veri yok.</td></tr>`;
     }
 }
 
@@ -1832,6 +2425,10 @@ function downloadSessionCSV() {
     // ---- Ortak sütunlar (her iki araç için) ----
     // CSV başlıkları (Excel uyumlu ASCII karakterler)
     const headers = ['Zaman', 'Hiz_kmh', 'Duty_pct', 'Voltaj_V', 'Akim_A', 'SOC_pct', 'Sicaklik_C', 'RPM'];
+    const showImu = currentDeviceId === 'a1';
+    if (showImu) {
+        headers.push('Roll_deg', 'Pitch_deg');
+    }
 
     // ---- Hidromobil (a1) özel sütunlar ----
     if (vehicleCfg.hasIso) {
@@ -1856,6 +2453,14 @@ function downloadSessionCSV() {
             row.bms?.temp_c?.toFixed(2) || '',
             row.motor?.rpm || ''
         ];
+
+        // IMU alanları (sadece Hidromobil)
+        if (showImu) {
+            cols.push(
+                row.imu?.roll_deg != null ? row.imu.roll_deg.toFixed(2) : '',
+                row.imu?.pitch_deg != null ? row.imu.pitch_deg.toFixed(2) : ''
+            );
+        }
 
         // Hidromobil özel alanlar
         if (vehicleCfg.hasIso) {
@@ -2590,7 +3195,7 @@ async function loadCustomPacketData(id) {
 
     document.getElementById('session-title').innerText = "Yükleniyor...";
     const tbody = document.getElementById('session-detail-body');
-    tbody.innerHTML = '<tr><td colspan="7">Veriler getiriliyor...</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${getHistoryColspan()}">Veriler getiriliyor...</td></tr>`;
 
     try {
         const res = await fetch(`${API_BASE}/api/v1/custom-sessions/${id}/data`);

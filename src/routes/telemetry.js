@@ -77,7 +77,12 @@ const FIELD_LIMITS = {
     res_1_kohm: [0, 1e7],
     res_2_kohm: [0, 1e7],
     ppm: [0, 100000],
-    flowmeter: [0, 1e6]
+    flowmeter: [0, 1e6],
+    pitch_deg: [-90, 90],
+    roll_deg: [-180, 180],
+    ax: [-16, 16],
+    ay: [-16, 16],
+    az: [-16, 16]
 };
 
 function isValidNum(fieldName, val) {
@@ -109,6 +114,13 @@ function validateTelemetry(data) {
         if (!isValidNum('ppm', data.hydrogen.ppm)) errors.push('hydrogen.ppm');
         if (!isValidNum('temp_c', data.hydrogen.temp_c)) errors.push('hydrogen.temp_c');
         if (!isValidNum('flowmeter', data.hydrogen.flowmeter)) errors.push('hydrogen.flowmeter');
+    }
+    if (data.imu) {
+        if (!isValidNum('pitch_deg', data.imu.pitch_deg)) errors.push('imu.pitch_deg');
+        if (!isValidNum('roll_deg', data.imu.roll_deg)) errors.push('imu.roll_deg');
+        if (!isValidNum('ax', data.imu.ax)) errors.push('imu.ax');
+        if (!isValidNum('ay', data.imu.ay)) errors.push('imu.ay');
+        if (!isValidNum('az', data.imu.az)) errors.push('imu.az');
     }
     return errors;
 }
@@ -146,6 +158,8 @@ router.post('/', async (req, res) => {
         return res.status(400).json({ error: 'Geçersiz cihaz ID\'si' });
     }
 
+    const isHidromobil = body.device_id === 'a1';
+
     try {
         const telemetryData = {
             device_id: body.device_id,
@@ -180,6 +194,13 @@ router.post('/', async (req, res) => {
             } : undefined,
             gsm: body.gsm ? {
                 signal_pct: body.gsm.signal_pct   // SIM800L CSQ → %, 0-100
+            } : undefined,
+            imu: (isHidromobil && body.imu) ? {
+                pitch_deg: body.imu.pitch_deg,
+                roll_deg:  body.imu.roll_deg,
+                ax:        body.imu.ax,
+                ay:        body.imu.ay,
+                az:        body.imu.az
             } : undefined
         };
 
@@ -235,6 +256,8 @@ router.get('/ingest', async (req, res) => {
         return res.status(400).json({ error: 'Geçersiz cihaz ID\'si' });
     }
 
+    const isHidromobil = deviceId === 'a1';
+
     // Her parametre: kısa format ?? eski format
     const eventType = q.evt ?? q.event_type ?? 'telemetry';
     const uptimeSec = toInt(q.upt ?? q.uptime_sec);
@@ -255,6 +278,11 @@ router.get('/ingest', async (req, res) => {
     const h2t = q.h2t ?? q.hydrogen_temp_c;
     const flw = q.flw ?? q.hydrogen_flowmeter;
     const sig = q.sig;   // GSM sinyal kalitesi (%, 0-100) — sadece SIM800L/a1 gönderir
+    const pit = q.pit;   // IMU: dikey eğim açısı (derece)
+    const rol = q.rol;   // IMU: yanal eğim açısı (derece)
+    const qax = q.ax;    // IMU: X ivmesi (g)
+    const qay = q.ay;    // IMU: Y ivmesi (g)
+    const qaz = q.az;    // IMU: Z ivmesi (g)
 
     try {
         const telemetryData = {
@@ -291,6 +319,13 @@ router.get('/ingest', async (req, res) => {
             } : undefined,
             gsm: (sig !== undefined) ? {
                 signal_pct: toInt(sig)
+            } : undefined,
+            imu: (isHidromobil && (pit !== undefined || rol !== undefined)) ? {
+                pitch_deg: toFloat(pit),
+                roll_deg:  toFloat(rol),
+                ax:        toFloat(qax),
+                ay:        toFloat(qay),
+                az:        toFloat(qaz)
             } : undefined
         };
 

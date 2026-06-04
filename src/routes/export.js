@@ -55,6 +55,7 @@ router.get('/csv', authenticateToken, async (req, res) => {
         // Araç tipini belirle: device_id belirtilmişse ona göre; yoksa ilk kayıttan al
         const resolvedDeviceId = device_id || (data[0]?.device_id ?? '');
         const vehicleCfg = VEHICLE_CONFIG[resolvedDeviceId] || { hasIso: false, hasH2: false };
+        const hasImu = resolvedDeviceId === 'a1' || resolvedDeviceId === 'arac-01';
 
         // ---- Ortak başlıklar ----
         const headers = [
@@ -70,6 +71,9 @@ router.get('/csv', authenticateToken, async (req, res) => {
         }
         if (vehicleCfg.hasH2) {
             headers.push('h2_ppm', 'h2_temp_c', 'flowmeter');
+        }
+        if (hasImu) {
+            headers.push('imu_roll_deg', 'imu_pitch_deg');
         }
 
         const rows = data.map(row => {
@@ -97,6 +101,9 @@ router.get('/csv', authenticateToken, async (req, res) => {
             }
             if (vehicleCfg.hasH2) {
                 cols.push(row.hydrogen?.ppm ?? '', row.hydrogen?.temp_c ?? '', row.hydrogen?.flowmeter ?? '');
+            }
+            if (hasImu) {
+                cols.push(row.imu?.roll_deg ?? '', row.imu?.pitch_deg ?? '');
             }
 
             return cols.join(',');

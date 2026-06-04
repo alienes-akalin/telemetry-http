@@ -51,9 +51,8 @@ Efficiency Challenge tarafında STM32F407 tabanlı araç CAN bus verilerini topl
 
 ┌──────────────────────┐      JSON HTTP POST     ┌──────────────────┐
 │ Shell Eco-Marathon   │ ───────────────────────▸│  Node.js Backend │
-│ ESP32_BMS            │        (2s)             │  Express + Mongo │
-│ ESP32_BMS_V2         │                         │                  │
-│ ESP32_Surucu         │                         │                  │
+│ ESP32_BMS            │        (2s)             │  Express + Mongo │                               
+│ ESP32_Motor_Surucu   │                         │                  │
 └──────────────────────┘                         └──────────────────┘
 ```
 
@@ -146,7 +145,6 @@ Düz bir dashboard arayüzünün ötesine geçmek amacıyla odaklanılan mühend
 |:------|:----|
 | Telemetry_SIM800L | STM32 firmware: CAN veri toplama + SIM800L gönderim |
 | Esp32_BMS | Shell araç alt sistemi: batarya telemetrisi |
-| Esp32_BMS_V2 | Shell araç alt sistemi: ikinci batarya/izleme varyantı |
 | Esp32_Surucu | Shell araç alt sistemi: sürücü telemetrisi |
 | native-app | React Native istemci |
 | android-app | Hibrit Android uygulama |

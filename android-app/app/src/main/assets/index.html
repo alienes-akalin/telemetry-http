@@ -22,9 +22,11 @@
 
     <!-- İkonlar (Icons) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tabler Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=123">
+    <link rel="stylesheet" href="css/style.css?v=126">
 
     <!-- FAST SPLASH CHECK -->
     <script>
@@ -103,6 +105,111 @@
                 max-height: 250px !important;
             }
         }
+
+        /* ========== CHART POINT FILTER BUTTONS ========== */
+        .chart-point-filter, .custom-chart-point-filter {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .cpf-btn {
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(99,102,241,0.35);
+            background: rgba(99,102,241,0.08);
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.03em;
+        }
+        .cpf-btn:hover { background: rgba(99,102,241,0.2); color: #c7d2fe; }
+        .cpf-btn.active {
+            background: rgba(99,102,241,0.3);
+            color: #a5b4fc;
+            border-color: #6366f1;
+            box-shadow: 0 0 8px rgba(99,102,241,0.3);
+        }
+
+        /* ========== CUSTOM MULTI-FIELD CHART ========== */
+        .custom-chart-wrapper {
+            grid-column: 1 / -1;
+            border-top: 1px solid rgba(99,102,241,0.2);
+            margin-top: 8px;
+        }
+        .custom-chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .custom-chart-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            color: #a5b4fc;
+            font-size: 0.95rem;
+        }
+        .custom-chart-title i { color: #818cf8; }
+        .custom-chart-subtitle {
+            font-size: 0.72rem;
+            font-weight: 400;
+            color: #64748b;
+            margin-left: 4px;
+        }
+        .custom-field-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .cfs-btn {
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(148,163,184,0.2);
+            background: rgba(30,41,59,0.7);
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cfs-btn:hover { border-color: rgba(99,102,241,0.5); color: #94a3b8; }
+        .cfs-btn.active {
+            border-color: var(--field-color, #6366f1);
+            color: var(--field-color, #a5b4fc);
+            background: rgba(99,102,241,0.15);
+            box-shadow: 0 0 8px rgba(99,102,241,0.2);
+        }
+        .cfs-btn-all {
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(52,211,153,0.35);
+            background: rgba(52,211,153,0.08);
+            color: #6ee7b7;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cfs-btn-all:hover { background: rgba(52,211,153,0.2); }
+        .cfs-btn-reset {
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(239,68,68,0.3);
+            background: rgba(239,68,68,0.08);
+            color: #fca5a5;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cfs-btn-reset:hover { background: rgba(239,68,68,0.2); }
 
         /* Geçmiş Tablo Scroll Fix */
         .card-body.scrollable {
@@ -232,25 +339,25 @@
 
             <nav class="nav-menu">
                 <a href="#" class="nav-item active" data-page="dashboard">
-                    <i class="fa-solid fa-gauge-high"></i> Dashboard
+                    <i class="ti ti-dashboard"></i> Dashboard
                 </a>
                 <a href="#" class="nav-item" data-page="race">
-                    <i class="fa-solid fa-flag-checkered"></i> Yarış
+                    <i class="ti ti-flag-3"></i> Yarış
                 </a>
                 <a href="#" class="nav-item" data-page="charts">
-                    <i class="fa-solid fa-chart-line"></i> Grafikler
+                    <i class="ti ti-chart-line"></i> Grafikler
                 </a>
                 <a href="#" class="nav-item" data-page="map">
-                    <i class="fa-solid fa-map-location-dot"></i> Harita
+                    <i class="ti ti-map-pin"></i> Harita
                 </a>
                 <a href="#" class="nav-item" data-page="history">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Geçmiş
+                    <i class="ti ti-history"></i> Geçmiş
                 </a>
                 <a href="#" class="nav-item" data-page="strategy">
-                    <i class="fa-solid fa-chess"></i> Stratejist
+                    <i class="ti ti-chess"></i> Stratejist
                 </a>
                 <a href="#" class="nav-item" data-page="media">
-                    <i class="fa-solid fa-music"></i> Medya
+                    <i class="ti ti-music"></i> Medya
                 </a>
             </nav>
 
@@ -276,6 +383,16 @@
                 <div class="topbar-controls">
                     <!-- Mobil: Satır 1 - Kullanıcı bilgileri + cihaz + saat -->
                     <div class="topbar-row topbar-row-1">
+                        <!-- GSM Sinyal Göstergesi (sadece Hidromobil / a1) -->
+                        <div id="gsm-signal-widget" class="gsm-signal-widget" style="display:none;" title="GSM Sinyal Kalitesi (SIM800L)">
+                            <svg class="gsm-bars-svg" viewBox="0 0 22 16" width="20" height="16" id="gsm-bars-svg">
+                                <rect id="gsm-b1" x="0"  y="12" width="4" height="4"  rx="1" fill="rgba(255,255,255,0.15)"/>
+                                <rect id="gsm-b2" x="6"  y="8"  width="4" height="8"  rx="1" fill="rgba(255,255,255,0.15)"/>
+                                <rect id="gsm-b3" x="12" y="4"  width="4" height="12" rx="1" fill="rgba(255,255,255,0.15)"/>
+                                <rect id="gsm-b4" x="18" y="0"  width="4" height="16" rx="1" fill="rgba(255,255,255,0.15)"/>
+                            </svg>
+                            <span id="gsm-signal-pct">--%</span>
+                        </div>
                         <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()"
                             title="Tema Değiştir">
                             <i class="fa-solid fa-sun"></i>
@@ -312,7 +429,7 @@
 
                 <!-- Üst Kartlar (Kritik Veriler) -->
                 <div class="stats-grid">
-                    <div class="stat-card critical">
+                    <div class="stat-card critical" data-spotlight>
                         <div class="stat-icon"><i class="fa-solid fa-gauge"></i></div>
                         <div class="stat-info">
                             <h3>HIZ</h3>
@@ -323,7 +440,7 @@
                         </div>
                     </div>
 
-                    <div class="stat-card info" id="current-card">
+                    <div class="stat-card info" id="current-card" data-spotlight>
                         <div class="stat-icon"><i class="fa-solid fa-bolt"></i></div>
                         <div class="stat-info">
                             <h3>AKIM</h3>
@@ -334,7 +451,7 @@
                         </div>
                     </div>
 
-                    <div class="stat-card warning">
+                    <div class="stat-card warning" data-spotlight>
                         <div class="stat-icon"><i class="fa-solid fa-car-battery"></i></div>
                         <div class="stat-info">
                             <h3>VOLTAJ</h3>
@@ -345,7 +462,7 @@
                         </div>
                     </div>
 
-                    <div class="stat-card" id="temp-card">
+                    <div class="stat-card" id="temp-card" data-spotlight>
                         <div class="stat-icon"><i class="fa-solid fa-temperature-three-quarters"></i></div>
                         <div class="stat-info">
                             <h3>SICAKLIK</h3>
@@ -376,6 +493,11 @@
                         </div>
                         <div class="card-body">
                             <div id="main-map"></div>
+                            <!-- Rakım göstergesi — haritanın sağ altında Leaflet yazısının hemen altı -->
+                            <div class="map-altitude-bar" id="map-altitude-bar">
+                                <i class="fa-solid fa-mountain"></i>
+                                <span id="val-altitude">-- m</span>
+                            </div>
                         </div>
                     </div>
 
@@ -431,21 +553,65 @@
                     </div>
                 </div>
 
-                <!-- Kronometre (Sadece Gösterim) -->
-                <div class="card stopwatch-card">
-                    <div class="card-header">
-                        <h3><i class="fa-solid fa-stopwatch"></i> Kronometre</h3>
+                <!-- Alt Widget'lar: Kronometre + IMU -->
+                <div class="dashboard-bottom-widgets">
+                    <!-- Kronometre (Sadece Gösterim) -->
+                    <div class="card stopwatch-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-stopwatch"></i> Kronometre</h3>
+                        </div>
+                        <div class="card-body stopwatch-body">
+                            <div class="stopwatch-display" id="stopwatch-display"><span class="sw-digit"
+                                    id="sw-h1">0</span><span class="sw-digit" id="sw-h2">0</span><span
+                                    class="sw-sep">:</span><span class="sw-digit" id="sw-m1">0</span><span class="sw-digit"
+                                    id="sw-m2">0</span><span class="sw-sep">:</span><span class="sw-digit"
+                                    id="sw-s1">0</span><span class="sw-digit" id="sw-s2">0</span><span class="ms">.<span
+                                        class="sw-digit sw-ms-digit" id="sw-c1">0</span><span class="sw-digit sw-ms-digit"
+                                        id="sw-c2">0</span></span></div>
+                            <!-- Kontrol butonları kaldırıldı - Stratejist sekmesinde kontrol edilir -->
+                            <div class="lap-list" id="lap-list"></div>
+                        </div>
                     </div>
-                    <div class="card-body stopwatch-body">
-                        <div class="stopwatch-display" id="stopwatch-display"><span class="sw-digit"
-                                id="sw-h1">0</span><span class="sw-digit" id="sw-h2">0</span><span
-                                class="sw-sep">:</span><span class="sw-digit" id="sw-m1">0</span><span class="sw-digit"
-                                id="sw-m2">0</span><span class="sw-sep">:</span><span class="sw-digit"
-                                id="sw-s1">0</span><span class="sw-digit" id="sw-s2">0</span><span class="ms">.<span
-                                    class="sw-digit sw-ms-digit" id="sw-c1">0</span><span class="sw-digit sw-ms-digit"
-                                    id="sw-c2">0</span></span></div>
-                        <!-- Kontrol butonları kaldırıldı - Stratejist sekmesinde kontrol edilir -->
-                        <div class="lap-list" id="lap-list"></div>
+
+                    <!-- IMU (Pitch/Roll) -->
+                    <div class="card imu-card" id="imu-card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-compass"></i> IMU Pitch/Roll</h3>
+                        </div>
+                        <div class="card-body imu-body">
+                            <div class="imu-columns">
+                                <div class="imu-gauge">
+                                    <div class="imu-gauge-head">
+                                        <span class="imu-label">Roll</span>
+                                        <span class="imu-value" id="imu-roll-val">-- deg</span>
+                                    </div>
+                                    <div class="imu-track-row">
+                                        <div class="imu-bar">
+                                            <div class="imu-zero"></div>
+                                            <div class="imu-indicator" id="imu-roll-indicator"></div>
+                                        </div>
+                                        <div class="imu-car-wrap">
+                                            <img src="img/header-hydro-top.png" alt="Roll araci" class="imu-car" id="imu-roll-car">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="imu-gauge">
+                                    <div class="imu-gauge-head">
+                                        <span class="imu-label">Pitch</span>
+                                        <span class="imu-value" id="imu-pitch-val">-- deg</span>
+                                    </div>
+                                    <div class="imu-track-row">
+                                        <div class="imu-bar">
+                                            <div class="imu-zero"></div>
+                                            <div class="imu-indicator" id="imu-pitch-indicator"></div>
+                                        </div>
+                                        <div class="imu-car-wrap">
+                                            <img src="img/header-hydro-side.png" alt="Pitch araci" class="imu-car" id="imu-pitch-car">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -497,16 +663,23 @@
             <!-- Chart View -->
             <div id="view-charts" class="view">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
                         <h3><i class="fa-solid fa-chart-line"></i> Performans Grafikleri</h3>
+                        <div class="chart-point-filter" id="chart-point-filter">
+                            <button class="cpf-btn active" data-pts="100">100 pts</button>
+                            <button class="cpf-btn" data-pts="200">200 pts</button>
+                            <button class="cpf-btn" data-pts="500">500 pts</button>
+                            <button class="cpf-btn" data-pts="1000">1000 pts</button>
+                            <button class="cpf-btn" data-pts="0">All</button>
+                        </div>
                     </div>
                     <div class="card-body charts-container">
                         <div class="chart-wrapper">
-                            <h4>Hız & RPM</h4>
+                            <h4>Hız &amp; RPM</h4>
                             <canvas id="chart-speed"></canvas>
                         </div>
                         <div class="chart-wrapper">
-                            <h4>Voltaj & Akım</h4>
+                            <h4>Voltaj &amp; Akım</h4>
                             <canvas id="chart-energy"></canvas>
                         </div>
                         <div class="chart-wrapper">
@@ -520,6 +693,38 @@
                         <div class="chart-wrapper" data-chart="iso" id="chart-iso-wrapper">
                             <h4>İzolasyon (kΩ)</h4>
                             <canvas id="chart-iso"></canvas>
+                        </div>
+
+                        <!-- CUSTOM MULTI-FIELD CHART -->
+                        <div class="chart-wrapper custom-chart-wrapper" id="custom-chart-wrapper">
+                            <div class="custom-chart-header">
+                                <div class="custom-chart-title">
+                                    <i class="fa-solid fa-sliders"></i>
+                                    <span>Custom Multi-Field Chart</span>
+                                    <span class="custom-chart-subtitle" id="custom-chart-subtitle">0 field seçili · Son 100 nokta</span>
+                                </div>
+                                <div class="custom-chart-point-filter" id="custom-point-filter">
+                                    <button class="cpf-btn active" data-cpts="100">100 pts</button>
+                                    <button class="cpf-btn" data-cpts="200">200 pts</button>
+                                    <button class="cpf-btn" data-cpts="0">All</button>
+                                </div>
+                            </div>
+                            <div class="custom-field-selector" id="custom-field-selector">
+                                <button class="cfs-btn" data-field="speed">Hız</button>
+                                <button class="cfs-btn" data-field="temp">Sıcaklık</button>
+                                <button class="cfs-btn" data-field="voltage">Voltaj</button>
+                                <button class="cfs-btn" data-field="current">Akım</button>
+                                <button class="cfs-btn" data-field="consumption">Tüketim</button>
+                                <button class="cfs-btn" data-field="vd">Vd</button>
+                                <button class="cfs-btn" data-field="id">Id</button>
+                                <button class="cfs-btn" data-field="vq">Vq</button>
+                                <button class="cfs-btn" data-field="rpm">RPM</button>
+                                <button class="cfs-btn" data-field="ref_speed">Referans Hız</button>
+                                <button class="cfs-btn" data-field="throttle">Throttle (Pot)</button>
+                                <button class="cfs-btn-all" id="cfs-all-btn">All</button>
+                                <button class="cfs-btn-reset" id="cfs-reset-btn">Reset</button>
+                            </div>
+                            <canvas id="chart-custom" style="min-height:280px;"></canvas>
                         </div>
                     </div>
                 </div>
@@ -610,13 +815,13 @@
                     <div class="card-header detail-card-header">
                         <!-- Geri butonu satırı -->
                         <div class="detail-nav">
-                            <button class="btn-back" onclick="backToSessions()"><i class="fa-solid fa-arrow-left"></i>
+                            <button class="btn-back" onclick="backToSessions()"><i class="ti ti-arrow-left"></i>
                                 Geri</button>
                         </div>
                         <!-- Başlık + CSV (sağa yaslı) -->
                         <div class="detail-title-row">
                             <h3 id="session-title">Oturum Detayı</h3>
-                            <button class="btn-csv" onclick="downloadSessionCSV()"><i class="fa-solid fa-download"></i>
+                            <button class="btn-csv" onclick="downloadSessionCSV()"><i class="ti ti-download"></i>
                                 CSV İndir</button>
                         </div>
                         <!-- İsim + Açıklama alanı (sadece Testler için gösterilir) -->
@@ -628,7 +833,7 @@
                                 </p>
                                 <button class="sw-btn" onclick="editTestLabelDetail()" id="label-toggle-btn"
                                     style="background:#3b82f6; padding:4px 14px; font-size:0.8rem;">
-                                    <i class="fa-solid fa-pen"></i> <span id="label-btn-text">İsim Ekle</span>
+                                    <i class="ti ti-pencil"></i> <span id="label-btn-text">İsim Ekle</span>
                                 </button>
                                 <div id="test-label-editor" style="display:none; margin-top:10px;">
                                     <input id="test-label-input" type="text" maxlength="80"
@@ -647,7 +852,7 @@
                                 style="color:#94a3b8; font-size:0.88rem; white-space:pre-wrap; margin:0 0 8px;"></p>
                             <button class="sw-btn" onclick="editTestDescription()" id="desc-toggle-btn"
                                 style="background:#3b82f6; padding:4px 14px; font-size:0.8rem;">
-                                <i class="fa-solid fa-pen"></i> <span id="desc-btn-text">Açıklama Ekle</span>
+                                <i class="ti ti-pencil"></i> <span id="desc-btn-text">Açıklama Ekle</span>
                             </button>
                             <div id="test-description-editor" style="display:none; margin-top:10px;">
                                 <textarea id="test-description-input" rows="3" placeholder="Açıklama girin..."
@@ -661,6 +866,91 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- ─── YENİ: İstatistik Özet Kartları ─── -->
+                    <div class="session-stats-grid" id="session-stats-grid">
+                        <div class="session-stat-card">
+                            <div class="ssc-icon"><i class="ti ti-database"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">TOPLAM KAYIT</div>
+                                <div class="ssc-value" id="sstat-total">—</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#3b82f6;"><i class="ti ti-gauge"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">ORT. HIZ</div>
+                                <div class="ssc-value" id="sstat-avg-speed" style="color:#60a5fa;">—</div>
+                                <div class="ssc-unit">km/h</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#10b981;"><i class="ti ti-bolt"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">MAKS. HIZ</div>
+                                <div class="ssc-value" id="sstat-max-speed" style="color:#34d399;">—</div>
+                                <div class="ssc-unit">km/h</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#f59e0b;"><i class="ti ti-battery"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">MAKS. VOLTAJ</div>
+                                <div class="ssc-value" id="sstat-max-volt" style="color:#fbbf24;">—</div>
+                                <div class="ssc-unit">V</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#f97316;"><i class="ti ti-battery-charging"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">MİN. VOLTAJ</div>
+                                <div class="ssc-value" id="sstat-min-volt" style="color:#fb923c;">—</div>
+                                <div class="ssc-unit">V</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#8b5cf6;"><i class="ti ti-thermometer"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">MAKS. SICAKLIK</div>
+                                <div class="ssc-value" id="sstat-max-temp" style="color:#a78bfa;">—</div>
+                                <div class="ssc-unit">°C</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#06b6d4;"><i class="ti ti-current-ac"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">ORT. AKIM</div>
+                                <div class="ssc-value" id="sstat-avg-current" style="color:#22d3ee;">—</div>
+                                <div class="ssc-unit">A</div>
+                            </div>
+                        </div>
+                        <div class="session-stat-card">
+                            <div class="ssc-icon" style="color:#ec4899;"><i class="ti ti-clock"></i></div>
+                            <div class="ssc-body">
+                                <div class="ssc-label">SÜRE</div>
+                                <div class="ssc-value" id="sstat-duration" style="color:#f472b6;">—</div>
+                                <div class="ssc-unit">dk</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ─── YENİ: Session Grafiği ─── -->
+                    <div class="session-chart-wrapper" id="session-chart-section">
+                        <div class="session-chart-header">
+                            <span class="session-chart-title"><i class="ti ti-chart-line"></i> Son Grafik</span>
+                            <div class="session-chart-field-selector" id="session-field-selector">
+                                <button class="scf-btn active" data-sfield="speed" style="--fc:#3b82f6">Hız</button>
+                                <button class="scf-btn" data-sfield="voltage" style="--fc:#f59e0b">Voltaj</button>
+                                <button class="scf-btn" data-sfield="current" style="--fc:#10b981">Akım</button>
+                                <button class="scf-btn" data-sfield="temp" style="--fc:#8b5cf6">Sıcaklık</button>
+                                <button class="scf-btn" data-sfield="rpm" style="--fc:#06b6d4">RPM</button>
+                                <button class="scf-btn" data-sfield="duty" style="--fc:#f97316">Duty %</button>
+                                <button class="scf-btn" data-sfield="soc" style="--fc:#ec4899">SOC %</button>
+                            </div>
+                        </div>
+                        <canvas id="session-chart" style="width:100%; max-height:320px;"></canvas>
+                    </div>
+
                     <div class="card-body scrollable">
                         <table class="history-table">
                             <thead>
@@ -673,6 +963,8 @@
                                     <th>SOC</th>
                                     <th>Sıcaklık</th>
                                     <th>RPM</th>
+                                    <th class="imu-col">Roll</th>
+                                    <th class="imu-col">Pitch</th>
                                 </tr>
                             </thead>
                             <tbody id="session-detail-body">
@@ -1448,8 +1740,9 @@
 
     <!-- Custom Scripts (Minified for Production) -->
     <!-- Pist Profili (trackData.js) -->
-    <script src="js/trackData.js?v=3"></script>
-    <script src="js/app.js?v=125"></script>
+    <script src="js/trackData.js?v=5"></script>
+    <script src="js/app.js?v=128"></script>
+    <script src="js/effects.js?v=5"></script>
 
     <!-- Service Worker & Pull-to-Refresh -->
     <script>
