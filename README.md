@@ -19,9 +19,6 @@
   <img src="https://img.shields.io/badge/PWA-Ready-5A0FC8?logo=pwa&logoColor=white" alt="PWA" />
 </p>
 
-> Bu depo, CV/portföy incelemesi için hazırlanmış teknik vitrin dokümanıdır.
-> Kurulum, dağıtım ve operasyon adımları bilinçli olarak README'den çıkarılmıştır.
-
 ---
 
 ## 📸 Arayüz Görselleri
@@ -40,17 +37,24 @@
 
 ## 🎯 Proje Özeti
 
-**1.5 ADANA Telemetri Platformu**, TÜBİTAK Efficiency Challenge aracı için geliştirilmiş uçtan uca veri izleme sistemidir.
+**1.5 ADANA Telemetri Platformu**, TÜBİTAK Efficiency Challenge ve Shell Eco-Marathon araçları için kullanılan uçtan uca veri izleme sistemidir.
 
-Araç üzerindeki STM32F407, CAN bus verilerini toplar ve SIM800L ile düzenli HTTP paketleri gönderir. Sunucu bu verileri kalıcı olarak saklar, aynı anda Socket.io ile bağlı istemcilere yayınlar.
+Efficiency Challenge tarafında STM32F407 tabanlı araç CAN bus verilerini toplar ve SIM800L ile düzenli HTTP paketleri gönderir. Shell tarafında ise ESP32 tabanlı alt sistemler üzerinden benzer telemetri akışı çalışır. Sunucu iki araçtan gelen verileri kalıcı olarak saklar, aynı anda Socket.io ile bağlı istemcilere yayınlar.
 
 ```
-┌──────────────┐    JSON HTTP POST    ┌──────────────────┐    Socket.io    ┌───────────────┐
-│  STM32 MCU   │ ────────────────────▸│  Node.js Backend │ ───────────────▸│  Web / Mobile │
-│  + SIM800L   │      (2s)            │  Express + Mongo │   real-time     │   Dashboard   │
-└──────────────┘                      └──────────────────┘                 └───────────────┘
-       │                                      │                                     │
-  CAN Bus                              Kalıcı depolama                    Chart + Map UI
+┌──────────────────────┐      JSON HTTP POST      ┌──────────────────┐      Socket.io      ┌──────────────────────┐
+│ Efficiency Challenge  │ ───────────────────────▸│  Node.js Backend  │ ────────────────────▸│  Web / Mobile UI      │
+│ STM32 + SIM800L       │        (2s)             │  Express + Mongo  │     real-time       │  Dashboard + Map      │
+└──────────────────────┘                           └──────────────────┘                      └──────────────────────┘
+          │                                                  │                                           │
+      CAN Bus                                         Kalıcı depolama                             Canlı izleme
+
+┌──────────────────────┐      JSON HTTP POST      ┌──────────────────┐
+│ Shell Eco-Marathon   │ ───────────────────────▸│  Node.js Backend  │
+│ ESP32_BMS            │        (2s)             │  Express + Mongo  │
+│ ESP32_BMS_V2         │                          │                  │
+│ ESP32_Surucu         │                          │                  │
+└──────────────────────┘                          └──────────────────┘
 ```
 
 ---
@@ -59,23 +63,10 @@ Araç üzerindeki STM32F407, CAN bus verilerini toplar ve SIM800L ile düzenli H
 
 | Alan | Detay |
 |:-----|:------|
-| **Fizik Tabanlı Simülatör** | LTV-LQG yaklaşımlı, sürtünme/eğim modeliyle (Track-Aware) çalışan enerji optimizasyon simülatörü |
-| **Dinamik Hava-GPS Entegrasyonu** | Seçilen pistin (örn. Polonya/SilesiaRing) anlık hava durumunu çekip aerodinamik sürtünme yoğunluğu hesabı yapabilme |
 | **Gerçek Zamanlı İzleme** | Socket.io yayın modeli ile anlık dashboard güncellemesi, sub-100ms gecikme |
 | **Çoklu Veri Kaynağı** | BMS, motor, GPS, izolasyon ve hidrojen verilerinin tek akışta toplanması |
-| **Canlı Pilot Koçluğu (HUD)** | Tur süreleri, adaptif hız tavsiyeleri ve "Dur-Kalk" (Stop-and-go) kinetik enerji uyarıları |
 | **Veri Analizi & Offline Destek** | Geçmiş telemetri sorgulama (MongoDB), test oturumları ve CSV/JSON dışa aktarım. |
 | **Mobil & PWA Deneyimi** | Android hibrit uygulama (WebView) ve PWA altyapısı ile yarış sahasında operasyonel kullanım |
-
----
-
-## 🏎️ Track-Aware "Stratejist" (Yapay Zeka Destekli Modül)
-
-Geleneksel "düz yol" telemetrilerinin bir adım ötesine geçerek, projeye özel olarak **LTV (Linear Time-Varying)** enerji korunum matematiğini temel alan otonom bir fizik motoru entegre edilmiştir. Yüksek çözünürlüklü GPS noktalarına bölünmüş pist dataları üzerinden şu hesaplamalar istemci (client) tarafında sıfır gecikmeyle gerçek zamanlı çalışır:
-
-- **Dinamik Formülasyon:** `F_total = F_Rolling + F_Aero(Hava_Yoğunluğu) + F_Slope(Eğim) + E_k(Dur-Kalk)`
-- **Sürücü Asistanı:** Yokuşlarda erken gaz kesme (coast) ve tırmanış noktalarını haritada mavi/turuncu dilimler (Throttle Map) ile renk kodlu olarak pilota iletir.
-- **Simülasyon Adaptasyonu:** Shell Eco-Marathon (SilesiaRing) yarış kuralları ile Adana yerel test pistinin (YADYO) "Tur sayısına bağlı kinetik dur-kalk maliyetlerini" bütçeleyerek mükemmele yakın batarya ömrü tahmini yapar.
 
 ---
 
@@ -132,11 +123,11 @@ Geleneksel "düz yol" telemetrilerinin bir adım ötesine geçerek, projeye öze
 
 Düz bir dashboard arayüzünün ötesine geçmek amacıyla odaklanılan mühendislik pratikleri:
 
-- **IoT Veri Mimarisini Tasarlama:** Gömülü sistem (STM32/CAN) ile Cloud/Backend (Node.js/Socket.io) katmanı arasında dayanıklı ve düşük gecikmeli veri boru hattı (pipeline) tesisi.
-- **Algoritme Geliştirme ve Fizik Modelleme:** Araç kinematiği ve çevresel değişkenleri hesaba katarak *JavaScript* üzerinde zero-latency çalışan otonom veri-temelli hız önerme motoru kurgusu.
-- **RESTful API ve 3. Parti Entegrasyon:** Konum ve koordinat bilgisini dinleyerek çalışan *Track-Aware* OpenWeatherMap backend proxy katmanı ve lokal önbellekleme (Caching).
-- **Üretime Hazır (Production-Ready) Güvenlik:** PM2 deployment ortamında `express-rate-limit` (DDoS koruması), özel NoSQL Injection middleware'i ve JWT Role Tabanlı (Superadmin/Viewer) erişim denetimi.
-- **Full-Stack Performans Optimizasyonu:** Yoğun DOM manipülasyonlarını vanilla JS ile optimize etme ve MongoDB zaman serisi verilerinde performanslı okuma/yazma.
+- **IoT Veri Mimarisini Tasarlama:** Gömülü sistemlerden (STM32 ve ESP32) backend katmanına dayanıklı ve düşük gecikmeli veri boru hattı tesisi.
+- **Gerçek Zamanlı Yayın:** Socket.io ile çoklu araç telemetrisini tek sunucudan canlı yayınlama.
+- **RESTful API ve Veri Modelleme:** Telemetri verisini cihaz bazlı doğrulama, saklama ve sorgulama akışıyla yönetme.
+- **Üretime Hazır Güvenlik:** Rate limiting, NoSQL koruması ve JWT tabanlı erişim denetimi.
+- **Full-Stack Performans Optimizasyonu:** Vanilla JS, Chart.js ve MongoDB üzerinde performanslı güncelleme/sorgu akışı.
 
 ---
 
@@ -154,8 +145,9 @@ Düz bir dashboard arayüzünün ötesine geçmek amacıyla odaklanılan mühend
 | Proje | Rol |
 |:------|:----|
 | Telemetry_SIM800L | STM32 firmware: CAN veri toplama + SIM800L gönderim |
-| Esp32_BMS | Batarya yönetim sistemi verileri |
-| Esp32_Surucu | Motor sürücü kontrol ve telemetri |
+| Esp32_BMS | Shell araç alt sistemi: batarya telemetrisi |
+| Esp32_BMS_V2 | Shell araç alt sistemi: ikinci batarya/izleme varyantı |
+| Esp32_Surucu | Shell araç alt sistemi: sürücü telemetrisi |
 | native-app | React Native istemci |
 | android-app | Hibrit Android uygulama |
 
