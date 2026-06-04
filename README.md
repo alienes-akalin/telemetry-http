@@ -42,19 +42,19 @@
 Efficiency Challenge tarafında STM32F407 tabanlı araç CAN bus verilerini toplar ve SIM800L ile düzenli HTTP paketleri gönderir. Shell tarafında ise ESP32 tabanlı alt sistemler üzerinden benzer telemetri akışı çalışır. Sunucu iki araçtan gelen verileri kalıcı olarak saklar, aynı anda Socket.io ile bağlı istemcilere yayınlar.
 
 ```
-┌──────────────────────┐      JSON HTTP POST      ┌──────────────────┐      Socket.io      ┌──────────────────────┐
-│ Efficiency Challenge  │ ───────────────────────▸│  Node.js Backend  │ ────────────────────▸│  Web / Mobile UI      │
-│ STM32 + SIM800L       │        (2s)             │  Express + Mongo  │     real-time       │  Dashboard + Map      │
-└──────────────────────┘                           └──────────────────┘                      └──────────────────────┘
-          │                                                  │                                           │
-      CAN Bus                                         Kalıcı depolama                             Canlı izleme
+┌──────────────────────┐     JSON HTTP POST      ┌──────────────────┐      Socket.io       ┌──────────────────────┐           
+│ Efficiency Challenge │ ───────────────────────▸│  Node.js Backend │ ────────────────────▸│  Web / Mobile UI     │
+│ STM32 + SIM800L      │         (2s)            │  Express + Mongo │      real-time       │  Dashboard + Map     │
+└──────────────────────┘                         └──────────────────┘                      └──────────────────────┘
+          │                                               │                                           │
+      CAN Bus                                      Kalıcı depolama                             Canlı izleme
 
-┌──────────────────────┐      JSON HTTP POST      ┌──────────────────┐
-│ Shell Eco-Marathon   │ ───────────────────────▸│  Node.js Backend  │
-│ ESP32_BMS            │        (2s)             │  Express + Mongo  │
-│ ESP32_BMS_V2         │                          │                  │
-│ ESP32_Surucu         │                          │                  │
-└──────────────────────┘                          └──────────────────┘
+┌──────────────────────┐      JSON HTTP POST     ┌──────────────────┐
+│ Shell Eco-Marathon   │ ───────────────────────▸│  Node.js Backend │
+│ ESP32_BMS            │        (2s)             │  Express + Mongo │
+│ ESP32_BMS_V2         │                         │                  │
+│ ESP32_Surucu         │                         │                  │
+└──────────────────────┘                         └──────────────────┘
 ```
 
 ---
@@ -123,7 +123,7 @@ Efficiency Challenge tarafında STM32F407 tabanlı araç CAN bus verilerini topl
 
 Düz bir dashboard arayüzünün ötesine geçmek amacıyla odaklanılan mühendislik pratikleri:
 
-- **IoT Veri Mimarisini Tasarlama:** Gömülü sistemlerden (STM32 ve ESP32) backend katmanına dayanıklı ve düşük gecikmeli veri boru hattı tesisi.
+- **IoT Veri Mimarisini Tasarlama:** Gömülü sistemlerden (STM32 ve ESP32) backend katmanına uzanan dayanıklı ve düşük gecikmeli bir veri akışı mimarisi kurma.
 - **Gerçek Zamanlı Yayın:** Socket.io ile çoklu araç telemetrisini tek sunucudan canlı yayınlama.
 - **RESTful API ve Veri Modelleme:** Telemetri verisini cihaz bazlı doğrulama, saklama ve sorgulama akışıyla yönetme.
 - **Üretime Hazır Güvenlik:** Rate limiting, NoSQL koruması ve JWT tabanlı erişim denetimi.
